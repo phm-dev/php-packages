@@ -207,27 +207,44 @@ jobs:
             sleep 30
           done
 
-  # Update central index.json after all releases
+  # Update central index.json from ALL releases
   update-index:
     name: Update package index
     needs: [prepare, publish-version]
-    if: needs.prepare.outputs.has_versions == 'true'
+    if: always() && !cancelled()
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
       - uses: actions/checkout@v4
 
-      - name: Download all artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: artifacts/
+      - name: Install zstd
+        run: sudo apt-get install -y zstd
 
-      - name: Collect all packages
+      - name: Download packages from all releases
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           mkdir -p dist
-          find artifacts/ -name '*.tar.zst' -exec cp {} dist/ \;
-          echo "Total packages:"
+
+          # Get all php-* releases
+          RELEASES=$(gh release list --json tagName -q '.[].tagName | select(startswith("php-"))' 2>/dev/null || echo "")
+
+          if [[ -z "$RELEASES" ]]; then
+            echo "No releases found"
+            exit 0
+          fi
+
+          echo "Found releases:"
+          echo "$RELEASES"
+
+          # Download packages from each release
+          for tag in $RELEASES; do
+            echo "Downloading packages from $tag..."
+            gh release download "$tag" --pattern "*.tar.zst" --dir dist/ --skip-existing || true
+          done
+
+          echo "Total packages downloaded:"
           ls -la dist/
 
       - name: Make scripts executable
@@ -235,12 +252,21 @@ jobs:
 
       - name: Generate index.json
         run: |
-          # Generate index with version-specific release URLs
+          if [[ ! -d dist ]] || [[ -z "$(ls dist/*.tar.zst 2>/dev/null)" ]]; then
+            echo "No packages found, skipping index generation"
+            exit 0
+          fi
+
           ./scripts/generate-index.sh \
             --base-url "https://github.com/${{ github.repository }}/releases/download"
 
       - name: Commit and push index.json
         run: |
+          if [[ ! -f dist/index.json ]]; then
+            echo "No index.json generated, skipping"
+            exit 0
+          fi
+
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
