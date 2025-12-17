@@ -62,7 +62,7 @@ for branch in $BRANCHES; do
 done
 
 if [[ "$OUTPUT_JSON" == true ]]; then
-    printf '%s\n' "${VERSIONS[@]}" | jq -R . | jq -s .
+    printf '%s\n' "${VERSIONS[@]}" | jq -R . | jq -sc .
 else
     for ver in "${VERSIONS[@]}"; do
         echo "$ver"
