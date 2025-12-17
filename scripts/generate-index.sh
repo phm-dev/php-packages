@@ -3,6 +3,7 @@
 # Generate index.json from package files in dist/
 # Usage: ./generate-index.sh [--base-url <url>]
 #
+# Each package URL points to a version-specific release (e.g., php-8.5.0)
 # Compatible with Bash 3.2+ (macOS default)
 #
 
@@ -14,17 +15,12 @@ DIST_DIR="${PROJECT_ROOT}/dist"
 
 # Default base URL for GitHub Releases
 BASE_URL="${BASE_URL:-https://github.com/USER/php-packages/releases/download}"
-RELEASE_TAG="${RELEASE_TAG:-latest}"
 
 # Parse arguments
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --base-url)
             BASE_URL="$2"
-            shift 2
-            ;;
-        --release-tag)
-            RELEASE_TAG="$2"
             shift 2
             ;;
         *)
@@ -101,8 +97,8 @@ while read -r pkg_path; do
         SHA256=$(shasum -a 256 "$pkg_path" | cut -d' ' -f1)
     fi
 
-    # Build download URL
-    DOWNLOAD_URL="${BASE_URL}/${RELEASE_TAG}/${pkg_file}"
+    # Build download URL (each PHP version has its own release tag: php-X.Y.Z)
+    DOWNLOAD_URL="${BASE_URL}/php-${VERSION}/${pkg_file}"
 
     # Create package entry JSON
     PACKAGE_ENTRY=$(cat << EOFPKG
