@@ -1,6 +1,7 @@
 # Build artifacts
 dist/
 *.tar.gz
+*.tar.zst
 *.sha256
 
 # Temporary files

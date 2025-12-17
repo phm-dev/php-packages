@@ -3,13 +3,25 @@
 # Package creation utilities for PHM
 # This file is sourced by other build scripts
 #
+# Package format: .tar.zst (zstandard compression)
+# Compression level: 3 (good balance between speed and ratio)
+#
 
 SCRIPT_DIR="${SCRIPT_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)}"
 PROJECT_ROOT="${PROJECT_ROOT:-$(dirname "$SCRIPT_DIR")}"
 DIST_DIR="${DIST_DIR:-${PROJECT_ROOT}/dist}"
 
+# Compression settings
+ZSTD_LEVEL=3
+
 # Ensure dist directory exists
 mkdir -p "$DIST_DIR"
+
+# Check for zstd
+if ! command -v zstd &> /dev/null; then
+    echo "[ERROR] zstd is required but not installed. Install with: brew install zstd"
+    exit 1
+fi
 
 # Create a package from files
 # Usage: create_package <name> <version> <revision> <platform> <files...> [--description <desc>] [--depends <deps>] [--provides <provides>]
@@ -52,7 +64,7 @@ create_package() {
         esac
     done
 
-    local pkg_filename="${name}_${version}-${revision}_${platform}.tar.gz"
+    local pkg_filename="${name}_${version}-${revision}_${platform}.tar.zst"
     local pkg_dir="${DIST_DIR}/.pkg-${name}-$$"
 
     echo "[PACKAGE] Creating ${pkg_filename}..."
@@ -180,8 +192,8 @@ create_package() {
 }
 EOF
 
-    # Create tarball
-    tar -czf "${DIST_DIR}/${pkg_filename}" -C "${pkg_dir}" pkginfo.json files
+    # Create tarball with zstd compression
+    tar -cf - -C "${pkg_dir}" pkginfo.json files | zstd -${ZSTD_LEVEL} -o "${DIST_DIR}/${pkg_filename}"
 
     # Generate SHA256
     if command -v sha256sum &> /dev/null; then
@@ -230,7 +242,7 @@ create_meta_package() {
         esac
     done
 
-    local pkg_filename="${name}_${version}-${revision}_${platform}.tar.gz"
+    local pkg_filename="${name}_${version}-${revision}_${platform}.tar.zst"
     local pkg_dir="${DIST_DIR}/.pkg-${name}-$$"
 
     echo "[META-PACKAGE] Creating ${pkg_filename}..."
@@ -304,8 +316,8 @@ create_meta_package() {
 }
 EOF
 
-    # Create tarball
-    tar -czf "${DIST_DIR}/${pkg_filename}" -C "${pkg_dir}" pkginfo.json files
+    # Create tarball with zstd compression
+    tar -cf - -C "${pkg_dir}" pkginfo.json files | zstd -${ZSTD_LEVEL} -o "${DIST_DIR}/${pkg_filename}"
 
     # Generate SHA256
     if command -v sha256sum &> /dev/null; then
@@ -363,7 +375,7 @@ create_extension_package() {
 
     local php_major_minor="${php_version%.*}"
     local pkg_name="php${php_major_minor}-${ext_name}"
-    local pkg_filename="${pkg_name}_${ext_version}-${revision}_${platform}.tar.gz"
+    local pkg_filename="${pkg_name}_${ext_version}-${revision}_${platform}.tar.zst"
     local pkg_dir="${DIST_DIR}/.pkg-${pkg_name}-$$"
 
     echo "[EXTENSION] Creating ${pkg_filename}..."
@@ -449,8 +461,8 @@ create_extension_package() {
 }
 EOF
 
-    # Create tarball
-    tar -czf "${DIST_DIR}/${pkg_filename}" -C "${pkg_dir}" pkginfo.json files
+    # Create tarball with zstd compression
+    tar -cf - -C "${pkg_dir}" pkginfo.json files | zstd -${ZSTD_LEVEL} -o "${DIST_DIR}/${pkg_filename}"
 
     # Generate SHA256
     if command -v sha256sum &> /dev/null; then

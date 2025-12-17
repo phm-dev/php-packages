@@ -63,11 +63,43 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
+# Resolve minor version (e.g., 8.3) to full version (e.g., 8.3.15)
+resolve_version() {
+    local ver="$1"
+
+    # Check if it's already a full version (X.Y.Z)
+    if [[ "$ver" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+        echo "$ver"
+        return
+    fi
+
+    # It's a minor version (X.Y), resolve to latest patch
+    local full_ver
+    full_ver=$(curl -fsSL "https://www.php.net/releases/index.php?json&version=${ver}" 2>/dev/null | \
+        jq -r '.version // empty' 2>/dev/null || true)
+
+    if [[ -n "$full_ver" ]]; then
+        echo "$full_ver"
+    else
+        log_warn "Could not resolve version ${ver}, using as-is"
+        echo "$ver"
+    fi
+}
+
 # Get versions if not specified
 if [[ -z "$VERSIONS" ]]; then
     log_info "Fetching latest PHP versions..."
     chmod +x "${SCRIPT_DIR}/get-php-versions.sh"
     VERSIONS=$("${SCRIPT_DIR}/get-php-versions.sh" | tr '\n' ' ')
+else
+    # Resolve any minor versions to full versions
+    RESOLVED_VERSIONS=""
+    for ver in $VERSIONS; do
+        resolved=$(resolve_version "$ver")
+        log_info "Resolved ${ver} → ${resolved}"
+        RESOLVED_VERSIONS="${RESOLVED_VERSIONS} ${resolved}"
+    done
+    VERSIONS=$(echo "$RESOLVED_VERSIONS" | xargs)
 fi
 
 if [[ -z "$VERSIONS" ]]; then
@@ -112,12 +144,12 @@ for VERSION in $VERSIONS; do
             log_info "Installing PHP ${VERSION} locally for extension builds..."
             sudo mkdir -p "/opt/php/${PHP_MAJOR_MINOR}"
 
-            for pkg in "${PROJECT_ROOT}/dist/php${PHP_MAJOR_MINOR}-common_"*.tar.gz \
-                       "${PROJECT_ROOT}/dist/php${PHP_MAJOR_MINOR}-cli_"*.tar.gz \
-                       "${PROJECT_ROOT}/dist/php${PHP_MAJOR_MINOR}-dev_"*.tar.gz \
-                       "${PROJECT_ROOT}/dist/php${PHP_MAJOR_MINOR}-pear_"*.tar.gz; do
+            for pkg in "${PROJECT_ROOT}/dist/php${PHP_MAJOR_MINOR}-common_"*.tar.zst \
+                       "${PROJECT_ROOT}/dist/php${PHP_MAJOR_MINOR}-cli_"*.tar.zst \
+                       "${PROJECT_ROOT}/dist/php${PHP_MAJOR_MINOR}-dev_"*.tar.zst \
+                       "${PROJECT_ROOT}/dist/php${PHP_MAJOR_MINOR}-pear_"*.tar.zst; do
                 if [[ -f "$pkg" ]]; then
-                    sudo tar -xzf "$pkg" -C / --strip-components=1 files/ 2>/dev/null || true
+                    zstd -dc "$pkg" | sudo tar -xf - -C / --strip-components=1 files/ 2>/dev/null || true
                 fi
             done
 
@@ -180,7 +212,7 @@ echo ""
 
 # List packages
 log_info "Built packages:"
-ls -lh "${PROJECT_ROOT}/dist/"*.tar.gz 2>/dev/null | awk '{print "  " $NF " (" $5 ")"}' || echo "  No packages"
+ls -lh "${PROJECT_ROOT}/dist/"*.tar.zst 2>/dev/null | awk '{print "  " $NF " (" $5 ")"}' || echo "  No packages"
 
 echo ""
 log_info "Index: ${PROJECT_ROOT}/dist/index.json"

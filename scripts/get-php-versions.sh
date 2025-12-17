@@ -1,19 +1,26 @@
 #!/usr/bin/env bash
 #
-# Get latest PHP versions for supported branches
+# Get latest PHP versions for all secure branches
 # Usage: ./get-php-versions.sh [--json]
+#
+# Fetches actively supported PHP branches from php.watch API,
+# then resolves each to its latest patch version from php.net
 #
 
 set -euo pipefail
-
-# Supported PHP branches
-BRANCHES=("8.3" "8.4" "8.5")
 
 OUTPUT_JSON=false
 
 if [[ "${1:-}" == "--json" ]]; then
     OUTPUT_JSON=true
 fi
+
+# Get secure PHP branches from php.watch API
+get_secure_branches() {
+    curl -fsSL "https://php.watch/api/v1/versions/secure" 2>/dev/null | \
+        jq -r '.data | to_entries[] | select(.value.isSecureVersion == true) | .value.name' 2>/dev/null || \
+        echo "8.3 8.4 8.5"  # Fallback
+}
 
 get_latest_version() {
     local branch="$1"
@@ -44,7 +51,10 @@ get_latest_version() {
 
 VERSIONS=()
 
-for branch in "${BRANCHES[@]}"; do
+# Get branches from php.watch API
+BRANCHES=$(get_secure_branches)
+
+for branch in $BRANCHES; do
     ver=$(get_latest_version "$branch")
     if [[ -n "$ver" ]]; then
         VERSIONS+=("$ver")

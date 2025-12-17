@@ -17,17 +17,15 @@ jobs:
     outputs:
       matrix: ${{ steps.versions.outputs.matrix }}
     steps:
-      - name: Fetch secure PHP versions from php.watch API
+      - uses: actions/checkout@v4
+
+      - name: Get secure PHP versions
         id: versions
         run: |
-          echo "Fetching secure PHP versions from php.watch..."
-
-          # Get all secure versions from php.watch API
-          MATRIX=$(curl -sf "https://php.watch/api/v1/versions/secure" | \
-            jq -c '[.data | to_entries[] | select(.value.isSecureVersion == true) | .value.name]')
-
-          echo "Secure versions: $MATRIX"
+          chmod +x scripts/get-php-versions.sh
+          MATRIX=$(./scripts/get-php-versions.sh --json)
           echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
+          echo "Versions to build: $MATRIX"
 
   build:
     name: Build PHP ${{ matrix.php_version }} (${{ matrix.platform.name }})
@@ -48,7 +46,7 @@ jobs:
           brew install -q autoconf automake bison re2c pkg-config \
             openssl@3 libzip icu4c readline libxml2 libxslt \
             sqlite lz4 zstd oniguruma jpeg-turbo libpng freetype webp \
-            libpq bzip2 curl libiconv \
+            libpq bzip2 curl libiconv zstd \
             rabbitmq-c libssh2 libmemcached
 
       - name: Make scripts executable
@@ -89,13 +87,13 @@ jobs:
           CXX: clang++
 
       - name: List built packages
-        run: ls -la dist/*.tar.gz
+        run: ls -la dist/*.tar.zst
 
       - name: Upload packages
         uses: actions/upload-artifact@v4
         with:
           name: php-packages-${{ matrix.php_version }}-${{ matrix.platform.name }}
-          path: dist/*.tar.gz
+          path: dist/*.tar.zst
           retention-days: 7
 
   publish:
@@ -116,7 +114,7 @@ jobs:
       - name: Collect packages
         run: |
           mkdir -p dist
-          find artifacts/ -name '*.tar.gz' -exec cp {} dist/ \;
+          find artifacts/ -name '*.tar.zst' -exec cp {} dist/ \;
           ls -la dist/
 
       - name: Make scripts executable
@@ -153,7 +151,7 @@ jobs:
             phm install php8.5-cli php8.5-fpm php8.5-redis
             ```
           files: |
-            dist/*.tar.gz
+            dist/*.tar.zst
             dist/index.json
           draft: false
           prerelease: false

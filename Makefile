@@ -112,7 +112,7 @@ index:
 	@$(SCRIPTS)/generate-index.sh
 
 clean:
-	rm -rf $(DIST)/*.tar.gz $(DIST)/*.sha256 $(DIST)/index.json
+	rm -rf $(DIST)/*.tar.zst $(DIST)/*.sha256 $(DIST)/index.json
 
 clean-all:
 	rm -rf $(DIST)
@@ -122,10 +122,10 @@ clean-all:
 install-php:
 	@PHP_MAJOR_MINOR=$${VERSION%.*}; \
 	sudo mkdir -p /opt/php/$$PHP_MAJOR_MINOR; \
-	for pkg in $(DIST)/php$${PHP_MAJOR_MINOR}-{common,cli,dev,pear}_*.tar.gz; do \
+	for pkg in $(DIST)/php$${PHP_MAJOR_MINOR}-{common,cli,dev,pear}_*.tar.zst; do \
 		if [ -f "$$pkg" ]; then \
 			echo "Installing $$pkg..."; \
-			sudo tar -xzf "$$pkg" -C / --strip-components=1 files/; \
+			zstd -dc "$$pkg" | sudo tar -xf - -C / --strip-components=1 files/; \
 		fi \
 	done; \
 	echo "PHP installed to /opt/php/$$PHP_MAJOR_MINOR"; \
@@ -140,16 +140,16 @@ uninstall-php:
 # List built packages
 list:
 	@echo "Built packages:"
-	@ls -lh $(DIST)/*.tar.gz 2>/dev/null | awk '{print "  " $$9 " (" $$5 ")"}' || echo "  No packages built yet"
+	@ls -lh $(DIST)/*.tar.zst 2>/dev/null | awk '{print "  " $$9 " (" $$5 ")"}' || echo "  No packages built yet"
 	@echo ""
-	@echo "Total: $$(ls $(DIST)/*.tar.gz 2>/dev/null | wc -l | tr -d ' ') packages"
+	@echo "Total: $$(ls $(DIST)/*.tar.zst 2>/dev/null | wc -l | tr -d ' ') packages"
 
 # Show package info
 info:
-	@for pkg in $(DIST)/*.tar.gz; do \
+	@for pkg in $(DIST)/*.tar.zst; do \
 		if [ -f "$$pkg" ]; then \
 			echo "=== $$(basename $$pkg) ==="; \
-			tar -xzf "$$pkg" -O pkginfo.json 2>/dev/null | jq -r '"  Name: \(.name)\n  Version: \(.version)\n  Size: \(.installed_size) bytes\n  Depends: \(.depends | join(", "))"' 2>/dev/null || true; \
+			zstd -dc "$$pkg" 2>/dev/null | tar -xf - -O pkginfo.json 2>/dev/null | jq -r '"  Name: \(.name)\n  Version: \(.version)\n  Size: \(.installed_size) bytes\n  Depends: \(.depends | join(", "))"' 2>/dev/null || true; \
 			echo ""; \
 		fi \
 	done
@@ -161,13 +161,13 @@ stats:
 	@echo ""
 	@echo "By PHP version:"
 	@for ver in 8.3 8.4 8.5; do \
-		count=$$(ls $(DIST)/php$$ver-*.tar.gz 2>/dev/null | wc -l | tr -d ' '); \
+		count=$$(ls $(DIST)/php$$ver-*.tar.zst 2>/dev/null | wc -l | tr -d ' '); \
 		echo "  PHP $$ver: $$count packages"; \
 	done
 	@echo ""
 	@echo "By type:"
-	@echo "  Core packages: $$(ls $(DIST)/php*-{common,cli,fpm,cgi,dev,pear}_*.tar.gz 2>/dev/null | wc -l | tr -d ' ')"
-	@echo "  Extensions:    $$(ls $(DIST)/php*-{redis,mongodb,amqp,xdebug,swoole,ssh2,uuid,mcrypt,igbinary,pcov,apcu}_*.tar.gz 2>/dev/null | wc -l | tr -d ' ')"
+	@echo "  Core packages: $$(ls $(DIST)/php*-{common,cli,fpm,cgi,dev,pear}_*.tar.zst 2>/dev/null | wc -l | tr -d ' ')"
+	@echo "  Extensions:    $$(ls $(DIST)/php*-{redis,mongodb,amqp,xdebug,swoole,ssh2,uuid,mcrypt,igbinary,pcov,apcu}_*.tar.zst 2>/dev/null | wc -l | tr -d ' ')"
 	@echo ""
 	@echo "Total size: $$(du -sh $(DIST) 2>/dev/null | cut -f1 || echo '0')"
 
@@ -189,6 +189,6 @@ gh-release:
 		exit 1; \
 	fi
 	@TAG="v$$(date +%Y%m%d%H%M)"; \
-	gh release create $$TAG $(DIST)/*.tar.gz $(DIST)/index.json \
+	gh release create $$TAG $(DIST)/*.tar.zst $(DIST)/index.json \
 		--title "PHP Packages $$TAG" \
 		--notes "Automated build"

@@ -615,4 +615,4 @@ log_info "=========================================="
 log_info "  Build complete!"
 log_info "  Packages created in: ${DIST_DIR}"
 log_info "=========================================="
-ls -la "${DIST_DIR}/"*.tar.gz 2>/dev/null || true
+ls -la "${DIST_DIR}/"*.tar.zst 2>/dev/null || true

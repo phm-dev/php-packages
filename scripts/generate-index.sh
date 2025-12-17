@@ -42,7 +42,7 @@ if [[ ! -d "$DIST_DIR" ]]; then
 fi
 
 # Find all package tarballs
-PACKAGES=$(find "$DIST_DIR" -name '*.tar.gz' -type f | sort)
+PACKAGES=$(find "$DIST_DIR" -name '*.tar.zst' -type f | sort)
 
 if [[ -z "$PACKAGES" ]]; then
     log_error "No packages found in ${DIST_DIR}"
@@ -65,8 +65,8 @@ while read -r pkg_path; do
     pkg_file="$(basename "$pkg_path")"
     log_info "Processing: ${pkg_file}"
 
-    # Extract pkginfo.json from tarball
-    PKGINFO=$(tar -xzf "$pkg_path" -O pkginfo.json 2>/dev/null || echo "{}")
+    # Extract pkginfo.json from tarball (zstd compressed)
+    PKGINFO=$(zstd -dc "$pkg_path" 2>/dev/null | tar -xf - -O pkginfo.json 2>/dev/null || echo "{}")
 
     if [[ "$PKGINFO" == "{}" ]]; then
         log_error "  Failed to extract pkginfo.json, skipping"
