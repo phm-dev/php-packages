@@ -1,0 +1,78 @@
+{
+  "version": 1,
+  "generated": "2025-12-17T08:35:52Z",
+  "platforms": {
+    "darwin-arm64": {
+      "packages": [
+        {
+          "name": "php8.5-cgi",
+          "version": "8.5.0",
+          "revision": 1,
+          "description": "PHP 8.5 CGI binary",
+          "depends": [
+            "php8.5-common (>= 8.5.0)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/v3/php8.5-cgi_8.5.0-1_darwin-arm64.tar.gz",
+          "sha256": "832ac0c1c52573cad416e495833da9e827f165ae0bca169daec99ef86332bc33",
+          "size": 5961513,
+          "installed_size": 25522176
+        },
+        {
+          "name": "php8.5-cli",
+          "version": "8.5.0",
+          "revision": 1,
+          "description": "PHP 8.5 CLI interpreter",
+          "depends": [
+            "php8.5-common (>= 8.5.0)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/v3/php8.5-cli_8.5.0-1_darwin-arm64.tar.gz",
+          "sha256": "2cb8bc5e7f2463f8a688e72f10d2b244629c986616e8d2f75bfe80e6465584f8",
+          "size": 6003653,
+          "installed_size": 25604096
+        },
+        {
+          "name": "php8.5-common",
+          "version": "8.5.0",
+          "revision": 1,
+          "description": "PHP 8.5 common files",
+          "depends": [],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/v3/php8.5-common_8.5.0-1_darwin-arm64.tar.gz",
+          "sha256": "40e100389c63e2eb67193454a343d5765070db2222f3ea3f46b88190e67d636e",
+          "size": 48638,
+          "installed_size": 172032
+        },
+        {
+          "name": "php8.5-dev",
+          "version": "8.5.0",
+          "revision": 1,
+          "description": "PHP 8.5 development files",
+          "depends": [
+            "php8.5-common (>= 8.5.0)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/v3/php8.5-dev_8.5.0-1_darwin-arm64.tar.gz",
+          "sha256": "a71ad481b3e4d2ccc7faf3124ca94085c651f7b44b6b7bd6a660cd88364508c7",
+          "size": 1379976,
+          "installed_size": 9605120
+        },
+        {
+          "name": "php8.5-fpm",
+          "version": "8.5.0",
+          "revision": 1,
+          "description": "PHP 8.5 FPM (FastCGI Process Manager)",
+          "depends": [
+            "php8.5-common (>= 8.5.0)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/v3/php8.5-fpm_8.5.0-1_darwin-arm64.tar.gz",
+          "sha256": "9b9afc3ca17bee3458aba3377cd9153f8ec7b00ab44531ab670cfd7fc0aaf9b3",
+          "size": 6015173,
+          "installed_size": 25636864
+        }
+      ]
+    }
+  }
+}
