@@ -50,26 +50,23 @@ jobs:
           # For scheduled runs or manual "all" - check all supported versions
           VERSIONS=()
 
-          # Check PHP 8.5.x
-          LATEST_85=$(curl -s https://www.php.net/releases/index.php?json&version=8.5 | jq -r '.version // empty')
-          if [[ -n "$LATEST_85" ]]; then
-            VERSIONS+=("$LATEST_85")
-          fi
+          # Get all releases data once
+          RELEASES=$(curl -s "https://www.php.net/releases/index.php?json")
 
-          # Check PHP 8.4.x
-          LATEST_84=$(curl -s https://www.php.net/releases/index.php?json&version=8.4 | jq -r '.version // empty')
-          if [[ -n "$LATEST_84" ]]; then
-            VERSIONS+=("$LATEST_84")
-          fi
+          # Extract latest versions for each branch
+          # The API returns {"8": {"version": "8.x.y", ...}, ...}
+          LATEST_85=$(echo "$RELEASES" | jq -r 'to_entries | map(select(.value.version | startswith("8.5"))) | .[0].value.version // empty')
+          LATEST_84=$(echo "$RELEASES" | jq -r 'to_entries | map(select(.value.version | startswith("8.4"))) | .[0].value.version // empty')
+          LATEST_83=$(echo "$RELEASES" | jq -r 'to_entries | map(select(.value.version | startswith("8.3"))) | .[0].value.version // empty')
 
-          # Check PHP 8.3.x
-          LATEST_83=$(curl -s https://www.php.net/releases/index.php?json&version=8.3 | jq -r '.version // empty')
-          if [[ -n "$LATEST_83" ]]; then
-            VERSIONS+=("$LATEST_83")
-          fi
+          # Add found versions
+          [[ -n "$LATEST_85" ]] && VERSIONS+=("$LATEST_85")
+          [[ -n "$LATEST_84" ]] && VERSIONS+=("$LATEST_84")
+          [[ -n "$LATEST_83" ]] && VERSIONS+=("$LATEST_83")
 
           if [[ ${#VERSIONS[@]} -gt 0 ]]; then
-            MATRIX=$(printf '%s\n' "${VERSIONS[@]}" | jq -R . | jq -s .)
+            # Build JSON array properly
+            MATRIX=$(printf '%s\n' "${VERSIONS[@]}" | jq -R . | jq -sc .)
             echo "matrix=${MATRIX}" >> $GITHUB_OUTPUT
             echo "has_updates=true" >> $GITHUB_OUTPUT
           else
