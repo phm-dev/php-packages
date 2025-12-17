@@ -2,23 +2,6 @@ name: Build PHP Packages
 
 on:
   workflow_dispatch:
-    inputs:
-      php_version:
-        description: 'PHP version to build (e.g., 8.5.0) or "all" for all supported versions'
-        required: true
-        type: string
-        default: 'all'
-      platforms:
-        description: 'Platforms to build for'
-        required: false
-        type: choice
-        options:
-          - 'all'
-          - 'darwin-arm64'
-          - 'darwin-amd64'
-        default: 'all'
-
-  # Nightly builds - check for new PHP versions
   schedule:
     - cron: '0 4 * * *'
 
@@ -28,60 +11,31 @@ env:
   HOMEBREW_NO_ENV_HINTS: 1
 
 jobs:
-  check-versions:
-    name: Check for new PHP versions
+  prepare:
+    name: Get latest PHP versions
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.versions.outputs.matrix }}
-      has_updates: ${{ steps.versions.outputs.has_updates }}
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Check latest PHP versions
+      - name: Fetch secure PHP versions from php.watch API
         id: versions
         run: |
-          # For manual runs with specific version
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" && "${{ inputs.php_version }}" != "all" ]]; then
-            echo "matrix=[\"${{ inputs.php_version }}\"]" >> $GITHUB_OUTPUT
-            echo "has_updates=true" >> $GITHUB_OUTPUT
-            exit 0
-          fi
+          echo "Fetching secure PHP versions from php.watch..."
 
-          # For scheduled runs or manual "all" - check all supported versions
-          VERSIONS=()
+          # Get all secure versions from php.watch API
+          MATRIX=$(curl -sf "https://php.watch/api/v1/versions/secure" | \
+            jq -c '[.data | to_entries[] | select(.value.isSecureVersion == true) | .value.name]')
 
-          # Get all releases data once
-          RELEASES=$(curl -s "https://www.php.net/releases/index.php?json")
-
-          # Extract latest versions for each branch
-          # The API returns {"8": {"version": "8.x.y", ...}, ...}
-          LATEST_85=$(echo "$RELEASES" | jq -r 'to_entries | map(select(.value.version | startswith("8.5"))) | .[0].value.version // empty')
-          LATEST_84=$(echo "$RELEASES" | jq -r 'to_entries | map(select(.value.version | startswith("8.4"))) | .[0].value.version // empty')
-          LATEST_83=$(echo "$RELEASES" | jq -r 'to_entries | map(select(.value.version | startswith("8.3"))) | .[0].value.version // empty')
-
-          # Add found versions
-          [[ -n "$LATEST_85" ]] && VERSIONS+=("$LATEST_85")
-          [[ -n "$LATEST_84" ]] && VERSIONS+=("$LATEST_84")
-          [[ -n "$LATEST_83" ]] && VERSIONS+=("$LATEST_83")
-
-          if [[ ${#VERSIONS[@]} -gt 0 ]]; then
-            # Build JSON array properly
-            MATRIX=$(printf '%s\n' "${VERSIONS[@]}" | jq -R . | jq -sc .)
-            echo "matrix=${MATRIX}" >> $GITHUB_OUTPUT
-            echo "has_updates=true" >> $GITHUB_OUTPUT
-          else
-            echo "matrix=[]" >> $GITHUB_OUTPUT
-            echo "has_updates=false" >> $GITHUB_OUTPUT
-          fi
+          echo "Secure versions: $MATRIX"
+          echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
 
   build:
     name: Build PHP ${{ matrix.php_version }} (${{ matrix.platform.name }})
-    needs: check-versions
-    if: needs.check-versions.outputs.has_updates == 'true'
+    needs: prepare
     strategy:
       fail-fast: false
       matrix:
-        php_version: ${{ fromJson(needs.check-versions.outputs.matrix) }}
+        php_version: ${{ fromJson(needs.prepare.outputs.matrix) }}
         platform:
           - { os: macos-15, name: darwin-arm64 }
           - { os: macos-15-intel, name: darwin-amd64 }
@@ -146,8 +100,8 @@ jobs:
 
   publish:
     name: Publish packages
-    needs: [check-versions, build]
-    if: always() && needs.check-versions.outputs.has_updates == 'true' && needs.build.result == 'success'
+    needs: [prepare, build]
+    if: needs.build.result == 'success'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -182,8 +136,7 @@ jobs:
           body: |
             ## PHP Packages
 
-            **Built versions:**
-            ${{ needs.check-versions.outputs.matrix }}
+            **Built versions:** ${{ needs.prepare.outputs.matrix }}
 
             **Platforms:**
             - darwin-arm64 (Apple Silicon)
@@ -193,7 +146,7 @@ jobs:
 
             ```bash
             # Install phm first
-            curl -fsSL https://github.com/${{ github.repository }}/raw/main/install-phm.sh | bash
+            curl -fsSL https://raw.githubusercontent.com/phm-dev/phm/main/scripts/install-phm.sh | bash
 
             # Then install PHP
             phm update
