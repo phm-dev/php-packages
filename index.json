@@ -1,9 +1,41 @@
 {
   "version": 1,
-  "generated": "2025-12-17T08:35:52Z",
+  "generated": "2025-12-17T08:54:55Z",
   "platforms": {
-    "darwin-arm64": {
+    "darwin-amd64": {
       "packages": [
+        {
+          "name": "php8.5-bcmath",
+          "version": "8.5.0",
+          "revision": 1,
+          "description": "PHP 8.5 BCMath arbitrary precision",
+          "depends": [
+            "php8.5-common (>= 8.5.0)"
+          ],
+          "provides": [
+            "php-bcmath"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/v4/php8.5-bcmath_8.5.0-1_darwin-amd64.tar.gz",
+          "sha256": "2d18c770d83780705d77638ff3751d21079a012af3a290eb425bb4cd31897402",
+          "size": 358,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.5-calendar",
+          "version": "8.5.0",
+          "revision": 1,
+          "description": "PHP 8.5 Calendar functions",
+          "depends": [
+            "php8.5-common (>= 8.5.0)"
+          ],
+          "provides": [
+            "php-calendar"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/v4/php8.5-calendar_8.5.0-1_darwin-amd64.tar.gz",
+          "sha256": "f7ca385159e78f7e5e1c08998b371cbbe45fbcb464b4da52cf94e67a68c01b76",
+          "size": 348,
+          "installed_size": 0
+        },
         {
           "name": "php8.5-cgi",
           "version": "8.5.0",
@@ -13,10 +45,10 @@
             "php8.5-common (>= 8.5.0)"
           ],
           "provides": [],
-          "url": "https://github.com/phm-dev/php-packages/releases/download/v3/php8.5-cgi_8.5.0-1_darwin-arm64.tar.gz",
-          "sha256": "832ac0c1c52573cad416e495833da9e827f165ae0bca169daec99ef86332bc33",
-          "size": 5961513,
-          "installed_size": 25522176
+          "url": "https://github.com/phm-dev/php-packages/releases/download/v4/php8.5-cgi_8.5.0-1_darwin-amd64.tar.gz",
+          "sha256": "b1d3fe08fbaa39c5d929308e83d2103d8335bc85ff44151ca5f5234fa9262977",
+          "size": 6199537,
+          "installed_size": 25993216
         },
         {
           "name": "php8.5-cli",
@@ -27,10 +59,10 @@
             "php8.5-common (>= 8.5.0)"
           ],
           "provides": [],
-          "url": "https://github.com/phm-dev/php-packages/releases/download/v3/php8.5-cli_8.5.0-1_darwin-arm64.tar.gz",
-          "sha256": "2cb8bc5e7f2463f8a688e72f10d2b244629c986616e8d2f75bfe80e6465584f8",
-          "size": 6003653,
-          "installed_size": 25604096
+          "url": "https://github.com/phm-dev/php-packages/releases/download/v4/php8.5-cli_8.5.0-1_darwin-amd64.tar.gz",
+          "sha256": "1ffe6a1983fcd12b5663d5f18af66166ad016a4020ce28f0640e567f92ad8bb7",
+          "size": 6239614,
+          "installed_size": 26079232
         },
         {
           "name": "php8.5-common",
@@ -39,10 +71,26 @@
           "description": "PHP 8.5 common files",
           "depends": [],
           "provides": [],
-          "url": "https://github.com/phm-dev/php-packages/releases/download/v3/php8.5-common_8.5.0-1_darwin-arm64.tar.gz",
-          "sha256": "40e100389c63e2eb67193454a343d5765070db2222f3ea3f46b88190e67d636e",
-          "size": 48638,
+          "url": "https://github.com/phm-dev/php-packages/releases/download/v4/php8.5-common_8.5.0-1_darwin-amd64.tar.gz",
+          "sha256": "854b9ef63d82abf08d2db974e7475c1c150d71d42eef96b0ed2ba34da115eca5",
+          "size": 48675,
           "installed_size": 172032
+        },
+        {
+          "name": "php8.5-curl",
+          "version": "8.5.0",
+          "revision": 1,
+          "description": "PHP 8.5 cURL support",
+          "depends": [
+            "php8.5-common (>= 8.5.0)"
+          ],
+          "provides": [
+            "php-curl"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/v4/php8.5-curl_8.5.0-1_darwin-amd64.tar.gz",
+          "sha256": "e86ca5ab23fdb28716ec8e6aedc3a0d5e1a8d7a8b1646c890e2c9304374562b0",
+          "size": 347,
+          "installed_size": 0
         },
         {
           "name": "php8.5-dev",
@@ -53,10 +101,26 @@
             "php8.5-common (>= 8.5.0)"
           ],
           "provides": [],
-          "url": "https://github.com/phm-dev/php-packages/releases/download/v3/php8.5-dev_8.5.0-1_darwin-arm64.tar.gz",
-          "sha256": "a71ad481b3e4d2ccc7faf3124ca94085c651f7b44b6b7bd6a660cd88364508c7",
-          "size": 1379976,
+          "url": "https://github.com/phm-dev/php-packages/releases/download/v4/php8.5-dev_8.5.0-1_darwin-amd64.tar.gz",
+          "sha256": "7172bcb183d37768b9975e7e91221b8d6b5a2e64aa08c9adf82224c7456839c6",
+          "size": 1379949,
           "installed_size": 9605120
+        },
+        {
+          "name": "php8.5-exif",
+          "version": "8.5.0",
+          "revision": 1,
+          "description": "PHP 8.5 EXIF metadata",
+          "depends": [
+            "php8.5-common (>= 8.5.0)"
+          ],
+          "provides": [
+            "php-exif"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/v4/php8.5-exif_8.5.0-1_darwin-amd64.tar.gz",
+          "sha256": "5bcc26367b477449bcc1f2c9d28e8592b51eda8c84695e3812de6d6f655aa5ad",
+          "size": 349,
+          "installed_size": 0
         },
         {
           "name": "php8.5-fpm",
@@ -67,10 +131,652 @@
             "php8.5-common (>= 8.5.0)"
           ],
           "provides": [],
-          "url": "https://github.com/phm-dev/php-packages/releases/download/v3/php8.5-fpm_8.5.0-1_darwin-arm64.tar.gz",
-          "sha256": "9b9afc3ca17bee3458aba3377cd9153f8ec7b00ab44531ab670cfd7fc0aaf9b3",
-          "size": 6015173,
-          "installed_size": 25636864
+          "url": "https://github.com/phm-dev/php-packages/releases/download/v4/php8.5-fpm_8.5.0-1_darwin-amd64.tar.gz",
+          "sha256": "1654d0b786d2d783979d0a386c1b311679b7de0515dddb2c117690f17d300e74",
+          "size": 6253836,
+          "installed_size": 26124288
+        },
+        {
+          "name": "php8.5-ftp",
+          "version": "8.5.0",
+          "revision": 1,
+          "description": "PHP 8.5 FTP support",
+          "depends": [
+            "php8.5-common (>= 8.5.0)"
+          ],
+          "provides": [
+            "php-ftp"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/v4/php8.5-ftp_8.5.0-1_darwin-amd64.tar.gz",
+          "sha256": "b14625a1377051446dd627224335e32d5400229d16f5565505c510a751a35b67",
+          "size": 345,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.5-gd",
+          "version": "8.5.0",
+          "revision": 1,
+          "description": "PHP 8.5 GD graphics library",
+          "depends": [
+            "php8.5-common (>= 8.5.0)"
+          ],
+          "provides": [
+            "php-gd"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/v4/php8.5-gd_8.5.0-1_darwin-amd64.tar.gz",
+          "sha256": "f9ea5950417bfcbd79a252beeb184918e5f30dbb03641a5ce030e1d253a2f198",
+          "size": 352,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.5-intl",
+          "version": "8.5.0",
+          "revision": 1,
+          "description": "PHP 8.5 Internationalization support",
+          "depends": [
+            "php8.5-common (>= 8.5.0)"
+          ],
+          "provides": [
+            "php-intl"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/v4/php8.5-intl_8.5.0-1_darwin-amd64.tar.gz",
+          "sha256": "df25bfd3c4c1235b2b3991de5d154e3adc3cf41e6da3e46c090a8dd88c619f68",
+          "size": 354,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.5-mbstring",
+          "version": "8.5.0",
+          "revision": 1,
+          "description": "PHP 8.5 Multibyte string support",
+          "depends": [
+            "php8.5-common (>= 8.5.0)"
+          ],
+          "provides": [
+            "php-mbstring"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/v4/php8.5-mbstring_8.5.0-1_darwin-amd64.tar.gz",
+          "sha256": "bd069c2b530356de4a640167831ec6748cb9fddfa3dc8448b430a8947fbc3f13",
+          "size": 357,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.5-mysql",
+          "version": "8.5.0",
+          "revision": 1,
+          "description": "PHP 8.5 MySQL support (mysqli, pdo_mysql)",
+          "depends": [
+            "php8.5-common (>= 8.5.0)"
+          ],
+          "provides": [
+            "php-mysql"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/v4/php8.5-mysql_8.5.0-1_darwin-amd64.tar.gz",
+          "sha256": "b9c4c8c0204e73e1fa0b18237230c8b85449f66495438c398ddb511289392108",
+          "size": 361,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.5-opcache",
+          "version": "8.5.0",
+          "revision": 1,
+          "description": "PHP 8.5 OPcache configuration (built into PHP 8.5+)",
+          "depends": [
+            "php8.5-common (>= 8.5.0)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/v4/php8.5-opcache_8.5.0-1_darwin-amd64.tar.gz",
+          "sha256": "1455098fcade29a9f65d38704ac82c4839231b33e24ebec821840f54f6785075",
+          "size": 656,
+          "installed_size": 4096
+        },
+        {
+          "name": "php8.5-pcntl",
+          "version": "8.5.0",
+          "revision": 1,
+          "description": "PHP 8.5 Process control",
+          "depends": [
+            "php8.5-common (>= 8.5.0)"
+          ],
+          "provides": [
+            "php-pcntl"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/v4/php8.5-pcntl_8.5.0-1_darwin-amd64.tar.gz",
+          "sha256": "2fb95b5e6182c53f510ec11e1f337e277e1937d050eca4f22ce47c821f3e880c",
+          "size": 347,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.5-pear",
+          "version": "8.5.0",
+          "revision": 1,
+          "description": "PHP 8.5 PEAR/PECL package manager",
+          "depends": [
+            "php8.5-cli (>= 8.5.0)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/v4/php8.5-pear_8.5.0-1_darwin-amd64.tar.gz",
+          "sha256": "b2b889587aa97f9911739df8b14ee32a7644d5a1478b45a2702e950efccb46d9",
+          "size": 344766,
+          "installed_size": 2244608
+        },
+        {
+          "name": "php8.5-pgsql",
+          "version": "8.5.0",
+          "revision": 1,
+          "description": "PHP 8.5 PostgreSQL support",
+          "depends": [
+            "php8.5-common (>= 8.5.0)"
+          ],
+          "provides": [
+            "php-pgsql"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/v4/php8.5-pgsql_8.5.0-1_darwin-amd64.tar.gz",
+          "sha256": "ee1b62c539e289791789b969fbeb6175fa797e931435b319be119c3198c04f78",
+          "size": 352,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.5-readline",
+          "version": "8.5.0",
+          "revision": 1,
+          "description": "PHP 8.5 Readline support",
+          "depends": [
+            "php8.5-common (>= 8.5.0)"
+          ],
+          "provides": [
+            "php-readline"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/v4/php8.5-readline_8.5.0-1_darwin-amd64.tar.gz",
+          "sha256": "5d9369864e059868c2756325f9847ce65d1d2a141ddf65dfbdecfaa2b9346e45",
+          "size": 348,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.5-soap",
+          "version": "8.5.0",
+          "revision": 1,
+          "description": "PHP 8.5 SOAP support",
+          "depends": [
+            "php8.5-common (>= 8.5.0)"
+          ],
+          "provides": [
+            "php-soap"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/v4/php8.5-soap_8.5.0-1_darwin-amd64.tar.gz",
+          "sha256": "92068da02997c3b3c4e300c87d39464abc2fd45fbd2e0efb959afcaf5855b04e",
+          "size": 347,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.5-sockets",
+          "version": "8.5.0",
+          "revision": 1,
+          "description": "PHP 8.5 Socket support",
+          "depends": [
+            "php8.5-common (>= 8.5.0)"
+          ],
+          "provides": [
+            "php-sockets"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/v4/php8.5-sockets_8.5.0-1_darwin-amd64.tar.gz",
+          "sha256": "7478d9e1bb247cdf649a6643bc1ab99bf752cd32826f2c2ba01fc71ceca73f1a",
+          "size": 347,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.5-sqlite3",
+          "version": "8.5.0",
+          "revision": 1,
+          "description": "PHP 8.5 SQLite3 support",
+          "depends": [
+            "php8.5-common (>= 8.5.0)"
+          ],
+          "provides": [
+            "php-sqlite3"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/v4/php8.5-sqlite3_8.5.0-1_darwin-amd64.tar.gz",
+          "sha256": "9348ab931303f29e869b7ff7ea563d09e103396ee534f5a98a8b264b7762204e",
+          "size": 351,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.5-xml",
+          "version": "8.5.0",
+          "revision": 1,
+          "description": "PHP 8.5 XML support",
+          "depends": [
+            "php8.5-common (>= 8.5.0)"
+          ],
+          "provides": [
+            "php-xml"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/v4/php8.5-xml_8.5.0-1_darwin-amd64.tar.gz",
+          "sha256": "23e0db885375aa534800e96136eefd27f7867ecc8b5a7cab5b9555f476bc7814",
+          "size": 346,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.5-zip",
+          "version": "8.5.0",
+          "revision": 1,
+          "description": "PHP 8.5 ZIP support",
+          "depends": [
+            "php8.5-common (>= 8.5.0)"
+          ],
+          "provides": [
+            "php-zip"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/v4/php8.5-zip_8.5.0-1_darwin-amd64.tar.gz",
+          "sha256": "8e633994831924e4a0f1cbdb651c3b9398a81cbf2cc243b5ac88e114eac484b2",
+          "size": 345,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.5",
+          "version": "8.5.0",
+          "revision": 1,
+          "description": "PHP 8.5 meta-package (CLI + common)",
+          "depends": [
+            "php8.5-cli (>= 8.5.0)",
+            "php8.5-common (>= 8.5.0)"
+          ],
+          "provides": [
+            "php"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/v4/php8.5_8.5.0-1_darwin-amd64.tar.gz",
+          "sha256": "11b47a924a710b6e718d313a9b0ac573bc977957c2e9056ef08979190e84cd43",
+          "size": 358,
+          "installed_size": 0
+        }
+      ]
+    },
+    "darwin-arm64": {
+      "packages": [
+        {
+          "name": "php8.5-bcmath",
+          "version": "8.5.0",
+          "revision": 1,
+          "description": "PHP 8.5 BCMath arbitrary precision",
+          "depends": [
+            "php8.5-common (>= 8.5.0)"
+          ],
+          "provides": [
+            "php-bcmath"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/v4/php8.5-bcmath_8.5.0-1_darwin-arm64.tar.gz",
+          "sha256": "9e6110971a2efeef0379f542c25b63cf9951dc860adab4f0006c9f40f64da87c",
+          "size": 357,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.5-calendar",
+          "version": "8.5.0",
+          "revision": 1,
+          "description": "PHP 8.5 Calendar functions",
+          "depends": [
+            "php8.5-common (>= 8.5.0)"
+          ],
+          "provides": [
+            "php-calendar"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/v4/php8.5-calendar_8.5.0-1_darwin-arm64.tar.gz",
+          "sha256": "fcce4973505cf803406b413dfc05237289d7751de79dfd3ff70f77320142febd",
+          "size": 348,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.5-cgi",
+          "version": "8.5.0",
+          "revision": 1,
+          "description": "PHP 8.5 CGI binary",
+          "depends": [
+            "php8.5-common (>= 8.5.0)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/v4/php8.5-cgi_8.5.0-1_darwin-arm64.tar.gz",
+          "sha256": "5a56362bc25ba72297d419aa49fb308178888b7a6c36d7edb7b2f3c4dc8f4614",
+          "size": 6104946,
+          "installed_size": 25763840
+        },
+        {
+          "name": "php8.5-cli",
+          "version": "8.5.0",
+          "revision": 1,
+          "description": "PHP 8.5 CLI interpreter",
+          "depends": [
+            "php8.5-common (>= 8.5.0)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/v4/php8.5-cli_8.5.0-1_darwin-arm64.tar.gz",
+          "sha256": "8a2eae2e7eb854fc00774acd900cda0378ee81cdc5beb39511e0587ad82eab1b",
+          "size": 6145798,
+          "installed_size": 25849856
+        },
+        {
+          "name": "php8.5-common",
+          "version": "8.5.0",
+          "revision": 1,
+          "description": "PHP 8.5 common files",
+          "depends": [],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/v4/php8.5-common_8.5.0-1_darwin-arm64.tar.gz",
+          "sha256": "9073d96dc77d826967b8bd8d72b3356a91014df73c52213a5bc9e2a56ef32e92",
+          "size": 48666,
+          "installed_size": 172032
+        },
+        {
+          "name": "php8.5-curl",
+          "version": "8.5.0",
+          "revision": 1,
+          "description": "PHP 8.5 cURL support",
+          "depends": [
+            "php8.5-common (>= 8.5.0)"
+          ],
+          "provides": [
+            "php-curl"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/v4/php8.5-curl_8.5.0-1_darwin-arm64.tar.gz",
+          "sha256": "3a06e2ac1350c52f305b65df3b5932c89a352b8a55dc66f12caba160721f6a44",
+          "size": 347,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.5-dev",
+          "version": "8.5.0",
+          "revision": 1,
+          "description": "PHP 8.5 development files",
+          "depends": [
+            "php8.5-common (>= 8.5.0)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/v4/php8.5-dev_8.5.0-1_darwin-arm64.tar.gz",
+          "sha256": "5adf46c383f716a6d31642fcf9c5f2509d38f15af4bb1e86ef4e5c39a1d75f3c",
+          "size": 1379966,
+          "installed_size": 9605120
+        },
+        {
+          "name": "php8.5-exif",
+          "version": "8.5.0",
+          "revision": 1,
+          "description": "PHP 8.5 EXIF metadata",
+          "depends": [
+            "php8.5-common (>= 8.5.0)"
+          ],
+          "provides": [
+            "php-exif"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/v4/php8.5-exif_8.5.0-1_darwin-arm64.tar.gz",
+          "sha256": "714f1ef7f94763ef26bb0a1050b50fe457ad2c699b1a961e5bec416c645dd716",
+          "size": 348,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.5-fpm",
+          "version": "8.5.0",
+          "revision": 1,
+          "description": "PHP 8.5 FPM (FastCGI Process Manager)",
+          "depends": [
+            "php8.5-common (>= 8.5.0)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/v4/php8.5-fpm_8.5.0-1_darwin-arm64.tar.gz",
+          "sha256": "0b8ce3637dc8e3ff609cab0377eae8f02db40b13641a51038414af13cb7d194f",
+          "size": 6157408,
+          "installed_size": 25899008
+        },
+        {
+          "name": "php8.5-ftp",
+          "version": "8.5.0",
+          "revision": 1,
+          "description": "PHP 8.5 FTP support",
+          "depends": [
+            "php8.5-common (>= 8.5.0)"
+          ],
+          "provides": [
+            "php-ftp"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/v4/php8.5-ftp_8.5.0-1_darwin-arm64.tar.gz",
+          "sha256": "7019632b65d8f8494f7149122dd83fad11996d5a6a0422a853247060cd426fa2",
+          "size": 344,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.5-gd",
+          "version": "8.5.0",
+          "revision": 1,
+          "description": "PHP 8.5 GD graphics library",
+          "depends": [
+            "php8.5-common (>= 8.5.0)"
+          ],
+          "provides": [
+            "php-gd"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/v4/php8.5-gd_8.5.0-1_darwin-arm64.tar.gz",
+          "sha256": "25884a0c74d81e9ca8f3bd95ececa5fadabbf9ae5e55b778fec30c4b0ddce42a",
+          "size": 354,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.5-intl",
+          "version": "8.5.0",
+          "revision": 1,
+          "description": "PHP 8.5 Internationalization support",
+          "depends": [
+            "php8.5-common (>= 8.5.0)"
+          ],
+          "provides": [
+            "php-intl"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/v4/php8.5-intl_8.5.0-1_darwin-arm64.tar.gz",
+          "sha256": "a2bd14c59d6bdda8d9b069ecec7982020d5caec54cfe80e994b4d73d9894ff02",
+          "size": 352,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.5-mbstring",
+          "version": "8.5.0",
+          "revision": 1,
+          "description": "PHP 8.5 Multibyte string support",
+          "depends": [
+            "php8.5-common (>= 8.5.0)"
+          ],
+          "provides": [
+            "php-mbstring"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/v4/php8.5-mbstring_8.5.0-1_darwin-arm64.tar.gz",
+          "sha256": "be2dba85b14c13980eab527ea4d24598f9a8b400fadef314073eb5ccc13b66c1",
+          "size": 354,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.5-mysql",
+          "version": "8.5.0",
+          "revision": 1,
+          "description": "PHP 8.5 MySQL support (mysqli, pdo_mysql)",
+          "depends": [
+            "php8.5-common (>= 8.5.0)"
+          ],
+          "provides": [
+            "php-mysql"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/v4/php8.5-mysql_8.5.0-1_darwin-arm64.tar.gz",
+          "sha256": "21c5fdd5f9444503c97d961bfbf2a9b41b20fe30e8400b1a1305986ea1919c01",
+          "size": 360,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.5-opcache",
+          "version": "8.5.0",
+          "revision": 1,
+          "description": "PHP 8.5 OPcache configuration (built into PHP 8.5+)",
+          "depends": [
+            "php8.5-common (>= 8.5.0)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/v4/php8.5-opcache_8.5.0-1_darwin-arm64.tar.gz",
+          "sha256": "20c353d23e0d3f198648ec697f77c8b2f2da3f0ad34dc92a66505216b2e20d34",
+          "size": 657,
+          "installed_size": 4096
+        },
+        {
+          "name": "php8.5-pcntl",
+          "version": "8.5.0",
+          "revision": 1,
+          "description": "PHP 8.5 Process control",
+          "depends": [
+            "php8.5-common (>= 8.5.0)"
+          ],
+          "provides": [
+            "php-pcntl"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/v4/php8.5-pcntl_8.5.0-1_darwin-arm64.tar.gz",
+          "sha256": "0b075bee7c29c91b59267b60f8e733468a6ba31b1855b571a08884edb2e25713",
+          "size": 347,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.5-pear",
+          "version": "8.5.0",
+          "revision": 1,
+          "description": "PHP 8.5 PEAR/PECL package manager",
+          "depends": [
+            "php8.5-cli (>= 8.5.0)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/v4/php8.5-pear_8.5.0-1_darwin-arm64.tar.gz",
+          "sha256": "3fc1d08a8ce13aee4f6f2bba38dc6ce9ef4e402ea182fcf9ced8449415fd1b87",
+          "size": 344753,
+          "installed_size": 2244608
+        },
+        {
+          "name": "php8.5-pgsql",
+          "version": "8.5.0",
+          "revision": 1,
+          "description": "PHP 8.5 PostgreSQL support",
+          "depends": [
+            "php8.5-common (>= 8.5.0)"
+          ],
+          "provides": [
+            "php-pgsql"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/v4/php8.5-pgsql_8.5.0-1_darwin-arm64.tar.gz",
+          "sha256": "02d5ce6089a9e499a8375d74b0410f05689db70c40557bab5d404e7a7c8f2405",
+          "size": 352,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.5-readline",
+          "version": "8.5.0",
+          "revision": 1,
+          "description": "PHP 8.5 Readline support",
+          "depends": [
+            "php8.5-common (>= 8.5.0)"
+          ],
+          "provides": [
+            "php-readline"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/v4/php8.5-readline_8.5.0-1_darwin-arm64.tar.gz",
+          "sha256": "2dc72e65e51e7425c3079b8e1d3582dc6172152e847fe24e3f4158c2bbe6c234",
+          "size": 347,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.5-soap",
+          "version": "8.5.0",
+          "revision": 1,
+          "description": "PHP 8.5 SOAP support",
+          "depends": [
+            "php8.5-common (>= 8.5.0)"
+          ],
+          "provides": [
+            "php-soap"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/v4/php8.5-soap_8.5.0-1_darwin-arm64.tar.gz",
+          "sha256": "37199d26ec1040cf14c3c517ab1f27c4316d0908147d735cf8c5b97818cb5bcb",
+          "size": 346,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.5-sockets",
+          "version": "8.5.0",
+          "revision": 1,
+          "description": "PHP 8.5 Socket support",
+          "depends": [
+            "php8.5-common (>= 8.5.0)"
+          ],
+          "provides": [
+            "php-sockets"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/v4/php8.5-sockets_8.5.0-1_darwin-arm64.tar.gz",
+          "sha256": "615a1dd89702be3dbfbb843ca05ebbc38833a48b83606a1e9caeaa377fa6d37e",
+          "size": 347,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.5-sqlite3",
+          "version": "8.5.0",
+          "revision": 1,
+          "description": "PHP 8.5 SQLite3 support",
+          "depends": [
+            "php8.5-common (>= 8.5.0)"
+          ],
+          "provides": [
+            "php-sqlite3"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/v4/php8.5-sqlite3_8.5.0-1_darwin-arm64.tar.gz",
+          "sha256": "68d05760bd908989f91c384319e6839594b17e094b66a0daa351947a95cab104",
+          "size": 349,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.5-xml",
+          "version": "8.5.0",
+          "revision": 1,
+          "description": "PHP 8.5 XML support",
+          "depends": [
+            "php8.5-common (>= 8.5.0)"
+          ],
+          "provides": [
+            "php-xml"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/v4/php8.5-xml_8.5.0-1_darwin-arm64.tar.gz",
+          "sha256": "fd4ee57aa2cdfe6259238385f44321a786a821c265fb37e1220ece6abbe0b13c",
+          "size": 346,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.5-zip",
+          "version": "8.5.0",
+          "revision": 1,
+          "description": "PHP 8.5 ZIP support",
+          "depends": [
+            "php8.5-common (>= 8.5.0)"
+          ],
+          "provides": [
+            "php-zip"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/v4/php8.5-zip_8.5.0-1_darwin-arm64.tar.gz",
+          "sha256": "004d12a5386d5a2003a3f6aa9ad02e32c274a2d9943f3ca973f3e6e6fd658fd7",
+          "size": 344,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.5",
+          "version": "8.5.0",
+          "revision": 1,
+          "description": "PHP 8.5 meta-package (CLI + common)",
+          "depends": [
+            "php8.5-cli (>= 8.5.0)",
+            "php8.5-common (>= 8.5.0)"
+          ],
+          "provides": [
+            "php"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/v4/php8.5_8.5.0-1_darwin-arm64.tar.gz",
+          "sha256": "b0b6a56b7a66ba330bc16ad8a9c40217e075d20f25d713daaf80f74237c66731",
+          "size": 357,
+          "installed_size": 0
         }
       ]
     }
