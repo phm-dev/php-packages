@@ -245,34 +245,44 @@ EXT_DIR_NAME="$("${STAGING_DIR}${INSTALL_PREFIX}/bin/php-config" --extension-dir
 FULL_EXT_DIR="${INSTALL_PREFIX}/lib/php/extensions/${EXT_DIR_NAME}"
 STAGING_EXT_DIR="${STAGING_DIR}${FULL_EXT_DIR}"
 
-# Create extension directory and copy opcache.so
+# Create extension directory
 log_info "Setting up extensions directory: ${EXT_DIR_NAME}"
 mkdir -p "$STAGING_EXT_DIR"
 
-# Copy opcache.so - check multiple possible locations
-OPCACHE_FOUND=false
-for opcache_path in \
-    "${PHP_SRC_DIR}/modules/opcache.so" \
-    "$(pwd)/modules/opcache.so" \
-    "${STAGING_DIR}${FULL_EXT_DIR}/opcache.so"
-do
-    if [[ -f "$opcache_path" ]]; then
-        cp "$opcache_path" "$STAGING_EXT_DIR/"
-        log_info "Copied opcache.so from ${opcache_path}"
-        OPCACHE_FOUND=true
-        break
-    fi
-done
+# In PHP 8.5+, OPcache is built into PHP core - no separate .so file
+# For older versions, we need to copy opcache.so
+PHP_MAJOR="${PHP_VERSION%%.*}"
+PHP_MINOR="${PHP_VERSION#*.}"
+PHP_MINOR="${PHP_MINOR%%.*}"
 
-if [[ "$OPCACHE_FOUND" == "false" ]]; then
-    log_warn "opcache.so not found - searching entire build directory..."
-    FOUND_OPCACHE=$(find "${BUILD_DIR}" -name "opcache.so" -type f 2>/dev/null | head -1)
-    if [[ -n "$FOUND_OPCACHE" ]]; then
-        cp "$FOUND_OPCACHE" "$STAGING_EXT_DIR/"
-        log_info "Copied opcache.so from ${FOUND_OPCACHE}"
-    else
-        log_error "opcache.so not found anywhere in build directory!"
+if [[ "$PHP_MAJOR" -lt 8 ]] || [[ "$PHP_MAJOR" -eq 8 && "$PHP_MINOR" -lt 5 ]]; then
+    # PHP < 8.5: Copy opcache.so
+    OPCACHE_FOUND=false
+    for opcache_path in \
+        "${PHP_SRC_DIR}/modules/opcache.so" \
+        "$(pwd)/modules/opcache.so" \
+        "${STAGING_DIR}${FULL_EXT_DIR}/opcache.so"
+    do
+        if [[ -f "$opcache_path" ]]; then
+            cp "$opcache_path" "$STAGING_EXT_DIR/"
+            log_info "Copied opcache.so from ${opcache_path}"
+            OPCACHE_FOUND=true
+            break
+        fi
+    done
+
+    if [[ "$OPCACHE_FOUND" == "false" ]]; then
+        log_warn "opcache.so not found - searching entire build directory..."
+        FOUND_OPCACHE=$(find "${BUILD_DIR}" -name "opcache.so" -type f 2>/dev/null | head -1)
+        if [[ -n "$FOUND_OPCACHE" ]]; then
+            cp "$FOUND_OPCACHE" "$STAGING_EXT_DIR/"
+            log_info "Copied opcache.so from ${FOUND_OPCACHE}"
+        else
+            log_error "opcache.so not found anywhere in build directory!"
+        fi
     fi
+else
+    log_info "PHP ${PHP_VERSION}: OPcache is built into PHP core (no separate .so file)"
 fi
 
 # Download peclcmd.php and pearcmd.php from PEAR repository
@@ -346,7 +356,9 @@ echo "scan_dir = ${INSTALL_PREFIX}/etc/fpm/conf.d" >> "${FPM_DIR}/php.ini"
 rm -f "$PHP_INI_TEMPLATE"
 
 # Create opcache.ini in mods-available
-cat > "${MODS_DIR}/opcache.ini" << EOF
+# PHP 8.5+: OPcache is built-in, no need for zend_extension line
+if [[ "$PHP_MAJOR" -lt 8 ]] || [[ "$PHP_MAJOR" -eq 8 && "$PHP_MINOR" -lt 5 ]]; then
+    cat > "${MODS_DIR}/opcache.ini" << EOF
 ; OPcache configuration
 ; Priority: 10
 zend_extension=opcache.so
@@ -358,6 +370,20 @@ opcache.validate_timestamps=1
 opcache.revalidate_freq=2
 opcache.save_comments=1
 EOF
+else
+    cat > "${MODS_DIR}/opcache.ini" << EOF
+; OPcache configuration
+; Priority: 10
+; Note: In PHP 8.5+, OPcache is built into PHP core (no zend_extension needed)
+opcache.enable=1
+opcache.memory_consumption=256
+opcache.interned_strings_buffer=16
+opcache.max_accelerated_files=20000
+opcache.validate_timestamps=1
+opcache.revalidate_freq=2
+opcache.save_comments=1
+EOF
+fi
 
 # Enable opcache for both CLI and FPM by default
 ln -sf "${INSTALL_PREFIX}/etc/mods-available/opcache.ini" "${CLI_DIR}/conf.d/10-opcache.ini"
@@ -509,12 +535,22 @@ create_package "php${PHP_MAJOR_MINOR}-dev" "$PHP_VERSION" "1" "$PLATFORM" \
     --description "PHP ${PHP_MAJOR_MINOR} development files" \
     --depends "php${PHP_MAJOR_MINOR}-common (>= ${PHP_VERSION})"
 
-# Package: php8.5-opcache (already built-in but separate ini)
-create_package "php${PHP_MAJOR_MINOR}-opcache" "$PHP_VERSION" "1" "$PLATFORM" \
-    "${STAGING_DIR}${INSTALL_PREFIX}/lib/php/extensions/${EXT_DIR_NAME}/opcache.so" \
-    "${STAGING_DIR}${INSTALL_PREFIX}/etc/conf.d/10-opcache.ini" \
-    --description "PHP ${PHP_MAJOR_MINOR} OPcache extension" \
-    --depends "php${PHP_MAJOR_MINOR}-common (>= ${PHP_VERSION})"
+# Package: php8.5-opcache
+# PHP 8.5+: OPcache is built-in, package only contains configuration
+# PHP < 8.5: Package contains opcache.so and configuration
+if [[ "$PHP_MAJOR" -lt 8 ]] || [[ "$PHP_MAJOR" -eq 8 && "$PHP_MINOR" -lt 5 ]]; then
+    create_package "php${PHP_MAJOR_MINOR}-opcache" "$PHP_VERSION" "1" "$PLATFORM" \
+        "${STAGING_DIR}${INSTALL_PREFIX}/lib/php/extensions/${EXT_DIR_NAME}/opcache.so" \
+        "${STAGING_DIR}${INSTALL_PREFIX}/etc/mods-available/opcache.ini" \
+        --description "PHP ${PHP_MAJOR_MINOR} OPcache extension" \
+        --depends "php${PHP_MAJOR_MINOR}-common (>= ${PHP_VERSION})"
+else
+    # PHP 8.5+: OPcache is built into PHP, this is a config-only package
+    create_package "php${PHP_MAJOR_MINOR}-opcache" "$PHP_VERSION" "1" "$PLATFORM" \
+        "${STAGING_DIR}${INSTALL_PREFIX}/etc/mods-available/opcache.ini" \
+        --description "PHP ${PHP_MAJOR_MINOR} OPcache configuration (built into PHP ${PHP_MAJOR_MINOR}+)" \
+        --depends "php${PHP_MAJOR_MINOR}-common (>= ${PHP_VERSION})"
+fi
 
 # Package: php8.5-pear (pecl)
 create_package "php${PHP_MAJOR_MINOR}-pear" "$PHP_VERSION" "1" "$PLATFORM" \
