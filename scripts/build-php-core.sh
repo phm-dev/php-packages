@@ -616,3 +616,29 @@ log_info "  Build complete!"
 log_info "  Packages created in: ${DIST_DIR}"
 log_info "=========================================="
 ls -la "${DIST_DIR}/"*.tar.zst 2>/dev/null || true
+
+# =============================================================================
+# Install PHP to /opt/php for extension building
+# =============================================================================
+log_info "Installing PHP to ${INSTALL_PREFIX} for extension building..."
+
+# Extract core packages
+for pkg in "${DIST_DIR}/php${PHP_MAJOR_MINOR}-common"_*.tar.zst \
+           "${DIST_DIR}/php${PHP_MAJOR_MINOR}-cli"_*.tar.zst \
+           "${DIST_DIR}/php${PHP_MAJOR_MINOR}-dev"_*.tar.zst \
+           "${DIST_DIR}/php${PHP_MAJOR_MINOR}-pear"_*.tar.zst; do
+    if [[ -f "$pkg" ]]; then
+        log_info "  Extracting $(basename "$pkg")..."
+        sudo mkdir -p "$INSTALL_PREFIX"
+        zstd -dc "$pkg" | sudo tar -xf - -C / --strip-components=1 files/
+    fi
+done
+
+# Verify installation
+if [[ -x "${INSTALL_PREFIX}/bin/php" ]]; then
+    log_info "PHP installed successfully:"
+    "${INSTALL_PREFIX}/bin/php" -v
+else
+    log_error "PHP installation failed!"
+    exit 1
+fi
