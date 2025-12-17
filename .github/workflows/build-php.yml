@@ -91,11 +91,6 @@ jobs:
         platform:
           - { os: macos-14, name: darwin-arm64 }
           - { os: macos-13, name: darwin-amd64 }
-        exclude:
-          - platform: { os: macos-13, name: darwin-amd64 }
-            php_version: ${{ github.event.inputs.platforms == 'darwin-arm64' && matrix.php_version || '' }}
-          - platform: { os: macos-14, name: darwin-arm64 }
-            php_version: ${{ github.event.inputs.platforms == 'darwin-amd64' && matrix.php_version || '' }}
     runs-on: ${{ matrix.platform.os }}
     outputs:
       artifact_name: php-core-${{ matrix.php_version }}-${{ matrix.platform.name }}
