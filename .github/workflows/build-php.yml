@@ -1,0 +1,305 @@
+name: Build PHP Packages
+
+on:
+  workflow_dispatch:
+    inputs:
+      php_version:
+        description: 'PHP version to build (e.g., 8.5.0)'
+        required: true
+        type: string
+      platforms:
+        description: 'Platforms to build for'
+        required: false
+        type: choice
+        options:
+          - 'all'
+          - 'darwin-arm64'
+          - 'darwin-amd64'
+        default: 'all'
+      extensions:
+        description: 'Extensions to build (comma-separated, or "all")'
+        required: false
+        type: string
+        default: 'redis,igbinary,mongodb,amqp,xdebug,swoole'
+
+  # Nightly builds - check for new PHP versions
+  schedule:
+    - cron: '0 4 * * *'
+
+env:
+  HOMEBREW_NO_AUTO_UPDATE: 1
+  HOMEBREW_NO_INSTALL_CLEANUP: 1
+
+jobs:
+  check-versions:
+    name: Check for new PHP versions
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.versions.outputs.matrix }}
+      has_updates: ${{ steps.versions.outputs.has_updates }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check latest PHP versions
+        id: versions
+        run: |
+          # For manual runs, use input
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "matrix=[\"${{ inputs.php_version }}\"]" >> $GITHUB_OUTPUT
+            echo "has_updates=true" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          # For scheduled runs, check for new versions
+          VERSIONS=()
+
+          # Check PHP 8.5.x
+          LATEST_85=$(curl -s https://www.php.net/releases/index.php?json&version=8.5 | jq -r '.version // empty')
+          if [[ -n "$LATEST_85" ]]; then
+            VERSIONS+=("$LATEST_85")
+          fi
+
+          # Check PHP 8.4.x
+          LATEST_84=$(curl -s https://www.php.net/releases/index.php?json&version=8.4 | jq -r '.version // empty')
+          if [[ -n "$LATEST_84" ]]; then
+            VERSIONS+=("$LATEST_84")
+          fi
+
+          # Check PHP 8.3.x
+          LATEST_83=$(curl -s https://www.php.net/releases/index.php?json&version=8.3 | jq -r '.version // empty')
+          if [[ -n "$LATEST_83" ]]; then
+            VERSIONS+=("$LATEST_83")
+          fi
+
+          if [[ ${#VERSIONS[@]} -gt 0 ]]; then
+            MATRIX=$(printf '%s\n' "${VERSIONS[@]}" | jq -R . | jq -s .)
+            echo "matrix=${MATRIX}" >> $GITHUB_OUTPUT
+            echo "has_updates=true" >> $GITHUB_OUTPUT
+          else
+            echo "matrix=[]" >> $GITHUB_OUTPUT
+            echo "has_updates=false" >> $GITHUB_OUTPUT
+          fi
+
+  build-core:
+    name: Build PHP ${{ matrix.php_version }} (${{ matrix.platform.name }})
+    needs: check-versions
+    if: needs.check-versions.outputs.has_updates == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        php_version: ${{ fromJson(needs.check-versions.outputs.matrix) }}
+        platform:
+          - { os: macos-14, name: darwin-arm64 }
+          - { os: macos-13, name: darwin-amd64 }
+        exclude:
+          - platform: { os: macos-13, name: darwin-amd64 }
+            php_version: ${{ github.event.inputs.platforms == 'darwin-arm64' && matrix.php_version || '' }}
+          - platform: { os: macos-14, name: darwin-arm64 }
+            php_version: ${{ github.event.inputs.platforms == 'darwin-amd64' && matrix.php_version || '' }}
+    runs-on: ${{ matrix.platform.os }}
+    outputs:
+      artifact_name: php-core-${{ matrix.php_version }}-${{ matrix.platform.name }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        run: |
+          brew install autoconf automake bison re2c pkg-config \
+            openssl@3 libzip icu4c readline libxml2 libxslt \
+            sqlite lz4 zstd oniguruma jpeg-turbo libpng freetype webp \
+            libpq bzip2 curl
+
+      - name: Make scripts executable
+        run: chmod +x scripts/*.sh
+
+      - name: Build PHP core packages
+        run: ./scripts/build-php-core.sh ${{ matrix.php_version }}
+        env:
+          CC: clang
+          CXX: clang++
+
+      - name: Upload core packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: php-core-${{ matrix.php_version }}-${{ matrix.platform.name }}
+          path: dist/*.tar.gz
+          retention-days: 7
+
+  build-extensions:
+    name: Build ${{ matrix.extension }} for PHP ${{ matrix.php_version }} (${{ matrix.platform.name }})
+    needs: [check-versions, build-core]
+    if: needs.check-versions.outputs.has_updates == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        php_version: ${{ fromJson(needs.check-versions.outputs.matrix) }}
+        platform:
+          - { os: macos-14, name: darwin-arm64 }
+          - { os: macos-13, name: darwin-amd64 }
+        extension:
+          - redis
+          - igbinary
+          - mongodb
+          - amqp
+          - xdebug
+          - swoole
+          - ssh2
+          - uuid
+          - mcrypt
+          - pcov
+          - apcu
+    runs-on: ${{ matrix.platform.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download PHP core
+        uses: actions/download-artifact@v4
+        with:
+          name: php-core-${{ matrix.php_version }}-${{ matrix.platform.name }}
+          path: dist/
+
+      - name: Install PHP from packages
+        run: |
+          PHP_MAJOR_MINOR="${{ matrix.php_version }}"
+          PHP_MAJOR_MINOR="${PHP_MAJOR_MINOR%.*}"
+
+          sudo mkdir -p /opt/php/${PHP_MAJOR_MINOR}
+
+          # Extract common package
+          COMMON_PKG=$(ls dist/php${PHP_MAJOR_MINOR}-common_*.tar.gz | head -1)
+          if [[ -f "$COMMON_PKG" ]]; then
+            sudo tar -xzf "$COMMON_PKG" -C / --strip-components=1 files/
+          fi
+
+          # Extract CLI package
+          CLI_PKG=$(ls dist/php${PHP_MAJOR_MINOR}-cli_*.tar.gz | head -1)
+          if [[ -f "$CLI_PKG" ]]; then
+            sudo tar -xzf "$CLI_PKG" -C / --strip-components=1 files/
+          fi
+
+          # Extract dev package (needed for phpize)
+          DEV_PKG=$(ls dist/php${PHP_MAJOR_MINOR}-dev_*.tar.gz | head -1)
+          if [[ -f "$DEV_PKG" ]]; then
+            sudo tar -xzf "$DEV_PKG" -C / --strip-components=1 files/
+          fi
+
+          # Extract pear package (needed for pecl)
+          PEAR_PKG=$(ls dist/php${PHP_MAJOR_MINOR}-pear_*.tar.gz | head -1)
+          if [[ -f "$PEAR_PKG" ]]; then
+            sudo tar -xzf "$PEAR_PKG" -C / --strip-components=1 files/
+          fi
+
+          # Verify PHP is working
+          /opt/php/${PHP_MAJOR_MINOR}/bin/php -v
+
+      - name: Install extension build dependencies
+        run: |
+          brew install autoconf automake pkg-config
+
+          # Extension-specific dependencies
+          case "${{ matrix.extension }}" in
+            amqp)
+              brew install rabbitmq-c
+              ;;
+            ssh2)
+              brew install libssh2
+              ;;
+            mcrypt)
+              brew install libmcrypt || true
+              ;;
+            imagick)
+              brew install imagemagick
+              ;;
+            memcached)
+              brew install libmemcached
+              ;;
+          esac
+
+      - name: Make scripts executable
+        run: chmod +x scripts/*.sh
+
+      - name: Build extension
+        run: ./scripts/build-extension.sh ${{ matrix.extension }} ${{ matrix.php_version }}
+        env:
+          CC: clang
+          CXX: clang++
+
+      - name: Upload extension package
+        uses: actions/upload-artifact@v4
+        with:
+          name: php-ext-${{ matrix.extension }}-${{ matrix.php_version }}-${{ matrix.platform.name }}
+          path: dist/php*-${{ matrix.extension }}_*.tar.gz
+          retention-days: 7
+
+  publish:
+    name: Publish packages
+    needs: [check-versions, build-core, build-extensions]
+    if: always() && needs.check-versions.outputs.has_updates == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts/
+
+      - name: Collect packages
+        run: |
+          mkdir -p dist
+          find artifacts/ -name '*.tar.gz' -exec cp {} dist/ \;
+          ls -la dist/
+
+      - name: Make scripts executable
+        run: chmod +x scripts/*.sh
+
+      - name: Generate index.json
+        run: |
+          ./scripts/generate-index.sh \
+            --base-url "https://github.com/${{ github.repository }}/releases/download" \
+            --release-tag "v${{ github.run_number }}"
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ github.run_number }}
+          name: PHP Packages Build ${{ github.run_number }}
+          body: |
+            ## PHP Packages
+
+            **Built versions:**
+            ${{ needs.check-versions.outputs.matrix }}
+
+            **Platforms:**
+            - darwin-arm64 (Apple Silicon)
+            - darwin-amd64 (Intel Mac)
+
+            ### Installation
+
+            ```bash
+            # Install phm first
+            curl -fsSL https://github.com/${{ github.repository }}/raw/main/install-phm.sh | bash
+
+            # Then install PHP
+            phm update
+            phm install php8.5-cli php8.5-fpm php8.5-redis
+            ```
+          files: |
+            dist/*.tar.gz
+            dist/index.json
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update latest index
+        run: |
+          # Copy index.json to repository for easy access
+          cp dist/index.json .
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add index.json
+          git commit -m "Update index.json" || true
+          git push || true
