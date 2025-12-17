@@ -32,6 +32,7 @@ jobs:
     needs: prepare
     strategy:
       fail-fast: false
+      max-parallel: 4
       matrix:
         php_version: ${{ fromJson(needs.prepare.outputs.matrix) }}
         platform:
@@ -127,36 +128,43 @@ jobs:
             --release-tag "v${{ github.run_number }}"
 
       - name: Create release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: v${{ github.run_number }}
-          name: PHP Packages Build ${{ github.run_number }}
-          body: |
-            ## PHP Packages
-
-            **Built versions:** ${{ needs.prepare.outputs.matrix }}
-
-            **Platforms:**
-            - darwin-arm64 (Apple Silicon)
-            - darwin-amd64 (Intel Mac)
-
-            ### Installation
-
-            ```bash
-            # Install phm first
-            curl -fsSL https://raw.githubusercontent.com/phm-dev/phm/main/scripts/install-phm.sh | bash
-
-            # Then install PHP
-            phm update
-            phm install php8.5-cli php8.5-fpm php8.5-redis
-            ```
-          files: |
-            dist/*.tar.zst
-            dist/index.json
-          draft: false
-          prerelease: false
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="v${{ github.run_number }}"
+
+          # Create release notes
+          cat > release_notes.md << 'EOF'
+          ## PHP Packages
+
+          **Built versions:** ${{ needs.prepare.outputs.matrix }}
+
+          **Platforms:**
+          - darwin-arm64 (Apple Silicon)
+          - darwin-amd64 (Intel Mac)
+
+          ### Installation
+
+          ```bash
+          # Install phm first
+          curl -fsSL https://raw.githubusercontent.com/phm-dev/phm/main/scripts/install-phm.sh | bash
+
+          # Then install PHP
+          phm update
+          phm install php8.5-cli php8.5-fpm php8.5-redis
+          ```
+          EOF
+
+          # Create release with retry
+          for i in 1 2 3; do
+            gh release create "$TAG" \
+              --title "PHP Packages Build ${{ github.run_number }}" \
+              --notes-file release_notes.md \
+              dist/*.tar.zst dist/index.json \
+              && break
+            echo "Attempt $i failed, waiting 30s..."
+            sleep 30
+          done
 
       - name: Update latest index
         run: |
