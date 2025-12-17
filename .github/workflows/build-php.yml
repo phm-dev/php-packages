@@ -99,6 +99,26 @@ jobs:
           CC: clang
           CXX: clang++
 
+      - name: Install PHP for extension building
+        run: |
+          PHP_VERSION="${{ matrix.php_version }}"
+          PHP_MAJOR_MINOR="${PHP_VERSION%.*}"
+
+          echo "Installing PHP ${PHP_MAJOR_MINOR} to /opt/php/${PHP_MAJOR_MINOR}..."
+          sudo mkdir -p /opt/php/${PHP_MAJOR_MINOR}
+
+          # Extract core packages to /opt/php
+          for pkg in dist/php${PHP_MAJOR_MINOR}-{common,cli,dev,pear}_*.tar.zst; do
+            if [[ -f "$pkg" ]]; then
+              echo "Extracting $pkg..."
+              zstd -dc "$pkg" | sudo tar -xf - -C / --strip-components=1 files/
+            fi
+          done
+
+          # Verify installation
+          /opt/php/${PHP_MAJOR_MINOR}/bin/php -v
+          /opt/php/${PHP_MAJOR_MINOR}/bin/php-config --version
+
       - name: Build extensions
         run: |
           PHP_VERSION="${{ matrix.php_version }}"
