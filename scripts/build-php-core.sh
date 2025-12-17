@@ -177,7 +177,6 @@ CONFIGURE_OPTS=(
     # Core features
     --enable-mbstring
     --enable-intl
-    --enable-opcache
     --enable-pcntl
     --enable-sockets
     --enable-bcmath
