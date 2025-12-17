@@ -1,0 +1,124 @@
+{
+  "extensions": {
+    "redis": {
+      "packagist": "phpredis/phpredis",
+      "pie_options": [],
+      "brew_deps": ["lz4", "zstd"],
+      "description": "Redis extension for PHP"
+    },
+    "igbinary": {
+      "packagist": "igbinary/igbinary",
+      "pie_options": [],
+      "brew_deps": [],
+      "description": "Binary serialization for PHP"
+    },
+    "mongodb": {
+      "packagist": "mongodb/mongodb-extension",
+      "pie_options": [],
+      "brew_deps": ["openssl@3"],
+      "description": "MongoDB driver for PHP"
+    },
+    "amqp": {
+      "packagist": "pdezwart/php-amqp",
+      "pie_options": [],
+      "brew_deps": ["rabbitmq-c"],
+      "description": "AMQP extension for PHP (RabbitMQ)"
+    },
+    "xdebug": {
+      "packagist": "xdebug/xdebug",
+      "pie_options": [],
+      "brew_deps": [],
+      "zend_extension": true,
+      "priority": 15,
+      "description": "Xdebug debugger and profiler"
+    },
+    "swoole": {
+      "packagist": "swoole/swoole",
+      "pie_options": [
+        "--enable-openssl",
+        "--enable-http2",
+        "--enable-swoole-curl",
+        "--enable-swoole-pgsql",
+        "--with-swoole-pgsql-dir=$(brew --prefix libpq)"
+      ],
+      "brew_deps": ["openssl@3", "libpq", "curl", "c-ares", "brotli"],
+      "description": "Coroutine-based concurrency library for PHP"
+    },
+    "pcov": {
+      "packagist": "krakjoe/pcov",
+      "pie_options": [],
+      "brew_deps": [],
+      "description": "Code coverage driver"
+    },
+    "apcu": {
+      "packagist": "apcu/apcu",
+      "pie_options": [],
+      "brew_deps": [],
+      "description": "APCu - APC User Cache"
+    },
+    "imagick": {
+      "packagist": "imagick/imagick",
+      "pie_options": [],
+      "brew_deps": ["imagemagick"],
+      "description": "ImageMagick binding for PHP"
+    },
+    "ev": {
+      "packagist": "osmanov/pecl-ev",
+      "pie_options": [],
+      "brew_deps": ["libev"],
+      "description": "Ev - high performance event loop"
+    },
+    "opentelemetry": {
+      "packagist": "open-telemetry/ext-opentelemetry",
+      "pie_options": [],
+      "brew_deps": [],
+      "description": "OpenTelemetry instrumentation"
+    },
+    "memcached": {
+      "packagist": "php-memcached/php-memcached",
+      "pie_options": [
+        "--enable-memcached-json",
+        "--with-zlib-dir=$(brew --prefix zlib)"
+      ],
+      "brew_deps": ["libmemcached", "zlib"],
+      "description": "Memcached client library"
+    },
+    "rdkafka": {
+      "packagist": "rdkafka/rdkafka",
+      "pie_options": [],
+      "brew_deps": ["librdkafka"],
+      "description": "Apache Kafka client for PHP"
+    },
+    "ssh2": {
+      "packagist": "ext-ssh2/ext-ssh2",
+      "pie_options": [],
+      "brew_deps": ["libssh2"],
+      "description": "SSH2 bindings for PHP"
+    },
+    "uuid": {
+      "packagist": "pecl/uuid",
+      "pie_options": [],
+      "brew_deps": ["ossp-uuid"],
+      "description": "UUID generation functions"
+    },
+    "relay": {
+      "packagist": "cachewerk/ext-relay",
+      "pie_options": [],
+      "brew_deps": [],
+      "special_build": true,
+      "description": "Relay - next-generation Redis cache"
+    },
+    "opcache": {
+      "packagist": null,
+      "source": "php-src",
+      "php_max_version": "8.4.99",
+      "pie_options": [],
+      "brew_deps": [],
+      "zend_extension": true,
+      "priority": 10,
+      "description": "OPcache - built into PHP 8.5+, separate for older versions"
+    }
+  },
+  "php_versions_api": "https://php.watch/api/v1/versions/secure",
+  "packagist_api": "https://repo.packagist.org/p2"
+}

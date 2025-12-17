@@ -1,0 +1,19 @@
+# Build artifacts
+dist/
+*.tar.gz
+*.tar.zst
+*.sha256
+
+# Temporary files
+tmp/
+*.tmp
+*.log
+
+# macOS
+.DS_Store
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*~
