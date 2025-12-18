@@ -1,9 +1,13 @@
 #!/usr/bin/env bash
 #
-# Generate index.json from package files in dist/
+# Generate index.json from GitHub Releases
 # Usage: ./generate-index.sh [--base-url <url>]
 #
-# Each package URL points to a version-specific release (e.g., php-8.5.0)
+# Parses all releases (PHP and extensions) and generates a unified index.json
+# New naming convention:
+#   - PHP core: php{VERSION}-{type}_{platform}.tar.zst
+#   - Extensions: php{VERSION}-{ext}{extver}_{platform}.tar.zst
+#
 # Compatible with Bash 3.2+ (macOS default)
 #
 
@@ -11,10 +15,9 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
-DIST_DIR="${PROJECT_ROOT}/dist"
 
 # Default base URL for GitHub Releases
-BASE_URL="${BASE_URL:-https://github.com/USER/php-packages/releases/download}"
+BASE_URL="${BASE_URL:-https://github.com/phm-dev/php-packages/releases/download}"
 
 # Parse arguments
 while [[ $# -gt 0 ]]; do
@@ -32,124 +35,187 @@ done
 log_info() { echo "[INFO] $*"; }
 log_error() { echo "[ERROR] $*" >&2; }
 
-if [[ ! -d "$DIST_DIR" ]]; then
-    log_error "Dist directory not found: ${DIST_DIR}"
+# Check for required tools
+if ! command -v gh &> /dev/null; then
+    log_error "GitHub CLI (gh) is required but not installed"
     exit 1
 fi
 
-# Find all package tarballs
-PACKAGES=$(find "$DIST_DIR" -name '*.tar.zst' -type f | sort)
-
-if [[ -z "$PACKAGES" ]]; then
-    log_error "No packages found in ${DIST_DIR}"
+if ! command -v jq &> /dev/null; then
+    log_error "jq is required but not installed"
     exit 1
 fi
 
-PKG_COUNT=$(echo "$PACKAGES" | wc -l | tr -d ' ')
-log_info "Found ${PKG_COUNT} packages"
-
-# Temporary files for collecting platform packages
+# Temporary directory for processing
 TEMP_DIR=$(mktemp -d)
 trap "rm -rf $TEMP_DIR" EXIT
 
-# Process each package (use process substitution to avoid subshell)
-while read -r pkg_path; do
-    if [[ -z "$pkg_path" ]]; then
+# Initialize platform files
+mkdir -p "$TEMP_DIR/platforms"
+
+log_info "Fetching releases from GitHub..."
+
+# Get all releases
+RELEASES=$(gh release list --json tagName,name -L 1000 2>/dev/null || echo "[]")
+RELEASE_COUNT=$(echo "$RELEASES" | jq 'length')
+
+if [[ "$RELEASE_COUNT" -eq 0 ]]; then
+    log_error "No releases found"
+    exit 1
+fi
+
+log_info "Found ${RELEASE_COUNT} releases"
+
+# Process each release
+echo "$RELEASES" | jq -r '.[].tagName' | while read -r TAG; do
+    if [[ -z "$TAG" ]]; then
         continue
     fi
 
-    pkg_file="$(basename "$pkg_path")"
-    log_info "Processing: ${pkg_file}"
+    log_info "Processing release: ${TAG}"
 
-    # Extract pkginfo.json from tarball (zstd compressed)
-    PKGINFO=$(zstd -dc "$pkg_path" 2>/dev/null | tar -xf - -O pkginfo.json 2>/dev/null || echo "{}")
+    # Get release assets
+    ASSETS=$(gh release view "$TAG" --json assets -q '.assets[].name' 2>/dev/null || echo "")
 
-    if [[ "$PKGINFO" == "{}" ]]; then
-        log_error "  Failed to extract pkginfo.json, skipping"
+    if [[ -z "$ASSETS" ]]; then
+        log_info "  No assets found, skipping"
         continue
     fi
 
-    # Parse package info using jq
-    NAME=$(echo "$PKGINFO" | jq -r '.name // empty')
-    VERSION=$(echo "$PKGINFO" | jq -r '.version // empty')
-    REVISION=$(echo "$PKGINFO" | jq -r '.revision // 1')
-    PLATFORM=$(echo "$PKGINFO" | jq -r '.platform // empty')
-    DESCRIPTION=$(echo "$PKGINFO" | jq -r '.description // empty')
-    DEPENDS=$(echo "$PKGINFO" | jq -c '.depends // []')
-    PROVIDES=$(echo "$PKGINFO" | jq -c '.provides // []')
-    INSTALLED_SIZE=$(echo "$PKGINFO" | jq -r '.installed_size // 0')
-
-    if [[ -z "$NAME" ]] || [[ -z "$PLATFORM" ]]; then
-        log_error "  Invalid package metadata, skipping"
-        continue
-    fi
-
-    # Get file size and SHA256
-    if [[ "$OSTYPE" == "darwin"* ]]; then
-        FILE_SIZE=$(stat -f%z "$pkg_path")
+    # Determine release type and version
+    if [[ "$TAG" =~ ^php-([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
+        RELEASE_TYPE="php"
+        PHP_FULL_VERSION="${BASH_REMATCH[1]}"
+        EXT_VERSION=""
+    elif [[ "$TAG" =~ ^([a-z]+)-([0-9]+\.[0-9]+\.?[0-9]*)$ ]]; then
+        RELEASE_TYPE="extension"
+        EXT_NAME="${BASH_REMATCH[1]}"
+        EXT_VERSION="${BASH_REMATCH[2]}"
+        PHP_FULL_VERSION=""
     else
-        FILE_SIZE=$(stat --printf="%s" "$pkg_path")
+        log_info "  Unknown tag format: ${TAG}, skipping"
+        continue
     fi
 
-    if [[ -f "${pkg_path}.sha256" ]]; then
-        SHA256=$(cat "${pkg_path}.sha256")
-    else
-        SHA256=$(shasum -a 256 "$pkg_path" | cut -d' ' -f1)
-    fi
-
-    # Extract PHP version from package name (e.g., php8.5-redis -> 8.5)
-    # For extensions, VERSION is the extension version, not PHP version
-    PHP_MINOR=$(echo "$NAME" | grep -oE '^php([0-9]+\.[0-9]+)' | sed 's/php//')
-
-    # Determine the release tag (PHP full version, not extension version)
-    if [[ -n "$PHP_MINOR" ]]; then
-        # Extract PHP full version from depends (e.g., "php8.5-common (>= 8.5.0)" -> "8.5.0")
-        PHP_FULL_VERSION=$(echo "$DEPENDS" | jq -r '.[] | select(contains("common")) | capture("\\(>= (?<ver>[0-9.]+)\\)") | .ver' 2>/dev/null || echo "")
-
-        if [[ -z "$PHP_FULL_VERSION" ]]; then
-            # Fallback: use package version if it matches PHP minor (core packages)
-            if [[ "$VERSION" == "$PHP_MINOR"* ]]; then
-                PHP_FULL_VERSION="$VERSION"
-            else
-                # Last resort: append .0 to minor version
-                PHP_FULL_VERSION="${PHP_MINOR}.0"
-            fi
+    # Process each asset
+    echo "$ASSETS" | while read -r ASSET; do
+        if [[ ! "$ASSET" =~ \.tar\.zst$ ]]; then
+            continue
         fi
-        RELEASE_TAG="php-${PHP_FULL_VERSION}"
-    else
-        # Non-PHP package (shouldn't happen, but fallback)
-        RELEASE_TAG="php-${VERSION}"
+
+        # Parse asset filename
+        # PHP core: php8.5.0-cli_darwin-arm64.tar.zst
+        # Extension: php8.5.0-redis6.3.0_darwin-arm64.tar.zst
+
+        if [[ "$ASSET" =~ ^php([0-9]+\.[0-9]+\.[0-9]+)-([a-z]+)_([a-z]+-[a-z0-9]+)\.tar\.zst$ ]]; then
+            # PHP core package
+            PKG_PHP_VERSION="${BASH_REMATCH[1]}"
+            PKG_TYPE="${BASH_REMATCH[2]}"
+            PLATFORM="${BASH_REMATCH[3]}"
+
+            PHP_MINOR="${PKG_PHP_VERSION%.*}"
+            PKG_NAME="php${PHP_MINOR}-${PKG_TYPE}"
+            PKG_VERSION="$PKG_PHP_VERSION"
+
+            case "$PKG_TYPE" in
+                common)
+                    DESCRIPTION="PHP ${PHP_MINOR} common files"
+                    DEPENDS="[]"
+                    ;;
+                cli)
+                    DESCRIPTION="PHP ${PHP_MINOR} CLI interpreter"
+                    DEPENDS="[\"php${PHP_MINOR}-common (>= ${PKG_PHP_VERSION})\"]"
+                    ;;
+                fpm)
+                    DESCRIPTION="PHP ${PHP_MINOR} FastCGI Process Manager"
+                    DEPENDS="[\"php${PHP_MINOR}-common (>= ${PKG_PHP_VERSION})\"]"
+                    ;;
+                cgi)
+                    DESCRIPTION="PHP ${PHP_MINOR} CGI binary"
+                    DEPENDS="[\"php${PHP_MINOR}-common (>= ${PKG_PHP_VERSION})\"]"
+                    ;;
+                dev)
+                    DESCRIPTION="PHP ${PHP_MINOR} development files"
+                    DEPENDS="[\"php${PHP_MINOR}-common (>= ${PKG_PHP_VERSION})\"]"
+                    ;;
+                pear)
+                    DESCRIPTION="PHP ${PHP_MINOR} PEAR/PECL tools"
+                    DEPENDS="[\"php${PHP_MINOR}-cli (>= ${PKG_PHP_VERSION})\"]"
+                    ;;
+                *)
+                    DESCRIPTION="PHP ${PHP_MINOR} ${PKG_TYPE}"
+                    DEPENDS="[\"php${PHP_MINOR}-common (>= ${PKG_PHP_VERSION})\"]"
+                    ;;
+            esac
+
+        elif [[ "$ASSET" =~ ^php([0-9]+\.[0-9]+\.[0-9]+)-([a-z]+)([0-9]+\.[0-9]+\.?[0-9]*)_([a-z]+-[a-z0-9]+)\.tar\.zst$ ]]; then
+            # Extension package
+            PKG_PHP_VERSION="${BASH_REMATCH[1]}"
+            PKG_EXT_NAME="${BASH_REMATCH[2]}"
+            PKG_EXT_VERSION="${BASH_REMATCH[3]}"
+            PLATFORM="${BASH_REMATCH[4]}"
+
+            PHP_MINOR="${PKG_PHP_VERSION%.*}"
+            PKG_NAME="php${PHP_MINOR}-${PKG_EXT_NAME}"
+            PKG_VERSION="$PKG_EXT_VERSION"
+            DESCRIPTION="${PKG_EXT_NAME} extension for PHP ${PHP_MINOR}"
+            DEPENDS="[\"php${PHP_MINOR}-common (>= ${PKG_PHP_VERSION})\"]"
+
+        else
+            log_info "    Unknown asset format: ${ASSET}, skipping"
+            continue
+        fi
+
+        DOWNLOAD_URL="${BASE_URL}/${TAG}/${ASSET}"
+
+        # Create package entry JSON
+        PACKAGE_ENTRY=$(jq -n \
+            --arg name "$PKG_NAME" \
+            --arg version "$PKG_VERSION" \
+            --arg description "$DESCRIPTION" \
+            --argjson depends "$DEPENDS" \
+            --arg url "$DOWNLOAD_URL" \
+            '{
+                name: $name,
+                version: $version,
+                revision: 1,
+                description: $description,
+                depends: $depends,
+                provides: [],
+                url: $url,
+                sha256: "",
+                size: 0,
+                installed_size: 0
+            }')
+
+        # Append to platform file
+        echo "$PACKAGE_ENTRY" >> "${TEMP_DIR}/platforms/${PLATFORM}.json"
+
+    done
+done
+
+# Deduplicate and keep latest version for each package per platform
+log_info "Deduplicating packages (keeping latest versions)..."
+
+for platform_file in "$TEMP_DIR/platforms"/*.json; do
+    if [[ ! -f "$platform_file" ]]; then
+        continue
     fi
 
-    # Build download URL
-    DOWNLOAD_URL="${BASE_URL}/${RELEASE_TAG}/${pkg_file}"
+    PLATFORM_NAME=$(basename "$platform_file" .json)
 
-    # Create package entry JSON
-    PACKAGE_ENTRY=$(cat << EOFPKG
-{
-  "name": "${NAME}",
-  "version": "${VERSION}",
-  "revision": ${REVISION},
-  "description": "${DESCRIPTION}",
-  "depends": ${DEPENDS},
-  "provides": ${PROVIDES},
-  "url": "${DOWNLOAD_URL}",
-  "sha256": "${SHA256}",
-  "size": ${FILE_SIZE},
-  "installed_size": ${INSTALLED_SIZE}
-}
-EOFPKG
-)
-
-    # Append to platform file (single line JSON for easier parsing)
-    echo "$PACKAGE_ENTRY" | jq -c '.' >> "${TEMP_DIR}/${PLATFORM}.json"
-done <<< "$PACKAGES"
+    # Sort by name then version (descending) and keep first occurrence of each name
+    jq -s 'sort_by(.name, .version) | reverse | unique_by(.name)' "$platform_file" > "${platform_file}.dedup"
+    mv "${platform_file}.dedup" "$platform_file"
+done
 
 # Build final index.json
 GENERATED_AT=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
+log_info "Building index.json..."
+
 # Start JSON
-cat > "${DIST_DIR}/index.json" << EOF
+cat > "${PROJECT_ROOT}/index.json" << EOF
 {
   "version": 1,
   "generated": "${GENERATED_AT}",
@@ -158,7 +224,7 @@ EOF
 
 # Add platforms
 FIRST_PLATFORM=true
-for platform_file in "$TEMP_DIR"/*.json; do
+for platform_file in "$TEMP_DIR/platforms"/*.json; do
     if [[ ! -f "$platform_file" ]]; then
         continue
     fi
@@ -168,49 +234,36 @@ for platform_file in "$TEMP_DIR"/*.json; do
     if [[ "$FIRST_PLATFORM" == "true" ]]; then
         FIRST_PLATFORM=false
     else
-        echo "," >> "${DIST_DIR}/index.json"
+        echo "," >> "${PROJECT_ROOT}/index.json"
     fi
 
     # Count packages for this platform
-    PKG_COUNT=$(wc -l < "$platform_file" | tr -d ' ')
+    PKG_COUNT=$(jq -s 'length' "$platform_file")
 
-    echo -n "    \"${PLATFORM_NAME}\": {\"packages\": [" >> "${DIST_DIR}/index.json"
+    echo -n "    \"${PLATFORM_NAME}\": {\"packages\": " >> "${PROJECT_ROOT}/index.json"
 
-    # Add packages (join with comma)
-    FIRST_PKG=true
-    while IFS= read -r pkg_json; do
-        if [[ -z "$pkg_json" ]]; then
-            continue
-        fi
+    # Add packages array
+    jq -s '.' "$platform_file" >> "${PROJECT_ROOT}/index.json"
 
-        if [[ "$FIRST_PKG" == "true" ]]; then
-            FIRST_PKG=false
-        else
-            echo -n "," >> "${DIST_DIR}/index.json"
-        fi
-
-        # Already compact single-line JSON
-        echo -n "$pkg_json" >> "${DIST_DIR}/index.json"
-    done < "$platform_file"
-
-    echo -n "]}" >> "${DIST_DIR}/index.json"
+    echo -n "}" >> "${PROJECT_ROOT}/index.json"
 
     log_info "  ${PLATFORM_NAME}: ${PKG_COUNT} packages"
 done
 
 # Close JSON
-cat >> "${DIST_DIR}/index.json" << EOF
+cat >> "${PROJECT_ROOT}/index.json" << EOF
 
   }
 }
 EOF
 
 # Pretty print the final JSON
-if command -v jq &> /dev/null; then
-    jq '.' "${DIST_DIR}/index.json" > "${DIST_DIR}/index.json.tmp"
-    mv "${DIST_DIR}/index.json.tmp" "${DIST_DIR}/index.json"
-fi
+jq '.' "${PROJECT_ROOT}/index.json" > "${PROJECT_ROOT}/index.json.tmp"
+mv "${PROJECT_ROOT}/index.json.tmp" "${PROJECT_ROOT}/index.json"
+
+TOTAL_PACKAGES=$(jq '[.platforms[].packages | length] | add // 0' "${PROJECT_ROOT}/index.json")
 
 log_info "=========================================="
-log_info "Generated: ${DIST_DIR}/index.json"
+log_info "Generated: ${PROJECT_ROOT}/index.json"
+log_info "Total packages: ${TOTAL_PACKAGES}"
 log_info "=========================================="

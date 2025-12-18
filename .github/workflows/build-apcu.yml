@@ -1,0 +1,202 @@
+name: Build APCu
+
+on:
+  schedule:
+    - cron: '0 4 * * *'
+  repository_dispatch:
+    types: [php-updated]
+  workflow_dispatch:
+    inputs:
+      php_versions:
+        description: 'PHP versions (comma-separated, empty=all)'
+        type: string
+      force_build:
+        description: 'Force build without version check'
+        type: boolean
+        default: false
+
+env:
+  EXTENSION: apcu
+  PACKAGIST: apcu/apcu
+  HOMEBREW_NO_AUTO_UPDATE: 1
+  HOMEBREW_NO_INSTALL_CLEANUP: 1
+
+jobs:
+  prepare:
+    name: Prepare build matrix
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+      has_builds: ${{ steps.set-matrix.outputs.has_builds }}
+      ext_version: ${{ steps.set-matrix.outputs.ext_version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Get extension version
+        id: ext-version
+        run: |
+          chmod +x scripts/get-extension-version.sh
+          VERSION=$(./scripts/get-extension-version.sh "$PACKAGIST")
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Extension version: $VERSION"
+
+      - name: Get PHP versions
+        id: php-versions
+        run: |
+          chmod +x scripts/get-php-versions.sh
+          VERSIONS=$(./scripts/get-php-versions.sh --json)
+          echo "versions=$VERSIONS" >> $GITHUB_OUTPUT
+
+      - name: Determine what to build
+        id: set-matrix
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          FORCE_BUILD: ${{ inputs.force_build }}
+          INPUT_PHP_VERSIONS: ${{ inputs.php_versions }}
+          DISPATCH_PHP_VERSIONS: ${{ github.event.client_payload.php_versions }}
+        run: |
+          EXT_VERSION="${{ steps.ext-version.outputs.version }}"
+          ALL_PHP_VERSIONS='${{ steps.php-versions.outputs.versions }}'
+
+          echo "ext_version=$EXT_VERSION" >> $GITHUB_OUTPUT
+
+          if [[ -n "$INPUT_PHP_VERSIONS" ]]; then
+            PHP_VERSIONS=$(echo "$INPUT_PHP_VERSIONS" | tr ',' '\n' | jq -R . | jq -sc .)
+          elif [[ -n "$DISPATCH_PHP_VERSIONS" && "$DISPATCH_PHP_VERSIONS" != "null" ]]; then
+            PHP_VERSIONS="$DISPATCH_PHP_VERSIONS"
+          else
+            PHP_VERSIONS="$ALL_PHP_VERSIONS"
+          fi
+
+          TAG="${EXTENSION}-${EXT_VERSION}"
+          EXISTING_ASSETS=""
+          if gh release view "$TAG" &>/dev/null; then
+            EXISTING_ASSETS=$(gh release view "$TAG" --json assets -q '.assets[].name' 2>/dev/null || echo "")
+          fi
+
+          BUILD_VERSIONS="[]"
+          for php_ver in $(echo "$PHP_VERSIONS" | jq -r '.[]'); do
+            for platform in darwin-arm64 darwin-amd64; do
+              PKG_NAME="php${php_ver}-${EXTENSION}${EXT_VERSION}_${platform}.tar.zst"
+              if [[ "$FORCE_BUILD" == "true" ]] || ! echo "$EXISTING_ASSETS" | grep -q "^${PKG_NAME}$"; then
+                BUILD_VERSIONS=$(echo "$BUILD_VERSIONS" | jq -c ". + [\"$php_ver\"]" | jq -c 'unique')
+              fi
+            done
+          done
+
+          echo "matrix={\"php_version\":$BUILD_VERSIONS,\"platform\":[{\"os\":\"macos-15\",\"name\":\"darwin-arm64\"},{\"os\":\"macos-13\",\"name\":\"darwin-amd64\"}]}" >> $GITHUB_OUTPUT
+
+          COUNT=$(echo "$BUILD_VERSIONS" | jq 'length')
+          if [[ "$COUNT" -gt 0 ]]; then
+            echo "has_builds=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_builds=false" >> $GITHUB_OUTPUT
+          fi
+
+  build:
+    name: Build ${{ env.EXTENSION }} for PHP ${{ matrix.php_version }} (${{ matrix.platform.name }})
+    needs: prepare
+    if: needs.prepare.outputs.has_builds == 'true'
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix: ${{ fromJson(needs.prepare.outputs.matrix) }}
+    runs-on: ${{ matrix.platform.os }}
+    env:
+      EXT_VERSION: ${{ needs.prepare.outputs.ext_version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        run: |
+          brew install -q zstd jq
+          echo No additional brew deps
+
+      - name: Download PHP
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PHP_VERSION="${{ matrix.php_version }}"
+          PHP_MINOR="${PHP_VERSION%.*}"
+          TAG="php-${PHP_VERSION}"
+
+          mkdir -p /tmp/php-packages
+          gh release download "$TAG" --pattern "php${PHP_VERSION}-common_${{ matrix.platform.name }}.tar.zst" --dir /tmp/php-packages
+          gh release download "$TAG" --pattern "php${PHP_VERSION}-cli_${{ matrix.platform.name }}.tar.zst" --dir /tmp/php-packages
+          gh release download "$TAG" --pattern "php${PHP_VERSION}-dev_${{ matrix.platform.name }}.tar.zst" --dir /tmp/php-packages || true
+
+          sudo mkdir -p /opt/php/${PHP_MINOR}
+          for pkg in /tmp/php-packages/*.tar.zst; do
+            tar -I zstd -xf "$pkg" -C /tmp
+            sudo cp -R /tmp/files/opt/php/${PHP_MINOR}/* /opt/php/${PHP_MINOR}/ 2>/dev/null || true
+            rm -rf /tmp/files /tmp/pkginfo.json
+          done
+
+          /opt/php/${PHP_MINOR}/bin/php -v
+
+      - name: Make scripts executable
+        run: chmod +x scripts/*.sh
+
+      - name: Build extension
+        run: |
+          ./scripts/build-extension.sh "$EXTENSION" "$EXT_VERSION" "${{ matrix.php_version }}"
+        env:
+          CC: clang
+          CXX: clang++
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.EXTENSION }}-${{ matrix.php_version }}-${{ matrix.platform.name }}
+          path: dist/*.tar.zst
+          retention-days: 7
+
+  publish:
+    name: Publish ${{ env.EXTENSION }}
+    needs: [prepare, build]
+    if: needs.prepare.outputs.has_builds == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      EXT_VERSION: ${{ needs.prepare.outputs.ext_version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: ${{ env.EXTENSION }}-*
+          path: artifacts/
+          merge-multiple: true
+
+      - name: List packages
+        run: ls -la artifacts/
+
+      - name: Create/Update release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${EXTENSION}-${EXT_VERSION}"
+
+          cat > release_notes.md << NOTES
+          ## ${EXTENSION} ${EXT_VERSION}
+
+          Pre-built ${EXTENSION} extension for PHP on macOS.
+
+          **Platforms:**
+          - darwin-arm64 (Apple Silicon)
+          - darwin-amd64 (Intel Mac)
+
+          ### Installation
+
+          \`\`\`bash
+          phm install php8.5-${EXTENSION}
+          \`\`\`
+          NOTES
+
+          if gh release view "$TAG" &>/dev/null; then
+            gh release upload "$TAG" artifacts/*.tar.zst --clobber
+          else
+            gh release create "$TAG"               --title "${EXTENSION} ${EXT_VERSION}"               --notes-file release_notes.md               artifacts/*.tar.zst
+          fi

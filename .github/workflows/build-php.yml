@@ -1,9 +1,14 @@
-name: Build PHP Packages
+name: Build PHP
 
 on:
-  workflow_dispatch:
   schedule:
-    - cron: '0 4 * * *'
+    - cron: '0 2 * * *'  # Daily at 2:00 UTC
+  workflow_dispatch:
+    inputs:
+      force_build:
+        description: 'Force build without version check'
+        type: boolean
+        default: false
 
 env:
   HOMEBREW_NO_AUTO_UPDATE: 1
@@ -12,11 +17,12 @@ env:
 
 jobs:
   prepare:
-    name: Get latest PHP versions
+    name: Prepare build matrix
     runs-on: ubuntu-latest
     outputs:
-      matrix: ${{ steps.filter.outputs.matrix }}
-      has_versions: ${{ steps.filter.outputs.has_versions }}
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+      has_builds: ${{ steps.set-matrix.outputs.has_builds }}
+      new_versions: ${{ steps.set-matrix.outputs.new_versions }}
     steps:
       - uses: actions/checkout@v4
 
@@ -24,71 +30,82 @@ jobs:
         id: versions
         run: |
           chmod +x scripts/get-php-versions.sh
-          MATRIX=$(./scripts/get-php-versions.sh --json)
-          echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
-          echo "All PHP versions: $MATRIX"
+          VERSIONS=$(./scripts/get-php-versions.sh --json)
+          echo "versions=$VERSIONS" >> $GITHUB_OUTPUT
+          echo "All PHP versions: $VERSIONS"
 
-      - name: Filter out existing releases
-        id: filter
+      - name: Determine versions to build
+        id: set-matrix
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          FORCE_BUILD: ${{ inputs.force_build }}
         run: |
-          # Get all versions
-          ALL_VERSIONS='${{ steps.versions.outputs.matrix }}'
+          ALL_VERSIONS='${{ steps.versions.outputs.versions }}'
 
-          # Get existing release tags
-          EXISTING=$(gh release list --json tagName -q '.[].tagName' 2>/dev/null || echo "")
+          if [[ "$FORCE_BUILD" == "true" ]]; then
+            echo "Force build enabled - building all versions"
+            NEW_VERSIONS="$ALL_VERSIONS"
+          else
+            # Get existing release tags
+            EXISTING=$(gh release list --json tagName -q '.[].tagName' 2>/dev/null | grep "^php-" || echo "")
 
-          # Filter out versions that already have releases
-          FILTERED=$(echo "$ALL_VERSIONS" | jq -c '[.[] | select("php-" + . as $tag | env.EXISTING | split("\n") | index($tag) | not)]' --arg EXISTING "$EXISTING" 2>/dev/null || echo "$ALL_VERSIONS")
+            # Filter out versions that already have releases
+            NEW_VERSIONS="[]"
+            for ver in $(echo "$ALL_VERSIONS" | jq -r '.[]'); do
+              TAG="php-${ver}"
+              if echo "$EXISTING" | grep -q "^${TAG}$"; then
+                echo "Skipping $ver - release $TAG already exists"
+              else
+                echo "Will build $ver - no existing release"
+                NEW_VERSIONS=$(echo "$NEW_VERSIONS" | jq -c ". + [\"$ver\"]")
+              fi
+            done
+          fi
 
-          # Handle empty jq arg issue - do it with a loop instead
-          FILTERED="[]"
-          for ver in $(echo "$ALL_VERSIONS" | jq -r '.[]'); do
-            TAG="php-${ver}"
-            if echo "$EXISTING" | grep -q "^${TAG}$"; then
-              echo "Skipping $ver - release $TAG already exists"
-            else
-              echo "Will build $ver - no existing release"
-              FILTERED=$(echo "$FILTERED" | jq -c ". + [\"$ver\"]")
-            fi
-          done
+          echo "new_versions=$NEW_VERSIONS" >> $GITHUB_OUTPUT
+          echo "Versions to build: $NEW_VERSIONS"
 
-          echo "matrix=$FILTERED" >> $GITHUB_OUTPUT
-          echo "Versions to build: $FILTERED"
+          # Create matrix with platforms
+          MATRIX=$(echo "$NEW_VERSIONS" | jq -c '{
+            php_version: .,
+            platform: [
+              { os: "macos-15", name: "darwin-arm64" },
+              { os: "macos-13", name: "darwin-amd64" }
+            ]
+          }')
+          echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
 
           # Check if there are any versions to build
-          COUNT=$(echo "$FILTERED" | jq 'length')
+          COUNT=$(echo "$NEW_VERSIONS" | jq 'length')
           if [[ "$COUNT" -gt 0 ]]; then
-            echo "has_versions=true" >> $GITHUB_OUTPUT
+            echo "has_builds=true" >> $GITHUB_OUTPUT
           else
-            echo "has_versions=false" >> $GITHUB_OUTPUT
+            echo "has_builds=false" >> $GITHUB_OUTPUT
             echo "No new versions to build"
           fi
 
   build:
     name: Build PHP ${{ matrix.php_version }} (${{ matrix.platform.name }})
     needs: prepare
-    if: needs.prepare.outputs.has_versions == 'true'
+    if: needs.prepare.outputs.has_builds == 'true'
     strategy:
       fail-fast: false
       max-parallel: 4
       matrix:
-        php_version: ${{ fromJson(needs.prepare.outputs.matrix) }}
+        php_version: ${{ fromJson(needs.prepare.outputs.new_versions) }}
         platform:
           - { os: macos-15, name: darwin-arm64 }
-          - { os: macos-15-intel, name: darwin-amd64 }
+          - { os: macos-13, name: darwin-amd64 }
     runs-on: ${{ matrix.platform.os }}
     steps:
       - uses: actions/checkout@v4
 
       - name: Install build dependencies
         run: |
-          brew install -q autoconf automake bison re2c pkg-config \
+          brew install -q autoconf automake bison re2c pkg-config libtool cmake \
             openssl@3 libzip icu4c readline libxml2 libxslt \
             sqlite lz4 zstd oniguruma jpeg-turbo libpng freetype webp \
-            libpq bzip2 curl libiconv zstd \
-            rabbitmq-c libssh2 libmemcached
+            libpq bzip2 curl libiconv
 
       - name: Make scripts executable
         run: chmod +x scripts/*.sh
@@ -99,35 +116,10 @@ jobs:
           CC: clang
           CXX: clang++
 
-      - name: Build extensions
-        run: |
-          PHP_VERSION="${{ matrix.php_version }}"
-
-          EXTENSIONS=(
-            redis
-            igbinary
-            mongodb
-            amqp
-            xdebug
-            swoole
-            pcov
-            apcu
-          )
-
-          for ext in "${EXTENSIONS[@]}"; do
-            echo "=========================================="
-            echo "Building extension: $ext"
-            echo "=========================================="
-            ./scripts/build-extension.sh "$ext" "$PHP_VERSION" || {
-              echo "Warning: Failed to build $ext, continuing..."
-            }
-          done
-        env:
-          CC: clang
-          CXX: clang++
-
       - name: List built packages
-        run: ls -la dist/*.tar.zst
+        run: |
+          echo "Built packages:"
+          ls -la dist/*.tar.zst 2>/dev/null || echo "No packages found"
 
       - name: Upload packages
         uses: actions/upload-artifact@v4
@@ -136,43 +128,43 @@ jobs:
           path: dist/*.tar.zst
           retention-days: 7
 
-  # Publish each PHP version as a separate release
-  publish-version:
+  publish:
     name: Publish PHP ${{ matrix.php_version }}
     needs: [prepare, build]
-    if: needs.prepare.outputs.has_versions == 'true'
+    if: needs.prepare.outputs.has_builds == 'true'
     strategy:
       fail-fast: false
       max-parallel: 2
       matrix:
-        php_version: ${{ fromJson(needs.prepare.outputs.matrix) }}
+        php_version: ${{ fromJson(needs.prepare.outputs.new_versions) }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
       - uses: actions/checkout@v4
 
-      - name: Download artifacts for this version
+      - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
           pattern: php-${{ matrix.php_version }}-*
           path: artifacts/
           merge-multiple: true
 
-      - name: List downloaded packages
+      - name: List packages
         run: |
           echo "Packages for PHP ${{ matrix.php_version }}:"
           ls -la artifacts/
 
-      - name: Create version release
+      - name: Create release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           VERSION="${{ matrix.php_version }}"
           TAG="php-${VERSION}"
+          MINOR="${VERSION%.*}"
 
           # Create release notes
-          cat > release_notes.md << EOF
+          cat > release_notes.md << 'EOF'
           ## PHP ${VERSION}
 
           Pre-built PHP ${VERSION} packages for macOS.
@@ -181,96 +173,55 @@ jobs:
           - darwin-arm64 (Apple Silicon)
           - darwin-amd64 (Intel Mac)
 
-          **Packages included:**
-          - php${VERSION%.*}-common (shared libraries)
-          - php${VERSION%.*}-cli (command line)
-          - php${VERSION%.*}-fpm (FastCGI Process Manager)
-          - php${VERSION%.*}-cgi (CGI binary)
-          - php${VERSION%.*}-dev (development headers)
-          - Extensions: redis, igbinary, mongodb, amqp, xdebug, swoole, pcov, apcu
+          **Core packages:**
+          - php${VERSION}-common
+          - php${VERSION}-cli
+          - php${VERSION}-fpm
+          - php${VERSION}-cgi
+          - php${VERSION}-dev
 
           ### Installation
 
-          \`\`\`bash
-          phm install php${VERSION%.*}-cli php${VERSION%.*}-fpm
-          \`\`\`
+          ```bash
+          phm install php${MINOR}-cli php${MINOR}-fpm
+          ```
+
+          ### Package naming
+
+          Packages use the format: `php{VERSION}-{type}_{platform}.tar.zst`
+
+          Example: `php${VERSION}-cli_darwin-arm64.tar.zst`
           EOF
 
-          # Create release with retry
-          for i in 1 2 3; do
-            gh release create "$TAG" \
-              --title "PHP ${VERSION}" \
-              --notes-file release_notes.md \
-              artifacts/*.tar.zst \
-              && break
-            echo "Attempt $i failed, waiting 30s..."
-            sleep 30
-          done
+          # Substitute variables
+          sed -i "s/\${VERSION}/${VERSION}/g" release_notes.md
+          sed -i "s/\${MINOR}/${MINOR}/g" release_notes.md
 
-  # Update central index.json from ALL releases
-  update-index:
-    name: Update package index
-    needs: [prepare, publish-version]
-    if: always() && !cancelled()
+          # Delete existing release if present
+          gh release delete "$TAG" --yes 2>/dev/null || true
+
+          # Create release
+          gh release create "$TAG" \
+            --title "PHP ${VERSION}" \
+            --notes-file release_notes.md \
+            artifacts/*.tar.zst
+
+  trigger-extensions:
+    name: Trigger extension builds
+    needs: [prepare, publish]
+    if: needs.prepare.outputs.has_builds == 'true'
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Install zstd
-        run: sudo apt-get install -y zstd
-
-      - name: Download packages from all releases
+      - name: Trigger extension workflows
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NEW_VERSIONS: ${{ needs.prepare.outputs.new_versions }}
         run: |
-          mkdir -p dist
+          echo "Triggering extension builds for new PHP versions: $NEW_VERSIONS"
 
-          # Get all php-* releases
-          RELEASES=$(gh release list --json tagName -q '.[].tagName | select(startswith("php-"))' 2>/dev/null || echo "")
+          # Send repository_dispatch event to trigger all extension workflows
+          gh api repos/${{ github.repository }}/dispatches \
+            -f event_type="php-updated" \
+            -f "client_payload[php_versions]=$NEW_VERSIONS"
 
-          if [[ -z "$RELEASES" ]]; then
-            echo "No releases found"
-            exit 0
-          fi
-
-          echo "Found releases:"
-          echo "$RELEASES"
-
-          # Download packages from each release
-          for tag in $RELEASES; do
-            echo "Downloading packages from $tag..."
-            gh release download "$tag" --pattern "*.tar.zst" --dir dist/ --skip-existing || true
-          done
-
-          echo "Total packages downloaded:"
-          ls -la dist/
-
-      - name: Make scripts executable
-        run: chmod +x scripts/*.sh
-
-      - name: Generate index.json
-        run: |
-          if [[ ! -d dist ]] || [[ -z "$(ls dist/*.tar.zst 2>/dev/null)" ]]; then
-            echo "No packages found, skipping index generation"
-            exit 0
-          fi
-
-          ./scripts/generate-index.sh \
-            --base-url "https://github.com/${{ github.repository }}/releases/download"
-
-      - name: Commit and push index.json
-        run: |
-          if [[ ! -f dist/index.json ]]; then
-            echo "No index.json generated, skipping"
-            exit 0
-          fi
-
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-
-          cp dist/index.json .
-          git add index.json
-          git diff --staged --quiet || git commit -m "Update index.json"
-          git push
+          echo "Extension builds triggered"

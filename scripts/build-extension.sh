@@ -1,79 +1,71 @@
 #!/usr/bin/env bash
 #
-# Build PECL extension package
-# Usage: ./build-extension.sh <extension> <php-version> [--quiet]
-# Example: ./build-extension.sh redis 8.5.0 --quiet
+# Build PHP extension using PIE (with PECL fallback)
+# Usage: ./build-extension.sh <extension> <ext_version> <php_version> [options...]
+#
+# Examples:
+#   ./build-extension.sh redis 6.3.0 8.5.0
+#   ./build-extension.sh xdebug 3.4.0 8.4.7
+#   ./build-extension.sh redis 6.3.0 8.5.0 --enable-redis-igbinary --enable-redis-zstd
 #
 # Compatible with Bash 3.2+ (macOS default)
 #
 
 set -euo pipefail
 
-# Parse arguments
-EXTENSION=""
-PHP_VERSION=""
-QUIET=false
-
-for arg in "$@"; do
-    case "$arg" in
-        -q|--quiet)
-            QUIET=true
-            ;;
-        *)
-            if [[ -z "$EXTENSION" ]]; then
-                EXTENSION="$arg"
-            elif [[ -z "$PHP_VERSION" ]]; then
-                PHP_VERSION="$arg"
-            fi
-            ;;
-    esac
-done
-
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
-BUILD_DIR="/tmp/ext-build-$$"
-DIST_DIR="${PROJECT_ROOT}/dist"
+CONFIG_FILE="${PROJECT_ROOT}/extensions/config.json"
+DIST_DIR="${DIST_DIR:-${PROJECT_ROOT}/dist}"
+
+# Source package utilities
+source "${SCRIPT_DIR}/package.sh"
 
 # Colors
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
 NC='\033[0m'
 
-log_info() { echo -e "${GREEN}[INFO]${NC} $*"; }
+log_info() { echo -e "${BLUE}[INFO]${NC} $*"; }
+log_success() { echo -e "${GREEN}[SUCCESS]${NC} $*"; }
 log_warn() { echo -e "${YELLOW}[WARN]${NC} $*"; }
-log_error() { echo -e "${RED}[ERROR]${NC} $*"; }
+log_error() { echo -e "${RED}[ERROR]${NC} $*" >&2; }
 
-# Build log file for quiet mode
-BUILD_LOG="/tmp/build-ext-$$.log"
+# Parse arguments
+EXTENSION=""
+EXT_VERSION=""
+PHP_VERSION=""
+QUIET=false
+declare -a PIE_OPTIONS=()
 
-# Run build command (shows output only on error in quiet mode)
-run_build() {
-    if [[ "$QUIET" == "true" ]]; then
-        if ! "$@" >> "$BUILD_LOG" 2>&1; then
-            log_error "Build failed. Last 50 lines of output:"
-            tail -50 "$BUILD_LOG" >&2
-            return 1
-        fi
-    else
-        "$@"
-    fi
-}
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        -q|--quiet)
+            QUIET=true
+            shift
+            ;;
+        --*)
+            PIE_OPTIONS+=("$1")
+            shift
+            ;;
+        *)
+            if [[ -z "$EXTENSION" ]]; then
+                EXTENSION="$1"
+            elif [[ -z "$EXT_VERSION" ]]; then
+                EXT_VERSION="$1"
+            elif [[ -z "$PHP_VERSION" ]]; then
+                PHP_VERSION="$1"
+            fi
+            shift
+            ;;
+    esac
+done
 
-# Validate arguments
-if [[ -z "$EXTENSION" ]] || [[ -z "$PHP_VERSION" ]]; then
-    log_error "Usage: $0 <extension> <php-version>"
-    log_error "Example: $0 redis 8.5.0"
-    exit 1
-fi
-
-PHP_MAJOR_MINOR="${PHP_VERSION%.*}"
-INSTALL_PREFIX="/opt/php/${PHP_MAJOR_MINOR}"
-
-# Check if PHP is installed
-if [[ ! -x "${INSTALL_PREFIX}/bin/php" ]]; then
-    log_error "PHP ${PHP_MAJOR_MINOR} not found at ${INSTALL_PREFIX}"
-    log_error "Please install php${PHP_MAJOR_MINOR}-cli first"
+if [[ -z "$EXTENSION" || -z "$EXT_VERSION" || -z "$PHP_VERSION" ]]; then
+    echo "Usage: $0 <extension> <ext_version> <php_version> [pie_options...]"
+    echo "Example: $0 redis 6.3.0 8.5.0 --enable-redis-igbinary"
     exit 1
 fi
 
@@ -90,432 +82,354 @@ detect_platform() {
 }
 
 PLATFORM="$(detect_platform)"
+PHP_MAJOR_MINOR="${PHP_VERSION%.*}"
+PHP_PATH="/opt/php/${PHP_MAJOR_MINOR}"
+PHP_BIN="${PHP_PATH}/bin/php"
+PHPIZE="${PHP_PATH}/bin/phpize"
+PHP_CONFIG="${PHP_PATH}/bin/php-config"
+PECL_BIN="${PHP_PATH}/bin/pecl"
 
-log_info "=========================================="
-log_info "  Building extension: ${EXTENSION}"
-log_info "  PHP version: ${PHP_VERSION}"
-log_info "  Platform: ${PLATFORM}"
-log_info "=========================================="
+# Build directory
+BUILD_DIR="/tmp/ext-build-${EXTENSION}-$$"
+BUILD_LOG="${BUILD_DIR}/build.log"
 
-# Set up environment
-export PATH="${INSTALL_PREFIX}/bin:$PATH"
-export CC=clang
-export CXX=clang++
-
-if [[ "$OSTYPE" == "darwin"* ]]; then
-    BREW_PREFIX="$(brew --prefix)"
-    export PKG_CONFIG_PATH="${BREW_PREFIX}/lib/pkgconfig:${BREW_PREFIX}/opt/openssl@3/lib/pkgconfig"
-    export LDFLAGS="-L${BREW_PREFIX}/lib"
-    export CPPFLAGS="-I${BREW_PREFIX}/include"
-fi
-
-# Cleanup on exit
 cleanup() {
     if [[ -d "$BUILD_DIR" ]]; then
-        log_info "Cleaning up..."
         rm -rf "$BUILD_DIR"
     fi
-    rm -f "$BUILD_LOG"
 }
 trap cleanup EXIT
 
-mkdir -p "$BUILD_DIR" "$DIST_DIR"
-cd "$BUILD_DIR"
-
-# Initialize build log
-: > "$BUILD_LOG"
-
-# Source package helper
-source "${SCRIPT_DIR}/package.sh"
-
-# Extension configuration function (Bash 3.2 compatible)
-get_ext_config() {
-    local ext="$1"
-    local field="$2"
-
-    case "$ext" in
-        redis)
-            case "$field" in
-                version) echo "6.3.0" ;;
-                pecl_name) echo "redis" ;;
-                description) echo "Redis client extension" ;;
-                depends) echo "" ;;
-                zend) echo "false" ;;
-                priority) echo "20" ;;
-                static_lib) echo "" ;;
-            esac
-            ;;
-        igbinary)
-            case "$field" in
-                version) echo "3.2.16" ;;
-                pecl_name) echo "igbinary" ;;
-                description) echo "Binary serializer" ;;
-                depends) echo "" ;;
-                zend) echo "false" ;;
-                priority) echo "20" ;;
-                static_lib) echo "" ;;
-            esac
-            ;;
-        mongodb)
-            case "$field" in
-                version) echo "2.1.4" ;;
-                pecl_name) echo "mongodb" ;;
-                description) echo "MongoDB driver" ;;
-                depends) echo "" ;;
-                zend) echo "false" ;;
-                priority) echo "20" ;;
-                static_lib) echo "" ;;
-            esac
-            ;;
-        amqp)
-            case "$field" in
-                version) echo "2.1.2" ;;
-                pecl_name) echo "amqp" ;;
-                description) echo "RabbitMQ AMQP client" ;;
-                depends) echo "" ;;
-                zend) echo "false" ;;
-                priority) echo "20" ;;
-                static_lib) echo "rabbitmq-c" ;;
-            esac
-            ;;
-        xdebug)
-            case "$field" in
-                version) echo "3.5.0" ;;
-                pecl_name) echo "xdebug" ;;
-                description) echo "Debugger and profiler" ;;
-                depends) echo "" ;;
-                zend) echo "true" ;;
-                priority) echo "30" ;;
-                static_lib) echo "" ;;
-            esac
-            ;;
-        swoole)
-            case "$field" in
-                version) echo "6.0.0" ;;
-                pecl_name) echo "swoole" ;;
-                description) echo "Async programming framework" ;;
-                depends) echo "php${PHP_MAJOR_MINOR}-sockets" ;;
-                zend) echo "false" ;;
-                priority) echo "20" ;;
-                static_lib) echo "" ;;
-            esac
-            ;;
-        ssh2)
-            case "$field" in
-                version) echo "1.4.1" ;;
-                pecl_name) echo "ssh2" ;;
-                description) echo "SSH2 client" ;;
-                depends) echo "" ;;
-                zend) echo "false" ;;
-                priority) echo "20" ;;
-                static_lib) echo "libssh2" ;;
-            esac
-            ;;
-        uuid)
-            case "$field" in
-                version) echo "1.2.1" ;;
-                pecl_name) echo "uuid" ;;
-                description) echo "UUID generation" ;;
-                depends) echo "" ;;
-                zend) echo "false" ;;
-                priority) echo "20" ;;
-                static_lib) echo "" ;;
-            esac
-            ;;
-        mcrypt)
-            case "$field" in
-                version) echo "1.0.7" ;;
-                pecl_name) echo "mcrypt" ;;
-                description) echo "Encryption functions" ;;
-                depends) echo "" ;;
-                zend) echo "false" ;;
-                priority) echo "20" ;;
-                static_lib) echo "libmcrypt" ;;
-            esac
-            ;;
-        pcov)
-            case "$field" in
-                version) echo "1.0.12" ;;
-                pecl_name) echo "pcov" ;;
-                description) echo "Code coverage driver" ;;
-                depends) echo "" ;;
-                zend) echo "true" ;;
-                priority) echo "30" ;;
-                static_lib) echo "" ;;
-            esac
-            ;;
-        apcu)
-            case "$field" in
-                version) echo "5.1.28" ;;
-                pecl_name) echo "apcu" ;;
-                description) echo "APC User Cache" ;;
-                depends) echo "" ;;
-                zend) echo "false" ;;
-                priority) echo "20" ;;
-                static_lib) echo "" ;;
-            esac
-            ;;
-        memcached)
-            case "$field" in
-                version) echo "3.4.0" ;;
-                pecl_name) echo "memcached" ;;
-                description) echo "Memcached client" ;;
-                depends) echo "php${PHP_MAJOR_MINOR}-igbinary" ;;
-                zend) echo "false" ;;
-                priority) echo "20" ;;
-                static_lib) echo "" ;;
-            esac
-            ;;
-        imagick)
-            case "$field" in
-                version) echo "3.7.0" ;;
-                pecl_name) echo "imagick" ;;
-                description) echo "ImageMagick binding" ;;
-                depends) echo "" ;;
-                zend) echo "false" ;;
-                priority) echo "20" ;;
-                static_lib) echo "imagemagick" ;;
-            esac
-            ;;
-        relay)
-            case "$field" in
-                version) echo "0.8.1" ;;
-                pecl_name) echo "relay" ;;
-                description) echo "High-performance Redis client" ;;
-                depends) echo "" ;;
-                zend) echo "false" ;;
-                priority) echo "20" ;;
-                static_lib) echo "" ;;
-            esac
-            ;;
-        *)
-            echo ""
-            ;;
-    esac
+# Run build command (shows output only on error in quiet mode)
+run_build() {
+    if [[ "$QUIET" == "true" ]]; then
+        if ! "$@" >> "$BUILD_LOG" 2>&1; then
+            log_error "Build failed. Last 50 lines of output:"
+            tail -50 "$BUILD_LOG" >&2
+            return 1
+        fi
+    else
+        "$@"
+    fi
 }
 
-# Get extension configuration
-EXT_VERSION=$(get_ext_config "$EXTENSION" "version")
-if [[ -z "$EXT_VERSION" ]]; then
-    log_error "Unknown extension: ${EXTENSION}"
-    log_error "Available: redis, igbinary, mongodb, amqp, xdebug, swoole, ssh2, uuid, mcrypt, pcov, apcu, memcached, imagick, relay"
-    exit 1
-fi
+# Check PHP installation
+check_php() {
+    if [[ ! -x "$PHP_BIN" ]]; then
+        log_error "PHP ${PHP_VERSION} not found at ${PHP_PATH}"
+        log_info "Please install PHP first or download from releases"
+        exit 1
+    fi
 
-PECL_NAME=$(get_ext_config "$EXTENSION" "pecl_name")
-EXT_DESC=$(get_ext_config "$EXTENSION" "description")
-EXT_DEPS=$(get_ext_config "$EXTENSION" "depends")
-IS_ZEND=$(get_ext_config "$EXTENSION" "zend")
-PRIORITY=$(get_ext_config "$EXTENSION" "priority")
-STATIC_LIB=$(get_ext_config "$EXTENSION" "static_lib")
+    log_info "Using PHP: $($PHP_BIN -v | head -1)"
+}
 
-log_info "Extension version: ${EXT_VERSION}"
-log_info "Description: ${EXT_DESC}"
+# Load extension config from JSON
+load_config() {
+    if [[ ! -f "$CONFIG_FILE" ]]; then
+        log_warn "Config file not found: $CONFIG_FILE"
+        return 1
+    fi
 
-# Build static library if required
-STATIC_LIB_PATH=""
+    if ! command -v jq &>/dev/null; then
+        log_warn "jq not found, cannot parse config"
+        return 1
+    fi
 
-if [[ -n "$STATIC_LIB" ]]; then
-    log_info "Building static ${STATIC_LIB}..."
-    STATIC_LIB_PATH="${BUILD_DIR}/static-libs"
-    mkdir -p "$STATIC_LIB_PATH"
+    local ext_config
+    ext_config=$(jq -r ".extensions.${EXTENSION} // empty" "$CONFIG_FILE" 2>/dev/null)
 
-    case "$STATIC_LIB" in
-        rabbitmq-c)
-            run_build git clone --depth 1 https://github.com/alanxz/rabbitmq-c.git
-            cd rabbitmq-c
-            mkdir build && cd build
-            run_build cmake .. \
-                -DCMAKE_INSTALL_PREFIX="$STATIC_LIB_PATH" \
-                -DBUILD_SHARED_LIBS=OFF \
-                -DBUILD_STATIC_LIBS=ON \
-                -DBUILD_EXAMPLES=OFF \
-                -DBUILD_TESTS=OFF \
-                -DBUILD_TOOLS=OFF
-            run_build make -j"$(sysctl -n hw.ncpu 2>/dev/null || echo 4)"
-            run_build make install
-            cd "$BUILD_DIR"
+    if [[ -z "$ext_config" ]]; then
+        log_warn "Extension ${EXTENSION} not found in config"
+        return 1
+    fi
 
-            export AMQP_CFLAGS="-I${STATIC_LIB_PATH}/include"
-            export AMQP_LIBS="${STATIC_LIB_PATH}/lib/librabbitmq.a"
-            ;;
+    # Load config values
+    PACKAGIST=$(echo "$ext_config" | jq -r '.packagist // empty')
+    IS_ZEND=$(echo "$ext_config" | jq -r '.zend_extension // false')
+    PRIORITY=$(echo "$ext_config" | jq -r '.priority // 20')
+    DESCRIPTION=$(echo "$ext_config" | jq -r '.description // empty')
+    SPECIAL_BUILD=$(echo "$ext_config" | jq -r '.special_build // false')
 
-        libssh2)
-            run_build curl -fSL -o libssh2.tar.gz "https://www.libssh2.org/download/libssh2-1.11.0.tar.gz"
-            tar xf libssh2.tar.gz
-            cd libssh2-*
-            run_build ./configure \
-                --prefix="$STATIC_LIB_PATH" \
-                --disable-shared \
-                --enable-static \
-                --with-openssl="$(brew --prefix openssl@3)"
-            run_build make -j"$(sysctl -n hw.ncpu 2>/dev/null || echo 4)"
-            run_build make install
-            cd "$BUILD_DIR"
+    # Load brew dependencies into array (Bash 3.2 compatible)
+    BREW_DEPS=()
+    while IFS= read -r dep; do
+        [[ -n "$dep" ]] && BREW_DEPS+=("$dep")
+    done < <(echo "$ext_config" | jq -r '.brew_deps[]? // empty' 2>/dev/null)
 
-            export SSH2_CFLAGS="-I${STATIC_LIB_PATH}/include"
-            export SSH2_LIBS="${STATIC_LIB_PATH}/lib/libssh2.a -L$(brew --prefix openssl@3)/lib -lssl -lcrypto"
-            ;;
+    # Load default PIE options from config (if not provided via CLI)
+    if [[ ${#PIE_OPTIONS[@]} -eq 0 ]]; then
+        while IFS= read -r opt; do
+            [[ -n "$opt" ]] && PIE_OPTIONS+=("$opt")
+        done < <(echo "$ext_config" | jq -r '.pie_options[]? // empty' 2>/dev/null)
+    fi
 
-        libmcrypt)
-            curl -fSL -o libmcrypt.tar.gz "https://sourceforge.net/projects/mcrypt/files/Libmcrypt/2.5.8/libmcrypt-2.5.8.tar.gz/download" || true
-            if [[ -f libmcrypt.tar.gz ]]; then
-                tar xf libmcrypt.tar.gz
-                cd libmcrypt-*
-                run_build ./configure \
-                    --prefix="$STATIC_LIB_PATH" \
-                    --disable-shared \
-                    --enable-static
-                run_build make -j"$(sysctl -n hw.ncpu 2>/dev/null || echo 4)"
-                run_build make install
-                cd "$BUILD_DIR"
+    return 0
+}
 
-                export MCRYPT_CFLAGS="-I${STATIC_LIB_PATH}/include"
-                export MCRYPT_LIBS="${STATIC_LIB_PATH}/lib/libmcrypt.a"
-            else
-                log_warn "Could not download libmcrypt, trying system library"
-            fi
-            ;;
+# Install brew dependencies
+install_brew_deps() {
+    if [[ ${#BREW_DEPS[@]} -eq 0 ]]; then
+        return 0
+    fi
 
-        imagemagick)
-            log_warn "ImageMagick static build is complex - using dynamic linking"
-            log_warn "Users will need ImageMagick installed"
-            ;;
-    esac
-fi
+    log_info "Installing brew dependencies: ${BREW_DEPS[*]}"
 
-# Build extension
-log_info "Building ${EXTENSION} extension..."
-cd "$BUILD_DIR"
-
-SO_FILE=""
-
-# Special build procedures for certain extensions
-case "$EXTENSION" in
-    amqp)
-        run_build pecl download "amqp-${EXT_VERSION}"
-        tar xf "amqp-${EXT_VERSION}.tgz"
-        cd "amqp-${EXT_VERSION}"
-
-        run_build phpize
-        run_build ./configure \
-            --with-php-config="${INSTALL_PREFIX}/bin/php-config" \
-            --with-amqp \
-            CFLAGS="${AMQP_CFLAGS:-}" \
-            LDFLAGS="${AMQP_LIBS:-}"
-        run_build make -j"$(sysctl -n hw.ncpu 2>/dev/null || echo 4)"
-
-        SO_FILE="$(pwd)/modules/amqp.so"
-        ;;
-
-    ssh2)
-        run_build pecl download "ssh2-${EXT_VERSION}"
-        tar xf "ssh2-${EXT_VERSION}.tgz"
-        cd "ssh2-${EXT_VERSION}"
-
-        run_build phpize
-        run_build ./configure \
-            --with-php-config="${INSTALL_PREFIX}/bin/php-config" \
-            --with-ssh2="${STATIC_LIB_PATH:-$(brew --prefix libssh2)}"
-        run_build make -j"$(sysctl -n hw.ncpu 2>/dev/null || echo 4)" \
-            LDFLAGS="${SSH2_LIBS:-}"
-
-        SO_FILE="$(pwd)/modules/ssh2.so"
-        ;;
-
-    swoole)
-        run_build pecl download "swoole-${EXT_VERSION}"
-        tar xf "swoole-${EXT_VERSION}.tgz"
-        cd "swoole-${EXT_VERSION}"
-
-        run_build phpize
-        run_build ./configure \
-            --with-php-config="${INSTALL_PREFIX}/bin/php-config" \
-            --enable-swoole \
-            --enable-sockets \
-            --enable-openssl \
-            --enable-http2 \
-            --enable-mysqlnd \
-            --with-openssl-dir="$(brew --prefix openssl@3)"
-        run_build make -j"$(sysctl -n hw.ncpu 2>/dev/null || echo 4)"
-
-        SO_FILE="$(pwd)/modules/swoole.so"
-        ;;
-
-    xdebug)
-        run_build pecl download "xdebug-${EXT_VERSION}"
-        tar xf "xdebug-${EXT_VERSION}.tgz"
-        cd "xdebug-${EXT_VERSION}"
-
-        run_build phpize
-        run_build ./configure \
-            --with-php-config="${INSTALL_PREFIX}/bin/php-config" \
-            --enable-xdebug
-        run_build make -j"$(sysctl -n hw.ncpu 2>/dev/null || echo 4)"
-
-        SO_FILE="$(pwd)/modules/xdebug.so"
-        ;;
-
-    relay)
-        log_info "Downloading pre-built Relay extension..."
-        RELAY_URL="https://builds.r2.relay.so/v${EXT_VERSION}/relay-v${EXT_VERSION}-php${PHP_MAJOR_MINOR}-darwin-${PLATFORM#darwin-}.tar.gz"
-
-        if curl -fSL -o relay.tar.gz "$RELAY_URL" 2>/dev/null; then
-            tar xf relay.tar.gz
-            SO_FILE="$(find . -name 'relay.so' | head -1)"
-        else
-            log_warn "Pre-built Relay not available for this platform"
-            exit 0
+    for dep in "${BREW_DEPS[@]}"; do
+        if [[ -n "$dep" ]]; then
+            brew install "$dep" 2>/dev/null || true
         fi
-        ;;
+    done
+}
 
-    *)
-        # Standard PECL build
-        log_info "Standard PECL build for ${EXTENSION}..."
+# Set up environment
+setup_env() {
+    export PATH="${PHP_PATH}/bin:$PATH"
+    export CC=clang
+    export CXX=clang++
 
-        run_build pecl download "${PECL_NAME}-${EXT_VERSION}"
-        tar xf "${PECL_NAME}-${EXT_VERSION}.tgz"
-        cd "${PECL_NAME}-${EXT_VERSION}"
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        BREW_PREFIX="$(brew --prefix)"
+        export PKG_CONFIG_PATH="${BREW_PREFIX}/lib/pkgconfig:${BREW_PREFIX}/opt/openssl@3/lib/pkgconfig"
+        export LDFLAGS="-L${BREW_PREFIX}/lib"
+        export CPPFLAGS="-I${BREW_PREFIX}/include"
+    fi
+}
 
-        run_build phpize
-        run_build ./configure --with-php-config="${INSTALL_PREFIX}/bin/php-config"
-        run_build make -j"$(sysctl -n hw.ncpu 2>/dev/null || echo 4)"
+# Try to build with PIE
+build_with_pie() {
+    log_info "Attempting build with PIE..."
 
-        SO_FILE="$(pwd)/modules/${EXTENSION}.so"
-        ;;
-esac
+    local pie_phar="${PHP_PATH}/bin/pie.phar"
 
-# Verify .so file exists
-if [[ ! -f "$SO_FILE" ]]; then
-    log_error "Build failed: ${SO_FILE} not found"
-    exit 1
-fi
+    # Install PIE if not present
+    if [[ ! -f "$pie_phar" ]]; then
+        log_info "Downloading PIE..."
+        local pie_url="https://github.com/php/pie/releases/latest/download/pie.phar"
+        if ! curl -fsSL "$pie_url" -o "$pie_phar"; then
+            log_warn "Failed to download PIE"
+            return 1
+        fi
+        chmod +x "$pie_phar"
+    fi
 
-log_info "Extension built: ${SO_FILE}"
+    if [[ -z "$PACKAGIST" || "$PACKAGIST" == "null" ]]; then
+        log_warn "No packagist package defined for ${EXTENSION}"
+        return 1
+    fi
 
-# Create package
-ZEND_FLAG=""
-PRIORITY_FLAG=""
+    # Build PIE command
+    local pie_args=("$pie_phar" "build" "${PACKAGIST}:${EXT_VERSION}")
 
-if [[ "$IS_ZEND" == "true" ]]; then
-    ZEND_FLAG="--zend"
-fi
+    # Add PIE options (configure options)
+    if [[ ${#PIE_OPTIONS[@]} -gt 0 ]]; then
+        pie_args+=("--")
+        for opt in "${PIE_OPTIONS[@]}"; do
+            [[ -n "$opt" ]] && pie_args+=("$opt")
+        done
+    fi
 
-PRIORITY_FLAG="--priority $PRIORITY"
+    log_info "Running: $PHP_BIN ${pie_args[*]}"
 
-create_extension_package \
-    "$EXTENSION" \
-    "$EXT_VERSION" \
-    "$PHP_VERSION" \
-    "1" \
-    "$PLATFORM" \
-    "$SO_FILE" \
-    --description "$EXT_DESC" \
-    --depends "$EXT_DEPS" \
-    $ZEND_FLAG \
-    $PRIORITY_FLAG
+    mkdir -p "$BUILD_DIR"
+    cd "$BUILD_DIR"
+    : > "$BUILD_LOG"
 
-log_info "=========================================="
-log_info "  Extension build complete!"
-log_info "  Package created in: ${DIST_DIR}"
-log_info "=========================================="
+    if run_build "$PHP_BIN" "${pie_args[@]}"; then
+        log_success "PIE build successful"
+        return 0
+    else
+        log_warn "PIE build failed"
+        return 1
+    fi
+}
+
+# Fallback to PECL
+build_with_pecl() {
+    log_info "Falling back to PECL build..."
+
+    if [[ ! -x "$PECL_BIN" ]]; then
+        log_error "PECL not found at ${PECL_BIN}"
+        return 1
+    fi
+
+    mkdir -p "$BUILD_DIR"
+    cd "$BUILD_DIR"
+    : > "$BUILD_LOG"
+
+    # Download and extract
+    log_info "Downloading ${EXTENSION}-${EXT_VERSION}..."
+    if ! run_build "$PECL_BIN" download "${EXTENSION}-${EXT_VERSION}"; then
+        log_error "Failed to download extension"
+        return 1
+    fi
+
+    tar xf "${EXTENSION}-${EXT_VERSION}.tgz" 2>/dev/null || tar xf "${EXTENSION}"-*.tgz 2>/dev/null
+    cd "${EXTENSION}-${EXT_VERSION}" 2>/dev/null || cd "${EXTENSION}"-* 2>/dev/null
+
+    # Build configure options string
+    local configure_opts=("--with-php-config=${PHP_CONFIG}")
+    for opt in "${PIE_OPTIONS[@]}"; do
+        [[ -n "$opt" ]] && configure_opts+=("$opt")
+    done
+
+    log_info "Building with options: ${configure_opts[*]}"
+
+    run_build "$PHPIZE"
+    run_build ./configure "${configure_opts[@]}"
+    run_build make -j"$(sysctl -n hw.ncpu 2>/dev/null || nproc 2>/dev/null || echo 4)"
+
+    log_success "PECL build successful"
+    return 0
+}
+
+# Special build for relay (pre-built binaries)
+build_relay() {
+    log_info "Downloading pre-built Relay extension..."
+
+    local arch="${PLATFORM#darwin-}"
+    local relay_url="https://builds.r2.relay.so/v${EXT_VERSION}/relay-v${EXT_VERSION}-php${PHP_MAJOR_MINOR}-darwin-${arch}.tar.gz"
+
+    mkdir -p "$BUILD_DIR"
+    cd "$BUILD_DIR"
+
+    if ! curl -fsSL -o relay.tar.gz "$relay_url"; then
+        log_warn "Pre-built Relay not available for this platform"
+        return 1
+    fi
+
+    tar xf relay.tar.gz
+    log_success "Downloaded Relay extension"
+    return 0
+}
+
+# Find the built .so file
+find_extension_so() {
+    local ext_dir
+    ext_dir=$("$PHP_CONFIG" --extension-dir 2>/dev/null || echo "")
+
+    # Check in extension directory
+    if [[ -n "$ext_dir" && -f "${ext_dir}/${EXTENSION}.so" ]]; then
+        echo "${ext_dir}/${EXTENSION}.so"
+        return 0
+    fi
+
+    # Check in build directory
+    local found
+    found=$(find "$BUILD_DIR" -name "${EXTENSION}.so" -type f 2>/dev/null | head -1)
+    if [[ -n "$found" ]]; then
+        echo "$found"
+        return 0
+    fi
+
+    # Check in modules subdirectory
+    found=$(find "$BUILD_DIR" -path "*/modules/${EXTENSION}.so" -type f 2>/dev/null | head -1)
+    if [[ -n "$found" ]]; then
+        echo "$found"
+        return 0
+    fi
+
+    return 1
+}
+
+# Create the package
+create_pkg() {
+    local so_file="$1"
+
+    log_info "Creating package..."
+
+    # Get extension directory name
+    local ext_dir_name=""
+    if [[ -d "/opt/php/${PHP_MAJOR_MINOR}/lib/php/extensions" ]]; then
+        ext_dir_name=$(ls "/opt/php/${PHP_MAJOR_MINOR}/lib/php/extensions" 2>/dev/null | head -1)
+    fi
+
+    local pkg_opts=()
+    [[ -n "$DESCRIPTION" ]] && pkg_opts+=("--description" "$DESCRIPTION")
+    [[ -n "$PRIORITY" ]] && pkg_opts+=("--priority" "$PRIORITY")
+    [[ "$IS_ZEND" == "true" ]] && pkg_opts+=("--zend")
+    [[ -n "$ext_dir_name" ]] && pkg_opts+=("--ext-dir" "$ext_dir_name")
+
+    create_extension_package_v2 \
+        "$EXTENSION" \
+        "$EXT_VERSION" \
+        "$PHP_VERSION" \
+        "$PLATFORM" \
+        "$so_file" \
+        "${pkg_opts[@]}"
+}
+
+# Main
+main() {
+    log_info "=========================================="
+    log_info "  Building extension: ${EXTENSION}"
+    log_info "  Extension version: ${EXT_VERSION}"
+    log_info "  PHP version: ${PHP_VERSION}"
+    log_info "  Platform: ${PLATFORM}"
+    log_info "=========================================="
+
+    # Initialize defaults
+    PACKAGIST=""
+    IS_ZEND="false"
+    PRIORITY="20"
+    DESCRIPTION="${EXTENSION} extension for PHP"
+    SPECIAL_BUILD="false"
+    BREW_DEPS=()
+
+    # Check PHP
+    check_php
+
+    # Setup environment
+    setup_env
+
+    # Load config (optional - provides defaults)
+    load_config || true
+
+    # Install dependencies
+    install_brew_deps
+
+    # Build extension
+    local build_success=false
+
+    if [[ "$SPECIAL_BUILD" == "true" && "$EXTENSION" == "relay" ]]; then
+        # Special handling for relay
+        if build_relay; then
+            build_success=true
+        fi
+    else
+        # Try PIE first, then PECL
+        if build_with_pie; then
+            build_success=true
+        elif build_with_pecl; then
+            build_success=true
+        fi
+    fi
+
+    if [[ "$build_success" != "true" ]]; then
+        log_error "All build methods failed for ${EXTENSION}"
+        if [[ -f "$BUILD_LOG" ]]; then
+            log_error "Build log:"
+            tail -50 "$BUILD_LOG"
+        fi
+        exit 1
+    fi
+
+    # Find .so file
+    local so_file
+    so_file=$(find_extension_so) || {
+        log_error "Could not find built extension: ${EXTENSION}.so"
+        exit 1
+    }
+
+    log_info "Found extension: $so_file"
+
+    # Create package
+    create_pkg "$so_file"
+
+    log_info "=========================================="
+    log_info "  Extension build complete!"
+    log_info "  Package: php${PHP_VERSION}-${EXTENSION}${EXT_VERSION}_${PLATFORM}.tar.zst"
+    log_info "=========================================="
+}
+
+main "$@"

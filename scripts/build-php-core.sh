@@ -499,61 +499,51 @@ log_info "Creating packages..."
 
 source "${SCRIPT_DIR}/package.sh"
 
-# Package: php8.5-common (shared files)
-create_package "php${PHP_MAJOR_MINOR}-common" "$PHP_VERSION" "1" "$PLATFORM" \
-    "${STAGING_DIR}${INSTALL_PREFIX}/etc" \
-    --description "PHP ${PHP_MAJOR_MINOR} common files" \
-    --depends ""
+# =============================================================================
+# Create packages using NEW naming convention: php{VERSION}-{type}_{platform}.tar.zst
+# Example: php8.5.0-cli_darwin-arm64.tar.zst
+# =============================================================================
 
-# Package: php8.5-cli
-create_package "php${PHP_MAJOR_MINOR}-cli" "$PHP_VERSION" "1" "$PLATFORM" \
+# Package: php8.5.0-common (shared files)
+create_php_core_package "common" "$PHP_VERSION" "$PLATFORM" \
+    "${STAGING_DIR}${INSTALL_PREFIX}/etc" \
+    --description "PHP ${PHP_VERSION} common files"
+
+# Package: php8.5.0-cli
+create_php_core_package "cli" "$PHP_VERSION" "$PLATFORM" \
     "${STAGING_DIR}${INSTALL_PREFIX}/bin/php" \
     "${STAGING_DIR}${INSTALL_PREFIX}/bin/phar" \
     "${STAGING_DIR}${INSTALL_PREFIX}/bin/phar.phar" \
-    --description "PHP ${PHP_MAJOR_MINOR} CLI interpreter" \
-    --depends "php${PHP_MAJOR_MINOR}-common (>= ${PHP_VERSION})"
+    --description "PHP ${PHP_VERSION} CLI interpreter" \
+    --depends "php${PHP_VERSION}-common"
 
-# Package: php8.5-fpm (includes LaunchDaemon)
-create_package "php${PHP_MAJOR_MINOR}-fpm" "$PHP_VERSION" "1" "$PLATFORM" \
+# Package: php8.5.0-fpm (includes LaunchDaemon)
+create_php_core_package "fpm" "$PHP_VERSION" "$PLATFORM" \
     "${STAGING_DIR}${INSTALL_PREFIX}/sbin/php-fpm" \
     "${STAGING_DIR}/Library/LaunchDaemons/com.phm.php${PHP_MAJOR_MINOR}-fpm.plist" \
-    --description "PHP ${PHP_MAJOR_MINOR} FPM (FastCGI Process Manager)" \
-    --depends "php${PHP_MAJOR_MINOR}-common (>= ${PHP_VERSION})"
+    --description "PHP ${PHP_VERSION} FPM (FastCGI Process Manager)" \
+    --depends "php${PHP_VERSION}-common"
 
-# Package: php8.5-cgi
-create_package "php${PHP_MAJOR_MINOR}-cgi" "$PHP_VERSION" "1" "$PLATFORM" \
+# Package: php8.5.0-cgi
+create_php_core_package "cgi" "$PHP_VERSION" "$PLATFORM" \
     "${STAGING_DIR}${INSTALL_PREFIX}/bin/php-cgi" \
-    --description "PHP ${PHP_MAJOR_MINOR} CGI binary" \
-    --depends "php${PHP_MAJOR_MINOR}-common (>= ${PHP_VERSION})"
+    --description "PHP ${PHP_VERSION} CGI binary" \
+    --depends "php${PHP_VERSION}-common"
 
-# Package: php8.5-dev (headers, phpize, php-config)
-create_package "php${PHP_MAJOR_MINOR}-dev" "$PHP_VERSION" "1" "$PLATFORM" \
+# Package: php8.5.0-dev (headers, phpize, php-config)
+create_php_core_package "dev" "$PHP_VERSION" "$PLATFORM" \
     "${STAGING_DIR}${INSTALL_PREFIX}/bin/phpize" \
     "${STAGING_DIR}${INSTALL_PREFIX}/bin/php-config" \
     "${STAGING_DIR}${INSTALL_PREFIX}/include" \
     "${STAGING_DIR}${INSTALL_PREFIX}/lib/php/build" \
-    --description "PHP ${PHP_MAJOR_MINOR} development files" \
-    --depends "php${PHP_MAJOR_MINOR}-common (>= ${PHP_VERSION})"
+    --description "PHP ${PHP_VERSION} development files" \
+    --depends "php${PHP_VERSION}-common"
 
-# Package: php8.5-opcache
-# PHP 8.5+: OPcache is built-in, package only contains configuration
-# PHP < 8.5: Package contains opcache.so and configuration
-if [[ "$PHP_MAJOR" -lt 8 ]] || [[ "$PHP_MAJOR" -eq 8 && "$PHP_MINOR" -lt 5 ]]; then
-    create_package "php${PHP_MAJOR_MINOR}-opcache" "$PHP_VERSION" "1" "$PLATFORM" \
-        "${STAGING_DIR}${INSTALL_PREFIX}/lib/php/extensions/${EXT_DIR_NAME}/opcache.so" \
-        "${STAGING_DIR}${INSTALL_PREFIX}/etc/mods-available/opcache.ini" \
-        --description "PHP ${PHP_MAJOR_MINOR} OPcache extension" \
-        --depends "php${PHP_MAJOR_MINOR}-common (>= ${PHP_VERSION})"
-else
-    # PHP 8.5+: OPcache is built into PHP, this is a config-only package
-    create_package "php${PHP_MAJOR_MINOR}-opcache" "$PHP_VERSION" "1" "$PLATFORM" \
-        "${STAGING_DIR}${INSTALL_PREFIX}/etc/mods-available/opcache.ini" \
-        --description "PHP ${PHP_MAJOR_MINOR} OPcache configuration (built into PHP ${PHP_MAJOR_MINOR}+)" \
-        --depends "php${PHP_MAJOR_MINOR}-common (>= ${PHP_VERSION})"
-fi
+# Note: OPcache is now built separately via build-opcache.yml workflow
+# For PHP 8.5+, opcache is built into PHP
 
-# Package: php8.5-pear (pecl)
-create_package "php${PHP_MAJOR_MINOR}-pear" "$PHP_VERSION" "1" "$PLATFORM" \
+# Package: php8.5.0-pear (pecl)
+create_php_core_package "pear" "$PHP_VERSION" "$PLATFORM" \
     "${STAGING_DIR}${INSTALL_PREFIX}/bin/pecl" \
     "${STAGING_DIR}${INSTALL_PREFIX}/bin/pear" \
     "${STAGING_DIR}${INSTALL_PREFIX}/bin/peardev" \
@@ -569,8 +559,8 @@ create_package "php${PHP_MAJOR_MINOR}-pear" "$PHP_VERSION" "1" "$PLATFORM" \
     "${STAGING_DIR}${INSTALL_PREFIX}/lib/php/XML" \
     "${STAGING_DIR}${INSTALL_PREFIX}/lib/php/peclcmd.php" \
     "${STAGING_DIR}${INSTALL_PREFIX}/lib/php/pearcmd.php" \
-    --description "PHP ${PHP_MAJOR_MINOR} PEAR/PECL package manager" \
-    --depends "php${PHP_MAJOR_MINOR}-cli (>= ${PHP_VERSION})"
+    --description "PHP ${PHP_VERSION} PEAR/PECL package manager" \
+    --depends "php${PHP_VERSION}-cli"
 
 # Built-in extensions packages (these are compiled into PHP but we can track them)
 BUILTIN_EXTENSIONS=(
@@ -622,11 +612,11 @@ ls -la "${DIST_DIR}/"*.tar.zst 2>/dev/null || true
 # =============================================================================
 log_info "Installing PHP to ${INSTALL_PREFIX} for extension building..."
 
-# Extract core packages
-for pkg in "${DIST_DIR}/php${PHP_MAJOR_MINOR}-common"_*.tar.zst \
-           "${DIST_DIR}/php${PHP_MAJOR_MINOR}-cli"_*.tar.zst \
-           "${DIST_DIR}/php${PHP_MAJOR_MINOR}-dev"_*.tar.zst \
-           "${DIST_DIR}/php${PHP_MAJOR_MINOR}-pear"_*.tar.zst; do
+# Extract core packages (new naming: php{VERSION}-{type}_{platform}.tar.zst)
+for pkg in "${DIST_DIR}/php${PHP_VERSION}-common_"*.tar.zst \
+           "${DIST_DIR}/php${PHP_VERSION}-cli_"*.tar.zst \
+           "${DIST_DIR}/php${PHP_VERSION}-dev_"*.tar.zst \
+           "${DIST_DIR}/php${PHP_VERSION}-pear_"*.tar.zst; do
     if [[ -f "$pkg" ]]; then
         log_info "  Extracting $(basename "$pkg")..."
         sudo mkdir -p "$INSTALL_PREFIX"
