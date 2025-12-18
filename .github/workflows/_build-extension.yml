@@ -161,7 +161,7 @@ jobs:
 
           sudo mkdir -p /opt/php/${PHP_MINOR}
           for pkg in /tmp/php-packages/*.tar.zst; do
-            tar -I zstd -xf "$pkg" -C /tmp
+            zstd -dc "$pkg" | tar -xf - -C /tmp
             sudo cp -R /tmp/files/opt/php/${PHP_MINOR}/* /opt/php/${PHP_MINOR}/ 2>/dev/null || true
             rm -rf /tmp/files /tmp/pkginfo.json
           done
