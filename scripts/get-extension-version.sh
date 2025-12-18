@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Get latest stable extension version from Packagist API
+# Get latest stable extension version from Packagist API (with PECL fallback)
 # Usage: ./get-extension-version.sh <vendor/package> [--all]
 #
 # Examples:
@@ -23,38 +23,76 @@ if [[ "${2:-}" == "--all" ]]; then
     SHOW_ALL=true
 fi
 
-# Fetch package info from Packagist API
-RESPONSE=$(curl -fsSL "https://repo.packagist.org/p2/${PACKAGE}.json" 2>/dev/null || echo "")
+# Extract extension name from package (e.g., igbinary/igbinary -> igbinary)
+EXT_NAME="${PACKAGE##*/}"
 
-if [[ -z "$RESPONSE" ]]; then
-    echo "Error: Could not fetch package info for ${PACKAGE}" >&2
-    exit 1
-fi
+# Try to get version from Packagist
+get_from_packagist() {
+    local response
+    response=$(curl -fsSL "https://repo.packagist.org/p2/${PACKAGE}.json" 2>/dev/null || echo "")
 
-# Extract versions - filter only stable releases (no dev, alpha, beta, RC)
-# Handles both "1.2.3" and "v1.2.3" formats, strips "v" prefix
-if [[ "$SHOW_ALL" == true ]]; then
-    echo "$RESPONSE" | jq -r --arg pkg "$PACKAGE" '
-        .packages[$pkg][]
-        | select(.version | test("^v?[0-9]"))
-        | select(.version | test("dev|alpha|beta|RC|rc") | not)
-        | .version
-        | ltrimstr("v")
-    ' | head -20
-else
-    # Get only the latest stable version
-    VERSION=$(echo "$RESPONSE" | jq -r --arg pkg "$PACKAGE" '
-        .packages[$pkg][]
-        | select(.version | test("^v?[0-9]"))
-        | select(.version | test("dev|alpha|beta|RC|rc") | not)
-        | .version
-        | ltrimstr("v")
-    ' | head -1)
-
-    if [[ -z "$VERSION" || "$VERSION" == "null" ]]; then
-        echo "Error: No stable version found for ${PACKAGE}" >&2
-        exit 1
+    if [[ -z "$response" ]]; then
+        return 1
     fi
 
-    echo "$VERSION"
+    # Extract stable versions (no dev, alpha, beta, RC)
+    # Handles both "1.2.3" and "v1.2.3" formats, strips "v" prefix
+    local version
+    version=$(echo "$response" | jq -r --arg pkg "$PACKAGE" '
+        .packages[$pkg][]
+        | select(.version | test("^v?[0-9]"))
+        | select(.version | test("dev|alpha|beta|RC|rc") | not)
+        | .version
+        | ltrimstr("v")
+    ' 2>/dev/null | head -1)
+
+    if [[ -n "$version" && "$version" != "null" ]]; then
+        echo "$version"
+        return 0
+    fi
+
+    return 1
+}
+
+# Fallback to PECL
+get_from_pecl() {
+    local response
+    response=$(curl -fsSL "https://pecl.php.net/rest/r/${EXT_NAME}/allreleases.xml" 2>/dev/null || echo "")
+
+    if [[ -z "$response" ]]; then
+        return 1
+    fi
+
+    # Extract stable versions from XML (skip alpha, beta, RC)
+    local version
+    version=$(echo "$response" | sed -n 's/.*<v>\([^<]*\)<\/v>.*/\1/p' | grep -v -i -E '(alpha|beta|rc|dev)' | head -1)
+
+    if [[ -n "$version" ]]; then
+        echo "$version"
+        return 0
+    fi
+
+    return 1
+}
+
+# Main logic
+VERSION=""
+
+# Try Packagist first
+if VERSION=$(get_from_packagist); then
+    if [[ -n "$VERSION" ]]; then
+        echo "$VERSION"
+        exit 0
+    fi
 fi
+
+# Fallback to PECL
+if VERSION=$(get_from_pecl); then
+    if [[ -n "$VERSION" ]]; then
+        echo "$VERSION"
+        exit 0
+    fi
+fi
+
+echo "Error: No stable version found for ${PACKAGE} (tried Packagist and PECL)" >&2
+exit 1
