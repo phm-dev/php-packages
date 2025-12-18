@@ -144,8 +144,11 @@ jobs:
           # Core tools
           brew install -q zstd jq
 
-          # PHP runtime dependencies (required to run the downloaded PHP)
-          brew install -q libiconv openssl@3 libzip icu4c readline libxml2 sqlite oniguruma curl
+          # PHP runtime dependencies (must match what PHP was built against)
+          brew install -q \
+            openssl@3 libzip icu4c readline libxml2 libxslt \
+            sqlite lz4 oniguruma jpeg-turbo libpng freetype webp \
+            libpq bzip2 curl libiconv
 
           # Extension-specific dependencies
           if [[ -n "$BREW_DEPS" ]]; then
