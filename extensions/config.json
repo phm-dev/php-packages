@@ -3,14 +3,11 @@
     "redis": {
       "packagist": "phpredis/phpredis",
       "pie_options": [
-        "--enable-redis-igbinary",
-        "--enable-redis-msgpack",
         "--enable-redis-lzf",
         "--enable-redis-zstd",
         "--enable-redis-lz4"
       ],
-      "depends": ["igbinary"],
-      "brew_deps": ["lz4", "zstd", "msgpack"],
+      "brew_deps": ["lz4", "zstd"],
       "description": "Redis extension for PHP"
     },
     "igbinary": {
@@ -95,12 +92,9 @@
     "memcached": {
       "packagist": "php-memcached/php-memcached",
       "pie_options": [
-        "--enable-memcached-igbinary",
-        "--enable-memcached-msgpack",
         "--enable-memcached-json"
       ],
-      "depends": ["igbinary"],
-      "brew_deps": ["libmemcached", "msgpack"],
+      "brew_deps": ["libmemcached"],
       "description": "Memcached client library"
     },
     "rdkafka": {

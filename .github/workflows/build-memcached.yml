@@ -25,7 +25,7 @@ jobs:
       extension: memcached
       packagist: php-memcached/php-memcached
       display_name: Memcached
-      brew_deps: "libmemcached msgpack"
+      brew_deps: "libmemcached"
       php_versions: ${{ inputs.php_versions || github.event.client_payload.php_versions || '' }}
       force_build: ${{ inputs.force_build || false }}
     secrets: inherit
