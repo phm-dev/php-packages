@@ -233,6 +233,8 @@ jobs:
     needs: [prepare, publish]
     if: needs.prepare.outputs.has_builds == 'true'
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Trigger extension workflows
         env:

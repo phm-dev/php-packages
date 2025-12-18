@@ -94,7 +94,7 @@ jobs:
           fi
 
   build:
-    name: Build ${{ env.EXTENSION }} for PHP ${{ matrix.php_version }} (${{ matrix.platform.name }})
+    name: Build rdkafka for PHP ${{ matrix.php_version }} (${{ matrix.platform.name }})
     needs: prepare
     if: needs.prepare.outputs.has_builds == 'true'
     strategy:
@@ -152,7 +152,7 @@ jobs:
           retention-days: 7
 
   publish:
-    name: Publish ${{ env.EXTENSION }}
+    name: Publish rdkafka
     needs: [prepare, build]
     if: needs.prepare.outputs.has_builds == 'true'
     runs-on: ubuntu-latest
