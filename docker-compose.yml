@@ -1,0 +1,49 @@
+# Docker-OSX configuration for local testing
+#
+# Usage:
+#   docker-compose up -d        # Start macOS container
+#   docker-compose logs -f      # Watch boot progress
+#   ssh user@localhost -p 10022 # Connect (password: alpine)
+#   docker-compose down         # Stop container
+#
+# Requirements:
+#   - Linux: KVM support (/dev/kvm)
+#   - macOS: Docker Desktop with Rosetta
+#   - 50GB+ disk space, 8GB+ RAM
+#
+
+services:
+  macos:
+    image: sickcodes/docker-osx:ventura
+    container_name: php-packages-macos
+    devices:
+      - /dev/kvm  # Remove this line on macOS
+    ports:
+      - "10022:10022"   # SSH
+      - "5999:5999"     # VNC (optional)
+    volumes:
+      - .:/mnt/php-packages:delegated
+    environment:
+      - GENERATE_UNIQUE=true
+      - CPU=Haswell-noTSX
+      - CPUID_FLAGS=kvm=on,vendor=GenuineIntel,+invtsc,vmware-cpuid-freq=on
+      - MASTER_PLIST_URL=https://raw.githubusercontent.com/sickcodes/osx-serial-generator/master/config-custom.plist
+    restart: unless-stopped
+
+  # Alternative: Headless mode (faster, no GUI)
+  macos-headless:
+    image: sickcodes/docker-osx:ventura
+    container_name: php-packages-macos-headless
+    profiles:
+      - headless
+    devices:
+      - /dev/kvm
+    ports:
+      - "10022:10022"
+    volumes:
+      - .:/mnt/php-packages:delegated
+    environment:
+      - GENERATE_UNIQUE=true
+      - HEADLESS=true
+      - CPU=Haswell-noTSX
+    restart: unless-stopped

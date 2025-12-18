@@ -30,12 +30,13 @@ Examples:
 
 ## GitHub Releases
 
-Packages are organized into separate releases:
+One release per PHP version containing **everything** (core + all extensions):
 
-- **PHP Releases**: `php-8.5.0`, `php-8.4.7`, etc.
-  - Contains core packages: common, cli, fpm, cgi, dev, pear
-- **Extension Releases**: `redis-6.3.0`, `xdebug-3.4.0`, etc.
-  - Contains extension packages for all supported PHP versions
+- **`php-8.5.0`** - PHP 8.5.0 core packages + all extensions
+- **`php-8.4.7`** - PHP 8.4.7 core packages + all extensions
+- **`php-8.3.15`** - PHP 8.3.15 core packages + all extensions
+
+Each release contains ~40 packages (5 core × 2 platforms + ~15 extensions × 2 platforms).
 
 ## Available Extensions
 
@@ -56,15 +57,13 @@ Packages are organized into separate releases:
 | opentelemetry | open-telemetry/ext-opentelemetry |
 | memcached | php-memcached/php-memcached |
 | rdkafka | rdkafka/rdkafka |
-| relay | cachewerk/ext-relay |
-| opcache | (built-in for PHP < 8.5) |
 
 ## Supported Platforms
 
 | Platform | Architecture | Runner |
 |----------|--------------|--------|
-| macOS 13+ | arm64 (Apple Silicon) | macos-15 |
-| macOS 13+ | amd64 (Intel) | macos-13 |
+| macOS 13+ | arm64 (Apple Silicon) | macos-26 |
+| macOS 13+ | amd64 (Intel) | macos-15-intel |
 
 ## Using These Packages
 
@@ -79,45 +78,83 @@ phm update
 phm install php8.5-cli php8.5-fpm php8.5-redis
 ```
 
+## Build System
+
+### Automated Builds (GitHub Actions)
+
+Single unified workflow (`build.yml`) runs daily and:
+
+1. **Checks for updates** - compares PHP and extension versions with `versions.json`
+2. **Smart triggering**:
+   - PHP version changed → build only that PHP version
+   - Extension changed → build ALL PHP versions
+3. **Builds PHP + all extensions** for each version
+4. **Publishes to GitHub Releases** with batched uploads
+
+### Manual Trigger
+
+```bash
+# Via GitHub CLI
+gh workflow run build.yml -f php_version=8.5.0
+gh workflow run build.yml -f force_build=true
+```
+
 ## Building Packages Locally
+
+### Native macOS
 
 ```bash
 # Install dependencies
+./scripts/install-deps.sh
+
+# Build PHP core
+./scripts/build-php-core.sh 8.5.0
+
+# Build all extensions
+./scripts/build-all-extensions.sh 8.5.0
+
+# Or use Makefile
 make deps
-
-# Build PHP core packages
 make php VERSION=8.5.0
-
-# Build extension (auto-detect version)
-make ext EXT=redis VERSION=8.5.0
-
-# Build extension with specific version
-make ext EXT=redis EXT_VER=6.3.0 VERSION=8.5.0
-
-# Check available PHP versions
-make versions
-
-# Check extension version
-make ext-version EXT=redis
 ```
 
-## GitHub Actions Workflows
+### Docker-OSX (Linux/macOS)
 
-### build-php.yml
-- Runs daily at 2:00 UTC
-- Builds new PHP versions when released
-- Triggers extension builds via `repository_dispatch`
+For testing on non-macOS systems using [Docker-OSX](https://github.com/sickcodes/Docker-OSX):
 
-### build-{extension}.yml
-- One workflow per extension
-- Runs daily at 4:00 UTC
-- Triggered by `repository_dispatch` when new PHP is built
-- Uses PIE (PHP Installer for Extensions) with PECL fallback
+```bash
+# First-time setup (downloads ~15-20GB image)
+./scripts/local-test.sh setup
 
-### update-index.yml
-- Triggered after any build workflow completes
-- Regenerates `index.json` from all releases
-- Commits and pushes to main branch
+# Start macOS container
+./scripts/local-test.sh start
+
+# Wait for boot (5-10 min first time), then build
+./scripts/local-test.sh build 8.5.0
+
+# Or manually via SSH
+./scripts/local-test.sh ssh
+# In macOS: cd /mnt/php-packages && ./scripts/build-php-core.sh 8.5.0
+
+# Stop when done
+./scripts/local-test.sh stop
+```
+
+Or with docker-compose:
+
+```bash
+docker-compose up -d
+# Wait for boot...
+ssh user@localhost -p 10022  # password: alpine
+cd /mnt/php-packages
+./scripts/build-php-core.sh 8.5.0
+./scripts/build-all-extensions.sh 8.5.0
+```
+
+**Requirements for Docker-OSX:**
+- Linux: KVM support (`/dev/kvm`)
+- macOS: Docker Desktop
+- 50GB+ disk space, 8GB+ RAM
 
 ## Directory Structure
 
@@ -125,29 +162,55 @@ make ext-version EXT=redis
 php-packages/
 ├── .github/
 │   └── workflows/
-│       ├── build-php.yml           # PHP core builds
-│       ├── build-redis.yml         # Extension workflows
-│       ├── build-xdebug.yml
-│       ├── ...
-│       └── update-index.yml        # Index regeneration
+│       ├── build.yml              # Unified build workflow
+│       └── update-index.yml       # Index regeneration
 ├── scripts/
-│   ├── build-php-core.sh           # Build PHP from source
-│   ├── build-extension.sh          # Build extension (PIE/PECL)
-│   ├── package.sh                  # Packaging utilities
-│   ├── get-php-versions.sh         # Fetch secure PHP versions
-│   ├── get-extension-version.sh    # Fetch extension version from Packagist
-│   ├── generate-index.sh           # Generate index.json from releases
-│   ├── install-pie.sh              # Install PIE tool
-│   └── install-deps.sh             # Install build dependencies
+│   ├── build-php-core.sh          # Build PHP from source
+│   ├── build-extension.sh         # Build single extension (PIE/PECL)
+│   ├── build-all-extensions.sh    # Build all extensions for PHP version
+│   ├── check-updates.sh           # Check for version updates
+│   ├── local-test.sh              # Docker-OSX local testing
+│   ├── package.sh                 # Packaging utilities
+│   ├── get-php-versions.sh        # Fetch secure PHP versions
+│   ├── get-extension-version.sh   # Fetch extension version
+│   ├── generate-index.sh          # Generate index.json
+│   └── install-deps.sh            # Install build dependencies
 ├── extensions/
-│   └── config.json                 # Extension configuration
-├── index.json                      # Package index (auto-generated)
+│   └── config.json                # Extension configuration
+├── versions.json                  # Current version tracking
+├── index.json                     # Package index (auto-generated)
+├── docker-compose.yml             # Docker-OSX config
 ├── Makefile
 └── README.md
 ```
+
+## Version Tracking
+
+`versions.json` tracks the last built versions:
+
+```json
+{
+  "last_check": "2024-12-18T02:00:00Z",
+  "php": {
+    "8.3": "8.3.15",
+    "8.4": "8.4.2",
+    "8.5": "8.5.0"
+  },
+  "extensions": {
+    "redis": "6.1.0",
+    "xdebug": "3.4.0",
+    ...
+  }
+}
+```
+
+When a new version is detected:
+- **PHP update** → rebuilds only that PHP version with all extensions
+- **Extension update** → rebuilds all PHP versions with the new extension
 
 ## Links
 
 - **PHM CLI**: https://github.com/phm-dev/phm
 - **PHP Packages**: https://github.com/phm-dev/php-packages
+- **Docker-OSX**: https://github.com/sickcodes/Docker-OSX
 - **PIE**: https://github.com/php/pie
