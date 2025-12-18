@@ -42,7 +42,7 @@ jobs:
           COUNT=$(echo "$FILTERED" | jq 'length')
           if [[ "$COUNT" -gt 0 ]]; then
             echo "has_builds=true" >> $GITHUB_OUTPUT
-            echo "matrix={\"php_version\":$FILTERED,\"platform\":[{\"os\":\"macos-15\",\"name\":\"darwin-arm64\"},{\"os\":\"macos-13\",\"name\":\"darwin-amd64\"}]}" >> $GITHUB_OUTPUT
+            echo "matrix={\"php_version\":$FILTERED,\"platform\":[{\"os\":\"macos-26\",\"name\":\"darwin-arm64\"},{\"os\":\"macos-15-intel\",\"name\":\"darwin-amd64\"}]}" >> $GITHUB_OUTPUT
           else
             echo "has_builds=false" >> $GITHUB_OUTPUT
             echo "No PHP versions < 8.5 found"

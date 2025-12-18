@@ -91,8 +91,8 @@ jobs:
           MATRIX=$(echo "$NEW_VERSIONS" | jq -c '{
             php_version: .,
             platform: [
-              { os: "macos-15", name: "darwin-arm64" },
-              { os: "macos-13", name: "darwin-amd64" }
+              { os: "macos-26", name: "darwin-arm64" },
+              { os: "macos-15-intel", name: "darwin-amd64" }
             ]
           }')
           echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
@@ -116,8 +116,8 @@ jobs:
       matrix:
         php_version: ${{ fromJson(needs.prepare.outputs.new_versions) }}
         platform:
-          - { os: macos-15, name: darwin-arm64 }
-          - { os: macos-13, name: darwin-amd64 }
+          - { os: macos-26, name: darwin-arm64 }
+          - { os: macos-15-intel, name: darwin-amd64 }
     runs-on: ${{ matrix.platform.os }}
     steps:
       - uses: actions/checkout@v4

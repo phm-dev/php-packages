@@ -92,7 +92,7 @@ jobs:
           done
 
           echo "Versions to build: $BUILD_VERSIONS"
-          echo "matrix={\"php_version\":$BUILD_VERSIONS,\"platform\":[{\"os\":\"macos-15\",\"name\":\"darwin-arm64\"},{\"os\":\"macos-13\",\"name\":\"darwin-amd64\"}]}" >> $GITHUB_OUTPUT
+          echo "matrix={\"php_version\":$BUILD_VERSIONS,\"platform\":[{\"os\":\"macos-26\",\"name\":\"darwin-arm64\"},{\"os\":\"macos-15-intel\",\"name\":\"darwin-amd64\"}]}" >> $GITHUB_OUTPUT
 
           COUNT=$(echo "$BUILD_VERSIONS" | jq 'length')
           if [[ "$COUNT" -gt 0 ]]; then
