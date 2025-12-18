@@ -223,16 +223,13 @@ build_with_pie() {
         return 1
     fi
 
-    # Build PIE command
+    # Build PIE command - options are passed directly (no -- separator)
     local pie_args=("$pie_phar" "build" "${PACKAGIST}:${EXT_VERSION}")
 
-    # Add PIE options (configure options)
-    if [[ ${#PIE_OPTIONS[@]} -gt 0 ]]; then
-        pie_args+=("--")
-        for opt in "${PIE_OPTIONS[@]}"; do
-            [[ -n "$opt" ]] && pie_args+=("$opt")
-        done
-    fi
+    # Add PIE options (configure options) - PIE accepts them directly
+    for opt in "${PIE_OPTIONS[@]}"; do
+        [[ -n "$opt" ]] && pie_args+=("$opt")
+    done
 
     log_info "Running: $PHP_BIN ${pie_args[*]}"
 

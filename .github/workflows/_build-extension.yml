@@ -141,8 +141,8 @@ jobs:
         env:
           BREW_DEPS: ${{ inputs.brew_deps }}
         run: |
-          # Core tools
-          brew install -q zstd jq
+          # Core tools and build dependencies
+          brew install -q zstd jq autoconf automake libtool pkg-config
 
           # PHP runtime dependencies (must match what PHP was built against)
           brew install -q \
