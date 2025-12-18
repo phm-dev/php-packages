@@ -167,6 +167,7 @@ jobs:
           gh release download "$TAG" --pattern "php${PHP_VERSION}-common_${{ matrix.platform.name }}.tar.zst" --dir /tmp/php-packages
           gh release download "$TAG" --pattern "php${PHP_VERSION}-cli_${{ matrix.platform.name }}.tar.zst" --dir /tmp/php-packages
           gh release download "$TAG" --pattern "php${PHP_VERSION}-dev_${{ matrix.platform.name }}.tar.zst" --dir /tmp/php-packages || true
+          gh release download "$TAG" --pattern "php${PHP_VERSION}-pear_${{ matrix.platform.name }}.tar.zst" --dir /tmp/php-packages || true
 
           sudo mkdir -p /opt/php/${PHP_MINOR}
           for pkg in /tmp/php-packages/*.tar.zst; do
