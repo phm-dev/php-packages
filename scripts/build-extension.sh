@@ -281,9 +281,20 @@ build_with_pecl() {
 
     log_info "Building with options: ${configure_opts[*]}"
 
-    run_build "$PHPIZE"
-    run_build ./configure "${configure_opts[@]}"
-    run_build make -j"$(sysctl -n hw.ncpu 2>/dev/null || nproc 2>/dev/null || echo 4)"
+    if ! run_build "$PHPIZE"; then
+        log_warn "phpize failed"
+        return 1
+    fi
+
+    if ! run_build ./configure "${configure_opts[@]}"; then
+        log_warn "configure failed"
+        return 1
+    fi
+
+    if ! run_build make -j"$(sysctl -n hw.ncpu 2>/dev/null || nproc 2>/dev/null || echo 4)"; then
+        log_warn "make failed"
+        return 1
+    fi
 
     log_success "PECL build successful"
     return 0
