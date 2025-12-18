@@ -97,8 +97,32 @@ while read -r pkg_path; do
         SHA256=$(shasum -a 256 "$pkg_path" | cut -d' ' -f1)
     fi
 
-    # Build download URL (each PHP version has its own release tag: php-X.Y.Z)
-    DOWNLOAD_URL="${BASE_URL}/php-${VERSION}/${pkg_file}"
+    # Extract PHP version from package name (e.g., php8.5-redis -> 8.5)
+    # For extensions, VERSION is the extension version, not PHP version
+    PHP_MINOR=$(echo "$NAME" | grep -oE '^php([0-9]+\.[0-9]+)' | sed 's/php//')
+
+    # Determine the release tag (PHP full version, not extension version)
+    if [[ -n "$PHP_MINOR" ]]; then
+        # Extract PHP full version from depends (e.g., "php8.5-common (>= 8.5.0)" -> "8.5.0")
+        PHP_FULL_VERSION=$(echo "$DEPENDS" | jq -r '.[] | select(contains("common")) | capture("\\(>= (?<ver>[0-9.]+)\\)") | .ver' 2>/dev/null || echo "")
+
+        if [[ -z "$PHP_FULL_VERSION" ]]; then
+            # Fallback: use package version if it matches PHP minor (core packages)
+            if [[ "$VERSION" == "$PHP_MINOR"* ]]; then
+                PHP_FULL_VERSION="$VERSION"
+            else
+                # Last resort: append .0 to minor version
+                PHP_FULL_VERSION="${PHP_MINOR}.0"
+            fi
+        fi
+        RELEASE_TAG="php-${PHP_FULL_VERSION}"
+    else
+        # Non-PHP package (shouldn't happen, but fallback)
+        RELEASE_TAG="php-${VERSION}"
+    fi
+
+    # Build download URL
+    DOWNLOAD_URL="${BASE_URL}/${RELEASE_TAG}/${pkg_file}"
 
     # Create package entry JSON
     PACKAGE_ENTRY=$(cat << EOFPKG
