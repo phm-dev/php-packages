@@ -1,9 +1,26 @@
 {
   "version": 1,
-  "generated": "2025-12-18T04:32:58Z",
+  "generated": "2025-12-18T07:25:21Z",
   "platforms": {
     "darwin-amd64": {
       "packages": [
+        {
+          "name": "php8.1",
+          "version": "8.1.33",
+          "revision": 1,
+          "description": "PHP 8.1 meta-package (CLI + common)",
+          "depends": [
+            "php8.1-cli (>= 8.1.33)",
+            "php8.1-common (>= 8.1.33)"
+          ],
+          "provides": [
+            "php"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.1.33/php8.1_8.1.33-1_darwin-amd64.tar.zst",
+          "sha256": "adfcc6819ae9fa011641781f494bf4510c8fffa37f369964f0d12da55dae0e89",
+          "size": 369,
+          "installed_size": 0
+        },
         {
           "name": "php8.1-amqp",
           "version": "2.1.2",
@@ -15,7 +32,7 @@
           "provides": [
             "php-amqp"
           ],
-          "url": "https://github.com/phm-dev/php-packages/releases/download/php-2.1.2/php8.1-amqp_2.1.2-1_darwin-amd64.tar.zst",
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.1.33/php8.1-amqp_2.1.2-1_darwin-amd64.tar.zst",
           "sha256": "b0caec9e6862359c3d08c1784f238096e22ff555aa99e391bd9a39ee2163b33a",
           "size": 103686,
           "installed_size": 372736
@@ -31,7 +48,7 @@
           "provides": [
             "php-apcu"
           ],
-          "url": "https://github.com/phm-dev/php-packages/releases/download/php-5.1.28/php8.1-apcu_5.1.28-1_darwin-amd64.tar.zst",
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.1.33/php8.1-apcu_5.1.28-1_darwin-amd64.tar.zst",
           "sha256": "e28e013b6d574771203c0ab97d735823aa7a9fd21fcd8718097a93c546c611f9",
           "size": 35725,
           "installed_size": 94208
@@ -211,7 +228,7 @@
           "provides": [
             "php-igbinary"
           ],
-          "url": "https://github.com/phm-dev/php-packages/releases/download/php-3.2.16/php8.1-igbinary_3.2.16-1_darwin-amd64.tar.zst",
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.1.33/php8.1-igbinary_3.2.16-1_darwin-amd64.tar.zst",
           "sha256": "ef2cae8b017b8d9e4a5d35837b4932b7d71130412c76a0a83aec51d2d4adc7f0",
           "size": 31453,
           "installed_size": 90112
@@ -259,7 +276,7 @@
           "provides": [
             "php-mongodb"
           ],
-          "url": "https://github.com/phm-dev/php-packages/releases/download/php-2.1.4/php8.1-mongodb_2.1.4-1_darwin-amd64.tar.zst",
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.1.33/php8.1-mongodb_2.1.4-1_darwin-amd64.tar.zst",
           "sha256": "0ca8a1ae7134f6b7bc6c2002cdf74a3e8dd0497fb75fd0ea242159810531a61e",
           "size": 1005263,
           "installed_size": 3354624
@@ -321,7 +338,7 @@
           "provides": [
             "php-pcov"
           ],
-          "url": "https://github.com/phm-dev/php-packages/releases/download/php-1.0.12/php8.1-pcov_1.0.12-1_darwin-amd64.tar.zst",
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.1.33/php8.1-pcov_1.0.12-1_darwin-amd64.tar.zst",
           "sha256": "6db6965ad8ed383e1acd8bed7d9bd5925b4cf5dfb1743fb55173c72037733735",
           "size": 8709,
           "installed_size": 36864
@@ -383,7 +400,7 @@
           "provides": [
             "php-redis"
           ],
-          "url": "https://github.com/phm-dev/php-packages/releases/download/php-6.3.0/php8.1-redis_6.3.0-1_darwin-amd64.tar.zst",
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.1.33/php8.1-redis_6.3.0-1_darwin-amd64.tar.zst",
           "sha256": "74f21b5e8bb3782a86576841cab85bee1b4268ce3433fca01451843e66aa4200",
           "size": 233593,
           "installed_size": 851968
@@ -448,7 +465,7 @@
           "provides": [
             "php-swoole"
           ],
-          "url": "https://github.com/phm-dev/php-packages/releases/download/php-6.0.0/php8.1-swoole_6.0.0-1_darwin-amd64.tar.zst",
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.1.33/php8.1-swoole_6.0.0-1_darwin-amd64.tar.zst",
           "sha256": "7d54244f8d84fde45d45403fbaa50be413b26efa41c6543972c319e6fcae7a70",
           "size": 1012483,
           "installed_size": 3502080
@@ -464,7 +481,7 @@
           "provides": [
             "php-xdebug"
           ],
-          "url": "https://github.com/phm-dev/php-packages/releases/download/php-3.5.0/php8.1-xdebug_3.5.0-1_darwin-amd64.tar.zst",
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.1.33/php8.1-xdebug_3.5.0-1_darwin-amd64.tar.zst",
           "sha256": "09d9420f69688c3e54cf6f7a3697d595a02a24d209a87cfac04179492493f28b",
           "size": 163613,
           "installed_size": 413696
@@ -502,19 +519,19 @@
           "installed_size": 0
         },
         {
-          "name": "php8.1",
-          "version": "8.1.33",
+          "name": "php8.2",
+          "version": "8.2.29",
           "revision": 1,
-          "description": "PHP 8.1 meta-package (CLI + common)",
+          "description": "PHP 8.2 meta-package (CLI + common)",
           "depends": [
-            "php8.1-cli (>= 8.1.33)",
-            "php8.1-common (>= 8.1.33)"
+            "php8.2-cli (>= 8.2.29)",
+            "php8.2-common (>= 8.2.29)"
           ],
           "provides": [
             "php"
           ],
-          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.1.33/php8.1_8.1.33-1_darwin-amd64.tar.zst",
-          "sha256": "adfcc6819ae9fa011641781f494bf4510c8fffa37f369964f0d12da55dae0e89",
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.2.29/php8.2_8.2.29-1_darwin-amd64.tar.zst",
+          "sha256": "ba316df615bbc88991183a7edbdba1c953535a458abfd314d65498ab6d5e90e0",
           "size": 369,
           "installed_size": 0
         },
@@ -529,7 +546,7 @@
           "provides": [
             "php-amqp"
           ],
-          "url": "https://github.com/phm-dev/php-packages/releases/download/php-2.1.2/php8.2-amqp_2.1.2-1_darwin-amd64.tar.zst",
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.2.29/php8.2-amqp_2.1.2-1_darwin-amd64.tar.zst",
           "sha256": "00eb82aac0e4a720f0469ab23426912f97621b7a37ad0f07810ed9f967f5e939",
           "size": 104308,
           "installed_size": 372736
@@ -545,7 +562,7 @@
           "provides": [
             "php-apcu"
           ],
-          "url": "https://github.com/phm-dev/php-packages/releases/download/php-5.1.28/php8.2-apcu_5.1.28-1_darwin-amd64.tar.zst",
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.2.29/php8.2-apcu_5.1.28-1_darwin-amd64.tar.zst",
           "sha256": "e45785b1733f9d78ad7d116e52f198e274a5b37a419a2d5315f5d1f2af6a442a",
           "size": 36174,
           "installed_size": 98304
@@ -725,7 +742,7 @@
           "provides": [
             "php-igbinary"
           ],
-          "url": "https://github.com/phm-dev/php-packages/releases/download/php-3.2.16/php8.2-igbinary_3.2.16-1_darwin-amd64.tar.zst",
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.2.29/php8.2-igbinary_3.2.16-1_darwin-amd64.tar.zst",
           "sha256": "7489ae46033df8cdcc599a804a88a63387c1bcb23dce3591cfcce86f02832059",
           "size": 32694,
           "installed_size": 94208
@@ -773,7 +790,7 @@
           "provides": [
             "php-mongodb"
           ],
-          "url": "https://github.com/phm-dev/php-packages/releases/download/php-2.1.4/php8.2-mongodb_2.1.4-1_darwin-amd64.tar.zst",
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.2.29/php8.2-mongodb_2.1.4-1_darwin-amd64.tar.zst",
           "sha256": "f7f7b59b12f2ccd71e1d30a1c33c594ecd4ede1a94919e9493c9ff887c00098a",
           "size": 1004737,
           "installed_size": 3354624
@@ -835,7 +852,7 @@
           "provides": [
             "php-pcov"
           ],
-          "url": "https://github.com/phm-dev/php-packages/releases/download/php-1.0.12/php8.2-pcov_1.0.12-1_darwin-amd64.tar.zst",
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.2.29/php8.2-pcov_1.0.12-1_darwin-amd64.tar.zst",
           "sha256": "4906d8998ef057cf5ef2ae270d087ed848648846199a937c7d04f9640782b326",
           "size": 8843,
           "installed_size": 36864
@@ -897,7 +914,7 @@
           "provides": [
             "php-redis"
           ],
-          "url": "https://github.com/phm-dev/php-packages/releases/download/php-6.3.0/php8.2-redis_6.3.0-1_darwin-amd64.tar.zst",
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.2.29/php8.2-redis_6.3.0-1_darwin-amd64.tar.zst",
           "sha256": "e880883b1b23db62c8452f3e0534b1396c1fa8c2bfd74fd55b59f4d9c41d4ecf",
           "size": 233355,
           "installed_size": 851968
@@ -962,7 +979,7 @@
           "provides": [
             "php-swoole"
           ],
-          "url": "https://github.com/phm-dev/php-packages/releases/download/php-6.0.0/php8.2-swoole_6.0.0-1_darwin-amd64.tar.zst",
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.2.29/php8.2-swoole_6.0.0-1_darwin-amd64.tar.zst",
           "sha256": "b5d8c3283346c89abf18520dee648a14fe420a7b2e843aceb8f266760c9a38a4",
           "size": 1014478,
           "installed_size": 3506176
@@ -978,7 +995,7 @@
           "provides": [
             "php-xdebug"
           ],
-          "url": "https://github.com/phm-dev/php-packages/releases/download/php-3.5.0/php8.2-xdebug_3.5.0-1_darwin-amd64.tar.zst",
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.2.29/php8.2-xdebug_3.5.0-1_darwin-amd64.tar.zst",
           "sha256": "bdec6fd90f723275a28528353c596f55afa54ebac89b755caa36a0b4ce4dd582",
           "size": 163770,
           "installed_size": 413696
@@ -1016,20 +1033,20 @@
           "installed_size": 0
         },
         {
-          "name": "php8.2",
-          "version": "8.2.29",
+          "name": "php8.3",
+          "version": "8.3.28",
           "revision": 1,
-          "description": "PHP 8.2 meta-package (CLI + common)",
+          "description": "PHP 8.3 meta-package (CLI + common)",
           "depends": [
-            "php8.2-cli (>= 8.2.29)",
-            "php8.2-common (>= 8.2.29)"
+            "php8.3-cli (>= 8.3.28)",
+            "php8.3-common (>= 8.3.28)"
           ],
           "provides": [
             "php"
           ],
-          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.2.29/php8.2_8.2.29-1_darwin-amd64.tar.zst",
-          "sha256": "ba316df615bbc88991183a7edbdba1c953535a458abfd314d65498ab6d5e90e0",
-          "size": 369,
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.28/php8.3_8.3.28-1_darwin-amd64.tar.zst",
+          "sha256": "b58a23bc3961068b9e72304169b522ff575690a364bdb13f76fef06f0c37a796",
+          "size": 370,
           "installed_size": 0
         },
         {
@@ -1043,7 +1060,7 @@
           "provides": [
             "php-amqp"
           ],
-          "url": "https://github.com/phm-dev/php-packages/releases/download/php-2.1.2/php8.3-amqp_2.1.2-1_darwin-amd64.tar.zst",
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.28/php8.3-amqp_2.1.2-1_darwin-amd64.tar.zst",
           "sha256": "85824f561eef2b7a0aad786e024cfdd1082aec6ecfa3e71922b00448399b7de7",
           "size": 104193,
           "installed_size": 368640
@@ -1059,7 +1076,7 @@
           "provides": [
             "php-apcu"
           ],
-          "url": "https://github.com/phm-dev/php-packages/releases/download/php-5.1.28/php8.3-apcu_5.1.28-1_darwin-amd64.tar.zst",
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.28/php8.3-apcu_5.1.28-1_darwin-amd64.tar.zst",
           "sha256": "d471458b8e5a360addd3bfcd214c8a853ae083d9c3e454e8a58d8f3fe3b638d3",
           "size": 36066,
           "installed_size": 98304
@@ -1239,7 +1256,7 @@
           "provides": [
             "php-igbinary"
           ],
-          "url": "https://github.com/phm-dev/php-packages/releases/download/php-3.2.16/php8.3-igbinary_3.2.16-1_darwin-amd64.tar.zst",
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.28/php8.3-igbinary_3.2.16-1_darwin-amd64.tar.zst",
           "sha256": "3c7c87ef0ef565338b4d0c1617788d1212d2cb6c0172d4e6857155183b9ac262",
           "size": 32604,
           "installed_size": 94208
@@ -1287,7 +1304,7 @@
           "provides": [
             "php-mongodb"
           ],
-          "url": "https://github.com/phm-dev/php-packages/releases/download/php-2.1.4/php8.3-mongodb_2.1.4-1_darwin-amd64.tar.zst",
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.28/php8.3-mongodb_2.1.4-1_darwin-amd64.tar.zst",
           "sha256": "d101ceae234e3a921329d6f472409f02ee929a6551be608f3a3cb6a0002c7f76",
           "size": 1006777,
           "installed_size": 3354624
@@ -1349,7 +1366,7 @@
           "provides": [
             "php-pcov"
           ],
-          "url": "https://github.com/phm-dev/php-packages/releases/download/php-1.0.12/php8.3-pcov_1.0.12-1_darwin-amd64.tar.zst",
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.28/php8.3-pcov_1.0.12-1_darwin-amd64.tar.zst",
           "sha256": "30e7073e2e99f567696bb2452167d2580b82085a868215bcdc20664bb20efa4b",
           "size": 8850,
           "installed_size": 36864
@@ -1411,7 +1428,7 @@
           "provides": [
             "php-redis"
           ],
-          "url": "https://github.com/phm-dev/php-packages/releases/download/php-6.3.0/php8.3-redis_6.3.0-1_darwin-amd64.tar.zst",
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.28/php8.3-redis_6.3.0-1_darwin-amd64.tar.zst",
           "sha256": "a314d6d55389f4c8570acc6c0632fe1a44f7d749f30e1dbf71cc8b83f447fa91",
           "size": 233999,
           "installed_size": 856064
@@ -1476,7 +1493,7 @@
           "provides": [
             "php-swoole"
           ],
-          "url": "https://github.com/phm-dev/php-packages/releases/download/php-6.0.0/php8.3-swoole_6.0.0-1_darwin-amd64.tar.zst",
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.28/php8.3-swoole_6.0.0-1_darwin-amd64.tar.zst",
           "sha256": "77103cbb71274c1e2b6f986ef76a1f9746707d6d4b6dcf8d6eee3e7ea7258c6d",
           "size": 1015180,
           "installed_size": 3506176
@@ -1492,7 +1509,7 @@
           "provides": [
             "php-xdebug"
           ],
-          "url": "https://github.com/phm-dev/php-packages/releases/download/php-3.5.0/php8.3-xdebug_3.5.0-1_darwin-amd64.tar.zst",
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.28/php8.3-xdebug_3.5.0-1_darwin-amd64.tar.zst",
           "sha256": "6ca91e5b8b1e0eaf023acf861454d17f8d77045683c4e00d1832d5bc790e081f",
           "size": 163739,
           "installed_size": 413696
@@ -1530,20 +1547,20 @@
           "installed_size": 0
         },
         {
-          "name": "php8.3",
-          "version": "8.3.28",
+          "name": "php8.4",
+          "version": "8.4.15",
           "revision": 1,
-          "description": "PHP 8.3 meta-package (CLI + common)",
+          "description": "PHP 8.4 meta-package (CLI + common)",
           "depends": [
-            "php8.3-cli (>= 8.3.28)",
-            "php8.3-common (>= 8.3.28)"
+            "php8.4-cli (>= 8.4.15)",
+            "php8.4-common (>= 8.4.15)"
           ],
           "provides": [
             "php"
           ],
-          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.28/php8.3_8.3.28-1_darwin-amd64.tar.zst",
-          "sha256": "b58a23bc3961068b9e72304169b522ff575690a364bdb13f76fef06f0c37a796",
-          "size": 370,
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.4.15/php8.4_8.4.15-1_darwin-amd64.tar.zst",
+          "sha256": "3af249aad8eed7bef6034768308010ceaf2801ebdbfa616c816a799734187b81",
+          "size": 367,
           "installed_size": 0
         },
         {
@@ -1557,7 +1574,7 @@
           "provides": [
             "php-amqp"
           ],
-          "url": "https://github.com/phm-dev/php-packages/releases/download/php-2.1.2/php8.4-amqp_2.1.2-1_darwin-amd64.tar.zst",
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.4.15/php8.4-amqp_2.1.2-1_darwin-amd64.tar.zst",
           "sha256": "d239ebe98e565838326e156fda4a0b765b3609709da7c4092b36300bfd7d549c",
           "size": 104165,
           "installed_size": 372736
@@ -1573,7 +1590,7 @@
           "provides": [
             "php-apcu"
           ],
-          "url": "https://github.com/phm-dev/php-packages/releases/download/php-5.1.28/php8.4-apcu_5.1.28-1_darwin-amd64.tar.zst",
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.4.15/php8.4-apcu_5.1.28-1_darwin-amd64.tar.zst",
           "sha256": "98c664b4955c0c87997aab850f40258215991733d46250aeb020df71661db895",
           "size": 36113,
           "installed_size": 98304
@@ -1753,7 +1770,7 @@
           "provides": [
             "php-igbinary"
           ],
-          "url": "https://github.com/phm-dev/php-packages/releases/download/php-3.2.16/php8.4-igbinary_3.2.16-1_darwin-amd64.tar.zst",
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.4.15/php8.4-igbinary_3.2.16-1_darwin-amd64.tar.zst",
           "sha256": "8e4e92f73c7e6f8b81b41645a40b2df7cec38984ffd7836cafdf949db8c4b502",
           "size": 32825,
           "installed_size": 94208
@@ -1801,7 +1818,7 @@
           "provides": [
             "php-mongodb"
           ],
-          "url": "https://github.com/phm-dev/php-packages/releases/download/php-2.1.4/php8.4-mongodb_2.1.4-1_darwin-amd64.tar.zst",
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.4.15/php8.4-mongodb_2.1.4-1_darwin-amd64.tar.zst",
           "sha256": "52f274c6724bf41b6473a34237a3065ca86a048f5a4633ff214604ad75d19e68",
           "size": 1007254,
           "installed_size": 3362816
@@ -1863,7 +1880,7 @@
           "provides": [
             "php-pcov"
           ],
-          "url": "https://github.com/phm-dev/php-packages/releases/download/php-1.0.12/php8.4-pcov_1.0.12-1_darwin-amd64.tar.zst",
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.4.15/php8.4-pcov_1.0.12-1_darwin-amd64.tar.zst",
           "sha256": "77768e18efa2de14a1a8f7f2a9d653a03ec0f97318658bdce239e5a112cbc172",
           "size": 8850,
           "installed_size": 36864
@@ -1925,7 +1942,7 @@
           "provides": [
             "php-redis"
           ],
-          "url": "https://github.com/phm-dev/php-packages/releases/download/php-6.3.0/php8.4-redis_6.3.0-1_darwin-amd64.tar.zst",
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.4.15/php8.4-redis_6.3.0-1_darwin-amd64.tar.zst",
           "sha256": "959afdbff18f7d76e3c73301774e0a92a4bcefaa8563d5eef171d8d5281a6f20",
           "size": 234726,
           "installed_size": 864256
@@ -1990,7 +2007,7 @@
           "provides": [
             "php-swoole"
           ],
-          "url": "https://github.com/phm-dev/php-packages/releases/download/php-6.0.0/php8.4-swoole_6.0.0-1_darwin-amd64.tar.zst",
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.4.15/php8.4-swoole_6.0.0-1_darwin-amd64.tar.zst",
           "sha256": "b7e425564e8e4d7f6125059ccc0433fb44970c6af124dcbaf91ba3c51f950654",
           "size": 1014808,
           "installed_size": 3518464
@@ -2006,7 +2023,7 @@
           "provides": [
             "php-xdebug"
           ],
-          "url": "https://github.com/phm-dev/php-packages/releases/download/php-3.5.0/php8.4-xdebug_3.5.0-1_darwin-amd64.tar.zst",
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.4.15/php8.4-xdebug_3.5.0-1_darwin-amd64.tar.zst",
           "sha256": "d7fc9396ba77d4cc82e80253afc7df693b973aa44779ede9ac161cbcfd7a6a10",
           "size": 164193,
           "installed_size": 413696
@@ -2044,20 +2061,20 @@
           "installed_size": 0
         },
         {
-          "name": "php8.4",
-          "version": "8.4.15",
+          "name": "php8.5",
+          "version": "8.5.0",
           "revision": 1,
-          "description": "PHP 8.4 meta-package (CLI + common)",
+          "description": "PHP 8.5 meta-package (CLI + common)",
           "depends": [
-            "php8.4-cli (>= 8.4.15)",
-            "php8.4-common (>= 8.4.15)"
+            "php8.5-cli (>= 8.5.0)",
+            "php8.5-common (>= 8.5.0)"
           ],
           "provides": [
             "php"
           ],
-          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.4.15/php8.4_8.4.15-1_darwin-amd64.tar.zst",
-          "sha256": "3af249aad8eed7bef6034768308010ceaf2801ebdbfa616c816a799734187b81",
-          "size": 367,
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.5.0/php8.5_8.5.0-1_darwin-amd64.tar.zst",
+          "sha256": "2b7605457c3c1e4ab71c580f1ab4ee5f66238c25a8e1be4bd13158249b279b44",
+          "size": 368,
           "installed_size": 0
         },
         {
@@ -2071,7 +2088,7 @@
           "provides": [
             "php-apcu"
           ],
-          "url": "https://github.com/phm-dev/php-packages/releases/download/php-5.1.28/php8.5-apcu_5.1.28-1_darwin-amd64.tar.zst",
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.5.0/php8.5-apcu_5.1.28-1_darwin-amd64.tar.zst",
           "sha256": "6910427e55c7a4a3245b6e02cc1056c0973af79678c3e1a58b2917a93cc1526c",
           "size": 36970,
           "installed_size": 102400
@@ -2283,7 +2300,7 @@
           "provides": [
             "php-mongodb"
           ],
-          "url": "https://github.com/phm-dev/php-packages/releases/download/php-2.1.4/php8.5-mongodb_2.1.4-1_darwin-amd64.tar.zst",
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.5.0/php8.5-mongodb_2.1.4-1_darwin-amd64.tar.zst",
           "sha256": "40fbb736a20d11c2ffb45ce1b092d8b90cb44f4021fcdcb6b25ad4677e159f97",
           "size": 1007242,
           "installed_size": 3362816
@@ -2345,7 +2362,7 @@
           "provides": [
             "php-pcov"
           ],
-          "url": "https://github.com/phm-dev/php-packages/releases/download/php-1.0.12/php8.5-pcov_1.0.12-1_darwin-amd64.tar.zst",
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.5.0/php8.5-pcov_1.0.12-1_darwin-amd64.tar.zst",
           "sha256": "8109a7b11828e2eb93eff5278152d1d65118657c16c0232aef4202b9692dcc49",
           "size": 8849,
           "installed_size": 36864
@@ -2407,7 +2424,7 @@
           "provides": [
             "php-redis"
           ],
-          "url": "https://github.com/phm-dev/php-packages/releases/download/php-6.3.0/php8.5-redis_6.3.0-1_darwin-amd64.tar.zst",
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.5.0/php8.5-redis_6.3.0-1_darwin-amd64.tar.zst",
           "sha256": "3650569b8c39159f5d75521a4fc11cff409941260aacc1e1458ab0bece9f7102",
           "size": 234705,
           "installed_size": 864256
@@ -2471,7 +2488,7 @@
           "provides": [
             "php-xdebug"
           ],
-          "url": "https://github.com/phm-dev/php-packages/releases/download/php-3.5.0/php8.5-xdebug_3.5.0-1_darwin-amd64.tar.zst",
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.5.0/php8.5-xdebug_3.5.0-1_darwin-amd64.tar.zst",
           "sha256": "ea705a4cec3fa6b962214d1a89b4c3e625e505ad31b0a6bd5bdc7e8c18decbc9",
           "size": 164634,
           "installed_size": 413696
@@ -2507,28 +2524,28 @@
           "sha256": "09d924b717e4af2d5b09de69fe9cc69ea4b8ca33bb3900f04180e8fc35b7f6d2",
           "size": 356,
           "installed_size": 0
-        },
-        {
-          "name": "php8.5",
-          "version": "8.5.0",
-          "revision": 1,
-          "description": "PHP 8.5 meta-package (CLI + common)",
-          "depends": [
-            "php8.5-cli (>= 8.5.0)",
-            "php8.5-common (>= 8.5.0)"
-          ],
-          "provides": [
-            "php"
-          ],
-          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.5.0/php8.5_8.5.0-1_darwin-amd64.tar.zst",
-          "sha256": "2b7605457c3c1e4ab71c580f1ab4ee5f66238c25a8e1be4bd13158249b279b44",
-          "size": 368,
-          "installed_size": 0
         }
       ]
     },
     "darwin-arm64": {
       "packages": [
+        {
+          "name": "php8.1",
+          "version": "8.1.33",
+          "revision": 1,
+          "description": "PHP 8.1 meta-package (CLI + common)",
+          "depends": [
+            "php8.1-cli (>= 8.1.33)",
+            "php8.1-common (>= 8.1.33)"
+          ],
+          "provides": [
+            "php"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.1.33/php8.1_8.1.33-1_darwin-arm64.tar.zst",
+          "sha256": "17fc2565addd6f3ce39e0ccb47507b23c6e04fbde85c9140a76a1f67b9630f11",
+          "size": 369,
+          "installed_size": 0
+        },
         {
           "name": "php8.1-amqp",
           "version": "2.1.2",
@@ -2540,7 +2557,7 @@
           "provides": [
             "php-amqp"
           ],
-          "url": "https://github.com/phm-dev/php-packages/releases/download/php-2.1.2/php8.1-amqp_2.1.2-1_darwin-arm64.tar.zst",
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.1.33/php8.1-amqp_2.1.2-1_darwin-arm64.tar.zst",
           "sha256": "3999bb6573408d026bd99ca564687bf668a05dd89648a60fd35910ea16c28910",
           "size": 106086,
           "installed_size": 389120
@@ -2556,7 +2573,7 @@
           "provides": [
             "php-apcu"
           ],
-          "url": "https://github.com/phm-dev/php-packages/releases/download/php-5.1.28/php8.1-apcu_5.1.28-1_darwin-arm64.tar.zst",
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.1.33/php8.1-apcu_5.1.28-1_darwin-arm64.tar.zst",
           "sha256": "9b8f38db7dc8ee6aa88f66a273700c7a545aa38d1cf57e4e0ce7595a2bd4e377",
           "size": 35478,
           "installed_size": 122880
@@ -2736,7 +2753,7 @@
           "provides": [
             "php-igbinary"
           ],
-          "url": "https://github.com/phm-dev/php-packages/releases/download/php-3.2.16/php8.1-igbinary_3.2.16-1_darwin-arm64.tar.zst",
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.1.33/php8.1-igbinary_3.2.16-1_darwin-arm64.tar.zst",
           "sha256": "23784653307f1da5f9b28b0f51dd4ae77387d93cfd8f8b00c93149944129eec1",
           "size": 32511,
           "installed_size": 122880
@@ -2784,7 +2801,7 @@
           "provides": [
             "php-mongodb"
           ],
-          "url": "https://github.com/phm-dev/php-packages/releases/download/php-2.1.4/php8.1-mongodb_2.1.4-1_darwin-arm64.tar.zst",
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.1.33/php8.1-mongodb_2.1.4-1_darwin-arm64.tar.zst",
           "sha256": "3ae923a12d3c30608d94840b22b7af01e3c5a39e6b4d2e67782d35f238ad4684",
           "size": 966094,
           "installed_size": 3334144
@@ -2846,7 +2863,7 @@
           "provides": [
             "php-pcov"
           ],
-          "url": "https://github.com/phm-dev/php-packages/releases/download/php-1.0.12/php8.1-pcov_1.0.12-1_darwin-arm64.tar.zst",
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.1.33/php8.1-pcov_1.0.12-1_darwin-arm64.tar.zst",
           "sha256": "11f2b06fb92b492e67c4cbcfeae613f943aa95abbe853b6fcea656f7a39704ab",
           "size": 9151,
           "installed_size": 65536
@@ -2908,7 +2925,7 @@
           "provides": [
             "php-redis"
           ],
-          "url": "https://github.com/phm-dev/php-packages/releases/download/php-6.3.0/php8.1-redis_6.3.0-1_darwin-arm64.tar.zst",
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.1.33/php8.1-redis_6.3.0-1_darwin-arm64.tar.zst",
           "sha256": "83732b7f95baa0714703ed8c4a7337ac0a9d3becf790a65bb4d14f77e8ef3f21",
           "size": 227989,
           "installed_size": 888832
@@ -2973,7 +2990,7 @@
           "provides": [
             "php-swoole"
           ],
-          "url": "https://github.com/phm-dev/php-packages/releases/download/php-6.0.0/php8.1-swoole_6.0.0-1_darwin-arm64.tar.zst",
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.1.33/php8.1-swoole_6.0.0-1_darwin-arm64.tar.zst",
           "sha256": "ab017a0f220f3e60c3ffc7ef4a681649dea9a1f14bda880ac3ba6901683043a6",
           "size": 969418,
           "installed_size": 3411968
@@ -2989,7 +3006,7 @@
           "provides": [
             "php-xdebug"
           ],
-          "url": "https://github.com/phm-dev/php-packages/releases/download/php-3.5.0/php8.1-xdebug_3.5.0-1_darwin-arm64.tar.zst",
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.1.33/php8.1-xdebug_3.5.0-1_darwin-arm64.tar.zst",
           "sha256": "333829ee78fac21f7c2ae12c645b43ac416ce44837152e5890e289a4a8e14de4",
           "size": 155987,
           "installed_size": 434176
@@ -3027,20 +3044,20 @@
           "installed_size": 0
         },
         {
-          "name": "php8.1",
-          "version": "8.1.33",
+          "name": "php8.2",
+          "version": "8.2.29",
           "revision": 1,
-          "description": "PHP 8.1 meta-package (CLI + common)",
+          "description": "PHP 8.2 meta-package (CLI + common)",
           "depends": [
-            "php8.1-cli (>= 8.1.33)",
-            "php8.1-common (>= 8.1.33)"
+            "php8.2-cli (>= 8.2.29)",
+            "php8.2-common (>= 8.2.29)"
           ],
           "provides": [
             "php"
           ],
-          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.1.33/php8.1_8.1.33-1_darwin-arm64.tar.zst",
-          "sha256": "17fc2565addd6f3ce39e0ccb47507b23c6e04fbde85c9140a76a1f67b9630f11",
-          "size": 369,
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.2.29/php8.2_8.2.29-1_darwin-arm64.tar.zst",
+          "sha256": "2adcde479ccb4ba30822232c6fd76915b8b6c1862360d37d87ba3b32d62b0f51",
+          "size": 368,
           "installed_size": 0
         },
         {
@@ -3054,7 +3071,7 @@
           "provides": [
             "php-amqp"
           ],
-          "url": "https://github.com/phm-dev/php-packages/releases/download/php-2.1.2/php8.2-amqp_2.1.2-1_darwin-arm64.tar.zst",
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.2.29/php8.2-amqp_2.1.2-1_darwin-arm64.tar.zst",
           "sha256": "27c902aecacc694ee12ebb724d80f5a4f1647feac0c8e1cdb1dd11af90e41503",
           "size": 106940,
           "installed_size": 389120
@@ -3070,7 +3087,7 @@
           "provides": [
             "php-apcu"
           ],
-          "url": "https://github.com/phm-dev/php-packages/releases/download/php-5.1.28/php8.2-apcu_5.1.28-1_darwin-arm64.tar.zst",
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.2.29/php8.2-apcu_5.1.28-1_darwin-arm64.tar.zst",
           "sha256": "37266229177a5ef01b80166c04e1d90965662b7454d1c383c3e3272ffc184c13",
           "size": 35818,
           "installed_size": 122880
@@ -3250,7 +3267,7 @@
           "provides": [
             "php-igbinary"
           ],
-          "url": "https://github.com/phm-dev/php-packages/releases/download/php-3.2.16/php8.2-igbinary_3.2.16-1_darwin-arm64.tar.zst",
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.2.29/php8.2-igbinary_3.2.16-1_darwin-arm64.tar.zst",
           "sha256": "38b88e936caab51cc7c09cd6fe8913ded9730c255d6439da957f8214a40db083",
           "size": 33131,
           "installed_size": 122880
@@ -3298,7 +3315,7 @@
           "provides": [
             "php-mongodb"
           ],
-          "url": "https://github.com/phm-dev/php-packages/releases/download/php-2.1.4/php8.2-mongodb_2.1.4-1_darwin-arm64.tar.zst",
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.2.29/php8.2-mongodb_2.1.4-1_darwin-arm64.tar.zst",
           "sha256": "c569a32a23df05fed0a486c38b7eec1085820b965ae2c9bc7a1767cabd25a550",
           "size": 964223,
           "installed_size": 3334144
@@ -3360,7 +3377,7 @@
           "provides": [
             "php-pcov"
           ],
-          "url": "https://github.com/phm-dev/php-packages/releases/download/php-1.0.12/php8.2-pcov_1.0.12-1_darwin-arm64.tar.zst",
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.2.29/php8.2-pcov_1.0.12-1_darwin-arm64.tar.zst",
           "sha256": "1190f8ced2d2c5dcd22ec3ec206aead69527860f5d788aabfca232d89338f857",
           "size": 9436,
           "installed_size": 65536
@@ -3422,7 +3439,7 @@
           "provides": [
             "php-redis"
           ],
-          "url": "https://github.com/phm-dev/php-packages/releases/download/php-6.3.0/php8.2-redis_6.3.0-1_darwin-arm64.tar.zst",
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.2.29/php8.2-redis_6.3.0-1_darwin-arm64.tar.zst",
           "sha256": "87389a97efa33f132cb53dc75d78bfb4e83dce427d69d8bfce8384ef0b43ecb2",
           "size": 227625,
           "installed_size": 884736
@@ -3487,7 +3504,7 @@
           "provides": [
             "php-swoole"
           ],
-          "url": "https://github.com/phm-dev/php-packages/releases/download/php-6.0.0/php8.2-swoole_6.0.0-1_darwin-arm64.tar.zst",
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.2.29/php8.2-swoole_6.0.0-1_darwin-arm64.tar.zst",
           "sha256": "55dca222b37d7fe8e1511a97b11390aa9021d2a059c03571c4871d1ff82f1e5c",
           "size": 970176,
           "installed_size": 3411968
@@ -3503,7 +3520,7 @@
           "provides": [
             "php-xdebug"
           ],
-          "url": "https://github.com/phm-dev/php-packages/releases/download/php-3.5.0/php8.2-xdebug_3.5.0-1_darwin-arm64.tar.zst",
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.2.29/php8.2-xdebug_3.5.0-1_darwin-arm64.tar.zst",
           "sha256": "a6b7762a222c17d4f4889579a213ce081ceee5f524ea2c59cc1c99e9c09851f9",
           "size": 156066,
           "installed_size": 434176
@@ -3541,20 +3558,20 @@
           "installed_size": 0
         },
         {
-          "name": "php8.2",
-          "version": "8.2.29",
+          "name": "php8.3",
+          "version": "8.3.28",
           "revision": 1,
-          "description": "PHP 8.2 meta-package (CLI + common)",
+          "description": "PHP 8.3 meta-package (CLI + common)",
           "depends": [
-            "php8.2-cli (>= 8.2.29)",
-            "php8.2-common (>= 8.2.29)"
+            "php8.3-cli (>= 8.3.28)",
+            "php8.3-common (>= 8.3.28)"
           ],
           "provides": [
             "php"
           ],
-          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.2.29/php8.2_8.2.29-1_darwin-arm64.tar.zst",
-          "sha256": "2adcde479ccb4ba30822232c6fd76915b8b6c1862360d37d87ba3b32d62b0f51",
-          "size": 368,
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.28/php8.3_8.3.28-1_darwin-arm64.tar.zst",
+          "sha256": "d4c4500a874ceb93224f0670bebd6c0163c1095442e4cc478edee319e704b981",
+          "size": 369,
           "installed_size": 0
         },
         {
@@ -3568,7 +3585,7 @@
           "provides": [
             "php-amqp"
           ],
-          "url": "https://github.com/phm-dev/php-packages/releases/download/php-2.1.2/php8.3-amqp_2.1.2-1_darwin-arm64.tar.zst",
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.28/php8.3-amqp_2.1.2-1_darwin-arm64.tar.zst",
           "sha256": "4ebc0c5a1b7c5aa8dd662a05f1db906e22f6a14ff9641ba343ca41d5e04f5b5f",
           "size": 105869,
           "installed_size": 372736
@@ -3584,7 +3601,7 @@
           "provides": [
             "php-apcu"
           ],
-          "url": "https://github.com/phm-dev/php-packages/releases/download/php-5.1.28/php8.3-apcu_5.1.28-1_darwin-arm64.tar.zst",
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.28/php8.3-apcu_5.1.28-1_darwin-arm64.tar.zst",
           "sha256": "cc09c570668474f1ebacc371f8b9565bbe7aacb65e1bd59d835973f48601d79b",
           "size": 35845,
           "installed_size": 122880
@@ -3764,7 +3781,7 @@
           "provides": [
             "php-igbinary"
           ],
-          "url": "https://github.com/phm-dev/php-packages/releases/download/php-3.2.16/php8.3-igbinary_3.2.16-1_darwin-arm64.tar.zst",
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.28/php8.3-igbinary_3.2.16-1_darwin-arm64.tar.zst",
           "sha256": "94afdf36ca5cb9058c55260aab4dede03c9409894552af7f4b1de286b95415f6",
           "size": 33166,
           "installed_size": 122880
@@ -3812,7 +3829,7 @@
           "provides": [
             "php-mongodb"
           ],
-          "url": "https://github.com/phm-dev/php-packages/releases/download/php-2.1.4/php8.3-mongodb_2.1.4-1_darwin-arm64.tar.zst",
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.28/php8.3-mongodb_2.1.4-1_darwin-arm64.tar.zst",
           "sha256": "493264840f80e9db358fbbfe8b2f7699ffe2f41ad7f2c081beb66d4faadae3ed",
           "size": 964513,
           "installed_size": 3334144
@@ -3874,7 +3891,7 @@
           "provides": [
             "php-pcov"
           ],
-          "url": "https://github.com/phm-dev/php-packages/releases/download/php-1.0.12/php8.3-pcov_1.0.12-1_darwin-arm64.tar.zst",
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.28/php8.3-pcov_1.0.12-1_darwin-arm64.tar.zst",
           "sha256": "5a028dd70cc6ee1779d4d26e39c83b88333703ae35505e02d703042ed66cd913",
           "size": 9383,
           "installed_size": 65536
@@ -3936,7 +3953,7 @@
           "provides": [
             "php-redis"
           ],
-          "url": "https://github.com/phm-dev/php-packages/releases/download/php-6.3.0/php8.3-redis_6.3.0-1_darwin-arm64.tar.zst",
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.28/php8.3-redis_6.3.0-1_darwin-arm64.tar.zst",
           "sha256": "971586645e918ff38f0677a46f89264e1609d18f76619b284746f5a2cbc9f8fc",
           "size": 227560,
           "installed_size": 884736
@@ -4001,7 +4018,7 @@
           "provides": [
             "php-swoole"
           ],
-          "url": "https://github.com/phm-dev/php-packages/releases/download/php-6.0.0/php8.3-swoole_6.0.0-1_darwin-arm64.tar.zst",
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.28/php8.3-swoole_6.0.0-1_darwin-arm64.tar.zst",
           "sha256": "cc9b4868209d261867c616170c73b0bd29b937c7cc103b2254ef8fb7bcd03be7",
           "size": 971151,
           "installed_size": 3411968
@@ -4017,7 +4034,7 @@
           "provides": [
             "php-xdebug"
           ],
-          "url": "https://github.com/phm-dev/php-packages/releases/download/php-3.5.0/php8.3-xdebug_3.5.0-1_darwin-arm64.tar.zst",
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.28/php8.3-xdebug_3.5.0-1_darwin-arm64.tar.zst",
           "sha256": "aac13956ecce1d6d7e15d91aa4c75ab417b37e5e980082d747237742c3863d04",
           "size": 156116,
           "installed_size": 434176
@@ -4055,20 +4072,20 @@
           "installed_size": 0
         },
         {
-          "name": "php8.3",
-          "version": "8.3.28",
+          "name": "php8.4",
+          "version": "8.4.15",
           "revision": 1,
-          "description": "PHP 8.3 meta-package (CLI + common)",
+          "description": "PHP 8.4 meta-package (CLI + common)",
           "depends": [
-            "php8.3-cli (>= 8.3.28)",
-            "php8.3-common (>= 8.3.28)"
+            "php8.4-cli (>= 8.4.15)",
+            "php8.4-common (>= 8.4.15)"
           ],
           "provides": [
             "php"
           ],
-          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.28/php8.3_8.3.28-1_darwin-arm64.tar.zst",
-          "sha256": "d4c4500a874ceb93224f0670bebd6c0163c1095442e4cc478edee319e704b981",
-          "size": 369,
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.4.15/php8.4_8.4.15-1_darwin-arm64.tar.zst",
+          "sha256": "d209b66ac4d8e019c4360bf689729473f69c3a4c648df3aa33218fdf91c54bc6",
+          "size": 367,
           "installed_size": 0
         },
         {
@@ -4082,7 +4099,7 @@
           "provides": [
             "php-amqp"
           ],
-          "url": "https://github.com/phm-dev/php-packages/releases/download/php-2.1.2/php8.4-amqp_2.1.2-1_darwin-arm64.tar.zst",
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.4.15/php8.4-amqp_2.1.2-1_darwin-arm64.tar.zst",
           "sha256": "a329115129ec190ef37ce11ae3776eb0ec03f5ee2454bf1797e5924c8f7a9bb7",
           "size": 106153,
           "installed_size": 372736
@@ -4098,7 +4115,7 @@
           "provides": [
             "php-apcu"
           ],
-          "url": "https://github.com/phm-dev/php-packages/releases/download/php-5.1.28/php8.4-apcu_5.1.28-1_darwin-arm64.tar.zst",
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.4.15/php8.4-apcu_5.1.28-1_darwin-arm64.tar.zst",
           "sha256": "0d1e02264e8898927101d6aefacb94ff7df2a09fbf3ca167f2177a4e40eabefc",
           "size": 35789,
           "installed_size": 122880
@@ -4278,7 +4295,7 @@
           "provides": [
             "php-igbinary"
           ],
-          "url": "https://github.com/phm-dev/php-packages/releases/download/php-3.2.16/php8.4-igbinary_3.2.16-1_darwin-arm64.tar.zst",
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.4.15/php8.4-igbinary_3.2.16-1_darwin-arm64.tar.zst",
           "sha256": "9cbcbc14a54335dd74732eef1a9d9aba2be2182da8a4d396e48e894c1bcf663d",
           "size": 33327,
           "installed_size": 139264
@@ -4326,7 +4343,7 @@
           "provides": [
             "php-mongodb"
           ],
-          "url": "https://github.com/phm-dev/php-packages/releases/download/php-2.1.4/php8.4-mongodb_2.1.4-1_darwin-arm64.tar.zst",
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.4.15/php8.4-mongodb_2.1.4-1_darwin-arm64.tar.zst",
           "sha256": "fcae3a89c58df4e4f96f05daca8a7bb6f7bb8c7a055d749c1e91c94c9ace8684",
           "size": 963848,
           "installed_size": 3334144
@@ -4388,7 +4405,7 @@
           "provides": [
             "php-pcov"
           ],
-          "url": "https://github.com/phm-dev/php-packages/releases/download/php-1.0.12/php8.4-pcov_1.0.12-1_darwin-arm64.tar.zst",
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.4.15/php8.4-pcov_1.0.12-1_darwin-arm64.tar.zst",
           "sha256": "6f6490eeed13d6e3814496a9fef40136e72f8660e04249f4b5aaf7f053553ee2",
           "size": 9369,
           "installed_size": 65536
@@ -4450,7 +4467,7 @@
           "provides": [
             "php-redis"
           ],
-          "url": "https://github.com/phm-dev/php-packages/releases/download/php-6.3.0/php8.4-redis_6.3.0-1_darwin-arm64.tar.zst",
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.4.15/php8.4-redis_6.3.0-1_darwin-arm64.tar.zst",
           "sha256": "89bdfa9eefc37923791728ee8264dcf0d77112debb7e14b7c10a2438ef144978",
           "size": 227959,
           "installed_size": 884736
@@ -4515,7 +4532,7 @@
           "provides": [
             "php-swoole"
           ],
-          "url": "https://github.com/phm-dev/php-packages/releases/download/php-6.0.0/php8.4-swoole_6.0.0-1_darwin-arm64.tar.zst",
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.4.15/php8.4-swoole_6.0.0-1_darwin-arm64.tar.zst",
           "sha256": "c638d678cd93bb52db02c6ade530e59a7a69c846245ca137098ed3bd7c212a73",
           "size": 972615,
           "installed_size": 3444736
@@ -4531,7 +4548,7 @@
           "provides": [
             "php-xdebug"
           ],
-          "url": "https://github.com/phm-dev/php-packages/releases/download/php-3.5.0/php8.4-xdebug_3.5.0-1_darwin-arm64.tar.zst",
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.4.15/php8.4-xdebug_3.5.0-1_darwin-arm64.tar.zst",
           "sha256": "8213ee37591c24ee2589a27777cb6ff387a74c39c91e5e0dfe6a4aa7bb02fddb",
           "size": 157065,
           "installed_size": 434176
@@ -4569,19 +4586,19 @@
           "installed_size": 0
         },
         {
-          "name": "php8.4",
-          "version": "8.4.15",
+          "name": "php8.5",
+          "version": "8.5.0",
           "revision": 1,
-          "description": "PHP 8.4 meta-package (CLI + common)",
+          "description": "PHP 8.5 meta-package (CLI + common)",
           "depends": [
-            "php8.4-cli (>= 8.4.15)",
-            "php8.4-common (>= 8.4.15)"
+            "php8.5-cli (>= 8.5.0)",
+            "php8.5-common (>= 8.5.0)"
           ],
           "provides": [
             "php"
           ],
-          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.4.15/php8.4_8.4.15-1_darwin-arm64.tar.zst",
-          "sha256": "d209b66ac4d8e019c4360bf689729473f69c3a4c648df3aa33218fdf91c54bc6",
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.5.0/php8.5_8.5.0-1_darwin-arm64.tar.zst",
+          "sha256": "017badadf867745bdcab95249c834f7e5e3c7f20c6df514fcc1788900fe52400",
           "size": 367,
           "installed_size": 0
         },
@@ -4596,7 +4613,7 @@
           "provides": [
             "php-apcu"
           ],
-          "url": "https://github.com/phm-dev/php-packages/releases/download/php-5.1.28/php8.5-apcu_5.1.28-1_darwin-arm64.tar.zst",
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.5.0/php8.5-apcu_5.1.28-1_darwin-arm64.tar.zst",
           "sha256": "495952e68afa5bf062aeb4c42483483bbf45764a051282d1dd1fa49a5d1020b2",
           "size": 36843,
           "installed_size": 126976
@@ -4808,7 +4825,7 @@
           "provides": [
             "php-mongodb"
           ],
-          "url": "https://github.com/phm-dev/php-packages/releases/download/php-2.1.4/php8.5-mongodb_2.1.4-1_darwin-arm64.tar.zst",
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.5.0/php8.5-mongodb_2.1.4-1_darwin-arm64.tar.zst",
           "sha256": "c0593a0279ff0751f4763906ca1755decea94f01a6e756f9ecee8026bb26e4b5",
           "size": 964266,
           "installed_size": 3334144
@@ -4870,7 +4887,7 @@
           "provides": [
             "php-pcov"
           ],
-          "url": "https://github.com/phm-dev/php-packages/releases/download/php-1.0.12/php8.5-pcov_1.0.12-1_darwin-arm64.tar.zst",
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.5.0/php8.5-pcov_1.0.12-1_darwin-arm64.tar.zst",
           "sha256": "5fb5efd612759f2763a9f83423b9fe56b3862b65e76a36d04f4636208ec8e861",
           "size": 9375,
           "installed_size": 65536
@@ -4932,7 +4949,7 @@
           "provides": [
             "php-redis"
           ],
-          "url": "https://github.com/phm-dev/php-packages/releases/download/php-6.3.0/php8.5-redis_6.3.0-1_darwin-arm64.tar.zst",
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.5.0/php8.5-redis_6.3.0-1_darwin-arm64.tar.zst",
           "sha256": "c418f92f2822a557b3f1a6d3076ee33efeac04ec57bb2ad2f58bbff607200ce3",
           "size": 227956,
           "installed_size": 884736
@@ -4996,7 +5013,7 @@
           "provides": [
             "php-xdebug"
           ],
-          "url": "https://github.com/phm-dev/php-packages/releases/download/php-3.5.0/php8.5-xdebug_3.5.0-1_darwin-arm64.tar.zst",
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.5.0/php8.5-xdebug_3.5.0-1_darwin-arm64.tar.zst",
           "sha256": "d664c3e9ac47fae8e157c2ea2de0897dbab7447532f43975ef2e3242f58f165c",
           "size": 157722,
           "installed_size": 434176
@@ -5031,23 +5048,6 @@
           "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.5.0/php8.5-zip_8.5.0-1_darwin-arm64.tar.zst",
           "sha256": "150a3e968905a08f7598d6e30f7ab775184e93be44eda67ffedd96adddae60e0",
           "size": 356,
-          "installed_size": 0
-        },
-        {
-          "name": "php8.5",
-          "version": "8.5.0",
-          "revision": 1,
-          "description": "PHP 8.5 meta-package (CLI + common)",
-          "depends": [
-            "php8.5-cli (>= 8.5.0)",
-            "php8.5-common (>= 8.5.0)"
-          ],
-          "provides": [
-            "php"
-          ],
-          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.5.0/php8.5_8.5.0-1_darwin-arm64.tar.zst",
-          "sha256": "017badadf867745bdcab95249c834f7e5e3c7f20c6df514fcc1788900fe52400",
-          "size": 367,
           "installed_size": 0
         }
       ]
