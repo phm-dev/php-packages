@@ -32,20 +32,23 @@ if [[ -z "$RESPONSE" ]]; then
 fi
 
 # Extract versions - filter only stable releases (no dev, alpha, beta, RC)
+# Handles both "1.2.3" and "v1.2.3" formats, strips "v" prefix
 if [[ "$SHOW_ALL" == true ]]; then
     echo "$RESPONSE" | jq -r --arg pkg "$PACKAGE" '
         .packages[$pkg][]
-        | select(.version | test("^[0-9]"))
+        | select(.version | test("^v?[0-9]"))
         | select(.version | test("dev|alpha|beta|RC|rc") | not)
         | .version
+        | ltrimstr("v")
     ' | head -20
 else
     # Get only the latest stable version
     VERSION=$(echo "$RESPONSE" | jq -r --arg pkg "$PACKAGE" '
         .packages[$pkg][]
-        | select(.version | test("^[0-9]"))
+        | select(.version | test("^v?[0-9]"))
         | select(.version | test("dev|alpha|beta|RC|rc") | not)
         | .version
+        | ltrimstr("v")
     ' | head -1)
 
     if [[ -z "$VERSION" || "$VERSION" == "null" ]]; then
