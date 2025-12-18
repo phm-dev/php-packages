@@ -141,7 +141,13 @@ jobs:
         env:
           BREW_DEPS: ${{ inputs.brew_deps }}
         run: |
+          # Core tools
           brew install -q zstd jq
+
+          # PHP runtime dependencies (required to run the downloaded PHP)
+          brew install -q libiconv openssl@3 libzip icu4c readline libxml2 sqlite oniguruma curl
+
+          # Extension-specific dependencies
           if [[ -n "$BREW_DEPS" ]]; then
             brew install -q $BREW_DEPS
           fi
