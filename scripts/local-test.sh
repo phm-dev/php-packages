@@ -64,7 +64,21 @@ check_docker() {
     fi
 }
 
-# Check KVM support
+# Check if running on macOS (no Docker needed!)
+check_macos_host() {
+    if [[ "$(uname -s)" == "Darwin" ]]; then
+        log_error "You're already on macOS! No need for Docker."
+        log_info ""
+        log_info "Build natively instead:"
+        log_info "  ./scripts/install-deps.sh"
+        log_info "  ./scripts/build-php-core.sh 8.5.0"
+        log_info "  ./scripts/build-all-extensions.sh 8.5.0"
+        log_info ""
+        exit 0
+    fi
+}
+
+# Check KVM support (Linux only)
 check_kvm() {
     if [[ ! -e /dev/kvm ]]; then
         log_error "KVM is not available (/dev/kvm not found)"
@@ -75,6 +89,7 @@ check_kvm() {
 
 # Start container
 cmd_start() {
+    check_macos_host
     log_info "Starting macOS container..."
     check_docker
     check_kvm
