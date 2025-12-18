@@ -227,9 +227,11 @@ build_with_pie() {
     local pie_args=("$pie_phar" "build" "${PACKAGIST}:${EXT_VERSION}")
 
     # Add PIE options (configure options) - PIE accepts them directly
-    for opt in "${PIE_OPTIONS[@]}"; do
-        [[ -n "$opt" ]] && pie_args+=("$opt")
-    done
+    if [[ ${#PIE_OPTIONS[@]} -gt 0 ]]; then
+        for opt in "${PIE_OPTIONS[@]}"; do
+            [[ -n "$opt" ]] && pie_args+=("$opt")
+        done
+    fi
 
     log_info "Running: $PHP_BIN ${pie_args[*]}"
 
@@ -271,9 +273,11 @@ build_with_pecl() {
 
     # Build configure options string
     local configure_opts=("--with-php-config=${PHP_CONFIG}")
-    for opt in "${PIE_OPTIONS[@]}"; do
-        [[ -n "$opt" ]] && configure_opts+=("$opt")
-    done
+    if [[ ${#PIE_OPTIONS[@]} -gt 0 ]]; then
+        for opt in "${PIE_OPTIONS[@]}"; do
+            [[ -n "$opt" ]] && configure_opts+=("$opt")
+        done
+    fi
 
     log_info "Building with options: ${configure_opts[*]}"
 
@@ -311,9 +315,11 @@ build_manual() {
 
     # Build configure options string
     local configure_opts=("--with-php-config=${PHP_CONFIG}")
-    for opt in "${PIE_OPTIONS[@]}"; do
-        [[ -n "$opt" ]] && configure_opts+=("$opt")
-    done
+    if [[ ${#PIE_OPTIONS[@]} -gt 0 ]]; then
+        for opt in "${PIE_OPTIONS[@]}"; do
+            [[ -n "$opt" ]] && configure_opts+=("$opt")
+        done
+    fi
 
     log_info "Building with options: ${configure_opts[*]}"
 
