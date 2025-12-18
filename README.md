@@ -42,7 +42,6 @@ One release per PHP version containing core + all extensions:
 | apcu | apcu/apcu |
 | decimal | php-decimal/ext-decimal |
 | imagick | imagick/imagick |
-| mcrypt | pecl/mcrypt |
 | ev | osmanov/pecl-ev |
 | opentelemetry | open-telemetry/ext-opentelemetry |
 | memcached | php-memcached/php-memcached |

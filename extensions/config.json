@@ -71,12 +71,6 @@
       "brew_deps": ["imagemagick"],
       "description": "ImageMagick binding for PHP"
     },
-    "mcrypt": {
-      "packagist": "pecl/mcrypt",
-      "pie_options": [],
-      "brew_deps": ["libmcrypt"],
-      "description": "Mcrypt encryption extension (legacy)"
-    },
     "ev": {
       "packagist": "osmanov/pecl-ev",
       "pie_options": [],
