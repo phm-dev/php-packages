@@ -200,17 +200,22 @@ setup_env() {
 build_with_pie() {
     log_info "Attempting build with PIE..."
 
-    local pie_phar="${PHP_PATH}/bin/pie.phar"
+    local pie_phar="${BUILD_DIR}/pie.phar"
 
-    # Install PIE if not present
-    if [[ ! -f "$pie_phar" ]]; then
-        log_info "Downloading PIE..."
-        local pie_url="https://github.com/php/pie/releases/latest/download/pie.phar"
-        if ! curl -fsSL "$pie_url" -o "$pie_phar"; then
-            log_warn "Failed to download PIE"
-            return 1
-        fi
-        chmod +x "$pie_phar"
+    # Download PIE
+    log_info "Downloading PIE..."
+    local pie_url="https://github.com/php/pie/releases/latest/download/pie.phar"
+
+    mkdir -p "$BUILD_DIR"
+    if ! curl -fsSL --retry 3 --retry-delay 2 "$pie_url" -o "$pie_phar" 2>/dev/null; then
+        log_warn "Failed to download PIE"
+        return 1
+    fi
+    chmod +x "$pie_phar"
+
+    if [[ ! -s "$pie_phar" ]]; then
+        log_warn "PIE download resulted in empty file"
+        return 1
     fi
 
     if [[ -z "$PACKAGIST" || "$PACKAGIST" == "null" ]]; then
@@ -244,12 +249,12 @@ build_with_pie() {
     fi
 }
 
-# Fallback to PECL
+# Fallback to PECL binary (if available)
 build_with_pecl() {
-    log_info "Falling back to PECL build..."
+    log_info "Attempting PECL build..."
 
     if [[ ! -x "$PECL_BIN" ]]; then
-        log_error "PECL not found at ${PECL_BIN}"
+        log_warn "PECL not found at ${PECL_BIN}"
         return 1
     fi
 
@@ -280,6 +285,57 @@ build_with_pecl() {
     run_build make -j"$(sysctl -n hw.ncpu 2>/dev/null || nproc 2>/dev/null || echo 4)"
 
     log_success "PECL build successful"
+    return 0
+}
+
+# Manual build from pecl.php.net (no pecl binary needed)
+build_manual() {
+    log_info "Attempting manual build from pecl.php.net..."
+
+    mkdir -p "$BUILD_DIR"
+    cd "$BUILD_DIR"
+    : > "$BUILD_LOG"
+
+    # Download from pecl.php.net
+    local pecl_url="https://pecl.php.net/get/${EXTENSION}-${EXT_VERSION}.tgz"
+    log_info "Downloading from ${pecl_url}..."
+
+    if ! curl -fsSL --retry 3 "$pecl_url" -o "${EXTENSION}-${EXT_VERSION}.tgz"; then
+        log_warn "Failed to download from pecl.php.net"
+        return 1
+    fi
+
+    # Extract
+    tar xf "${EXTENSION}-${EXT_VERSION}.tgz" 2>/dev/null
+    cd "${EXTENSION}-${EXT_VERSION}" 2>/dev/null || cd "${EXTENSION}"-* 2>/dev/null || {
+        log_warn "Failed to find extracted directory"
+        return 1
+    }
+
+    # Build configure options string
+    local configure_opts=("--with-php-config=${PHP_CONFIG}")
+    for opt in "${PIE_OPTIONS[@]}"; do
+        [[ -n "$opt" ]] && configure_opts+=("$opt")
+    done
+
+    log_info "Building with options: ${configure_opts[*]}"
+
+    if ! run_build "$PHPIZE"; then
+        log_warn "phpize failed"
+        return 1
+    fi
+
+    if ! run_build ./configure "${configure_opts[@]}"; then
+        log_warn "configure failed"
+        return 1
+    fi
+
+    if ! run_build make -j"$(sysctl -n hw.ncpu 2>/dev/null || nproc 2>/dev/null || echo 4)"; then
+        log_warn "make failed"
+        return 1
+    fi
+
+    log_success "Manual build successful"
     return 0
 }
 
@@ -397,10 +453,12 @@ main() {
             build_success=true
         fi
     else
-        # Try PIE first, then PECL
+        # Try build methods in order: PIE -> PECL -> Manual
         if build_with_pie; then
             build_success=true
         elif build_with_pecl; then
+            build_success=true
+        elif build_manual; then
             build_success=true
         fi
     fi
