@@ -59,7 +59,7 @@ jobs:
               PACKAGIST=$(jq -r ".extensions.${ext}.packagist // empty" extensions/config.json)
               [[ -z "$PACKAGIST" || "$PACKAGIST" == "null" ]] && continue
               VERSION=$(./scripts/get-extension-version.sh "$PACKAGIST" 2>/dev/null || echo "")
-              [[ -n "$VERSION" ]] && EXT_VERSIONS=$(echo "$EXT_VERSIONS" | jq --arg e "$ext" --arg v "$VERSION" '. + {($e): $v}')
+              [[ -n "$VERSION" ]] && EXT_VERSIONS=$(echo "$EXT_VERSIONS" | jq -c --arg e "$ext" --arg v "$VERSION" '. + {($e): $v}')
             done
             echo "ext_versions=$EXT_VERSIONS" >> $GITHUB_OUTPUT
             exit 0
