@@ -247,7 +247,7 @@ create_php_core_package() {
 EOF
 
     # Create tarball with zstd compression
-    tar -cf - -C "${pkg_dir}" pkginfo.json files | zstd -${ZSTD_LEVEL} -o "${DIST_DIR}/${pkg_filename}"
+    tar -cf - -C "${pkg_dir}" pkginfo.json files | zstd -${ZSTD_LEVEL} -f -o "${DIST_DIR}/${pkg_filename}"
 
     # Generate SHA256
     if command -v sha256sum &> /dev/null; then
@@ -400,7 +400,7 @@ create_extension_package_v2() {
 EOF
 
     # Create tarball with zstd compression
-    tar -cf - -C "${pkg_dir}" pkginfo.json files | zstd -${ZSTD_LEVEL} -o "${DIST_DIR}/${pkg_filename}"
+    tar -cf - -C "${pkg_dir}" pkginfo.json files | zstd -${ZSTD_LEVEL} -f -o "${DIST_DIR}/${pkg_filename}"
 
     # Generate SHA256
     if command -v sha256sum &> /dev/null; then
@@ -589,7 +589,7 @@ create_package() {
 EOF
 
     # Create tarball with zstd compression
-    tar -cf - -C "${pkg_dir}" pkginfo.json files | zstd -${ZSTD_LEVEL} -o "${DIST_DIR}/${pkg_filename}"
+    tar -cf - -C "${pkg_dir}" pkginfo.json files | zstd -${ZSTD_LEVEL} -f -o "${DIST_DIR}/${pkg_filename}"
 
     # Generate SHA256
     if command -v sha256sum &> /dev/null; then
@@ -713,7 +713,7 @@ create_meta_package() {
 EOF
 
     # Create tarball with zstd compression
-    tar -cf - -C "${pkg_dir}" pkginfo.json files | zstd -${ZSTD_LEVEL} -o "${DIST_DIR}/${pkg_filename}"
+    tar -cf - -C "${pkg_dir}" pkginfo.json files | zstd -${ZSTD_LEVEL} -f -o "${DIST_DIR}/${pkg_filename}"
 
     # Generate SHA256
     if command -v sha256sum &> /dev/null; then
@@ -858,7 +858,7 @@ create_extension_package() {
 EOF
 
     # Create tarball with zstd compression
-    tar -cf - -C "${pkg_dir}" pkginfo.json files | zstd -${ZSTD_LEVEL} -o "${DIST_DIR}/${pkg_filename}"
+    tar -cf - -C "${pkg_dir}" pkginfo.json files | zstd -${ZSTD_LEVEL} -f -o "${DIST_DIR}/${pkg_filename}"
 
     # Generate SHA256
     if command -v sha256sum &> /dev/null; then

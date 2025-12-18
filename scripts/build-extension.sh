@@ -226,6 +226,14 @@ build_with_pie() {
     # Build PIE command - options are passed directly (no -- separator)
     local pie_args=("$pie_phar" "build" "${PACKAGIST}:${EXT_VERSION}")
 
+    # Add PHP config path - required for PIE to find the right PHP
+    pie_args+=("--with-php-config=${PHP_CONFIG}")
+
+    # Add parallel jobs for faster builds
+    local num_cpus
+    num_cpus=$(sysctl -n hw.ncpu 2>/dev/null || nproc 2>/dev/null || echo 4)
+    pie_args+=("-j${num_cpus}")
+
     # Add PIE options (configure options) - PIE accepts them directly
     if [[ ${#PIE_OPTIONS[@]} -gt 0 ]]; then
         for opt in "${PIE_OPTIONS[@]}"; do
@@ -238,6 +246,12 @@ build_with_pie() {
     mkdir -p "$BUILD_DIR"
     cd "$BUILD_DIR"
     : > "$BUILD_LOG"
+
+    # Clean PIE cache for this PHP version to avoid stale state
+    local pie_cache_dir="${HOME}/.pie"
+    if [[ -d "$pie_cache_dir" ]]; then
+        rm -rf "${pie_cache_dir}"/php${PHP_MAJOR_MINOR}* 2>/dev/null || true
+    fi
 
     if run_build "$PHP_BIN" "${pie_args[@]}"; then
         log_success "PIE build successful"
@@ -382,6 +396,17 @@ find_extension_so() {
     if [[ -n "$ext_dir" && -f "${ext_dir}/${EXTENSION}.so" ]]; then
         echo "${ext_dir}/${EXTENSION}.so"
         return 0
+    fi
+
+    # Check in PIE cache directory (~/.pie/php{version}_{hash}/vendor/*/modules/)
+    local pie_cache_dir="${HOME}/.pie"
+    if [[ -d "$pie_cache_dir" ]]; then
+        local found
+        found=$(find "$pie_cache_dir" -path "*/modules/${EXTENSION}.so" -type f 2>/dev/null | head -1)
+        if [[ -n "$found" ]]; then
+            echo "$found"
+            return 0
+        fi
     fi
 
     # Check in build directory

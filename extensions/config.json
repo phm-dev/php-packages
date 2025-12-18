@@ -2,11 +2,7 @@
   "extensions": {
     "redis": {
       "packagist": "phpredis/phpredis",
-      "pie_options": [
-        "--enable-redis-lzf",
-        "--enable-redis-zstd",
-        "--enable-redis-lz4"
-      ],
+      "pie_options": [],
       "brew_deps": ["lz4", "zstd"],
       "description": "Redis extension for PHP"
     },
@@ -48,7 +44,7 @@
       "description": "Coroutine-based concurrency library for PHP"
     },
     "pcov": {
-      "packagist": "pecl/pcov",
+      "packagist": "krakjoe/pcov",
       "pie_options": [],
       "brew_deps": [],
       "description": "Code coverage driver"
