@@ -1,25 +1,29 @@
 #!/usr/bin/env bash
 #
 # Local testing script for php-packages builds
-# Uses Docker-OSX for macOS environment simulation
+# Uses dockur/macos for macOS environment in Docker
 #
 # Prerequisites:
-#   - Docker with KVM support (Linux) or Docker Desktop (macOS)
-#   - At least 50GB free disk space
+#   - Linux with KVM support (/dev/kvm)
+#   - Docker installed
+#   - 50GB+ free disk space
 #   - 8GB+ RAM recommended
 #
 # Usage:
-#   ./local-test.sh setup              # First-time setup (downloads macOS image)
-#   ./local-test.sh start              # Start Docker-OSX container
-#   ./local-test.sh ssh                # SSH into running container
-#   ./local-test.sh build <php_ver>    # Build PHP + extensions in container
+#   ./local-test.sh start              # Start macOS container
+#   ./local-test.sh web                # Open web UI in browser
+#   ./local-test.sh ssh                # SSH into macOS (after enabling SSH)
 #   ./local-test.sh stop               # Stop container
-#   ./local-test.sh clean              # Remove container and volumes
+#   ./local-test.sh clean              # Remove container and storage
+#   ./local-test.sh status             # Show status
 #
-# Examples:
-#   ./local-test.sh setup
-#   ./local-test.sh start
-#   ./local-test.sh build 8.5.0
+# First run setup:
+#   1. ./local-test.sh start
+#   2. ./local-test.sh web (or open http://localhost:8006)
+#   3. Use Disk Utility to format the virtual disk
+#   4. Install macOS (15-30 min)
+#   5. Enable SSH: System Preferences > Sharing > Remote Login
+#   6. ./local-test.sh ssh
 #
 
 set -euo pipefail
@@ -29,11 +33,11 @@ PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 
 # Configuration
 CONTAINER_NAME="php-packages-macos"
+WEB_PORT="${WEB_PORT:-8006}"
+VNC_PORT="${VNC_PORT:-5900}"
 SSH_PORT="${SSH_PORT:-10022}"
-VNC_PORT="${VNC_PORT:-5999}"
-MACOS_VERSION="${MACOS_VERSION:-ventura}"  # sonoma, ventura, monterey
-SSH_USER="user"
-SSH_PASS="alpine"
+MACOS_VERSION="${MACOS_VERSION:-15}"  # 11, 12, 13, 14, 15
+STORAGE_VOLUME="php-packages_macos-storage"
 
 # Colors
 RED='\033[0;31m'
@@ -60,85 +64,87 @@ check_docker() {
     fi
 }
 
-# Check KVM support (Linux only)
+# Check KVM support
 check_kvm() {
-    if [[ "$(uname -s)" == "Linux" ]]; then
-        if [[ ! -e /dev/kvm ]]; then
-            log_error "KVM is not available. Enable virtualization in BIOS."
-            exit 1
-        fi
+    if [[ ! -e /dev/kvm ]]; then
+        log_error "KVM is not available (/dev/kvm not found)"
+        log_error "Enable virtualization in BIOS or run on a Linux host with KVM support"
+        exit 1
     fi
 }
 
-# Setup - pull Docker-OSX image
-cmd_setup() {
-    log_info "Setting up Docker-OSX environment..."
-    check_docker
-
-    log_info "Pulling Docker-OSX image (sickcodes/docker-osx:${MACOS_VERSION})..."
-    log_warn "This may take a while (image is ~15-20GB)"
-
-    docker pull "sickcodes/docker-osx:${MACOS_VERSION}"
-
-    log_success "Setup complete!"
-    log_info ""
-    log_info "Next steps:"
-    log_info "  1. Run: ./local-test.sh start"
-    log_info "  2. Wait for macOS to boot (5-10 minutes first time)"
-    log_info "  3. Run: ./local-test.sh ssh"
-    log_info "  4. In macOS: ./local-test.sh build 8.5.0"
-}
-
-# Start Docker-OSX container
+# Start container
 cmd_start() {
-    log_info "Starting Docker-OSX container..."
+    log_info "Starting macOS container..."
     check_docker
+    check_kvm
 
     # Check if already running
     if docker ps --format '{{.Names}}' | grep -q "^${CONTAINER_NAME}$"; then
         log_warn "Container already running"
-        log_info "SSH: ssh ${SSH_USER}@localhost -p ${SSH_PORT}"
+        log_info "Web UI: http://localhost:${WEB_PORT}"
+        log_info "VNC: localhost:${VNC_PORT}"
         return 0
     fi
 
     # Remove stopped container if exists
     docker rm -f "$CONTAINER_NAME" 2>/dev/null || true
 
-    # Determine device options based on OS
-    local device_opts=""
-    if [[ "$(uname -s)" == "Linux" ]]; then
-        check_kvm
-        device_opts="--device /dev/kvm"
-    fi
-
     log_info "Starting macOS ${MACOS_VERSION} container..."
-    log_info "SSH port: ${SSH_PORT}, VNC port: ${VNC_PORT}"
+    log_info "Web UI port: ${WEB_PORT}, VNC port: ${VNC_PORT}, SSH port: ${SSH_PORT}"
 
     docker run -d \
         --name "$CONTAINER_NAME" \
-        $device_opts \
-        -p "${SSH_PORT}:10022" \
-        -p "${VNC_PORT}:5999" \
-        -v "${PROJECT_ROOT}:/mnt/php-packages:delegated" \
-        -e "DISPLAY=${DISPLAY:-:0}" \
-        -e "GENERATE_UNIQUE=true" \
-        -e "CPU=Haswell-noTSX" \
-        -e "CPUID_FLAGS=kvm=on,vendor=GenuineIntel,+invtsc,vmware-cpuid-freq=on" \
-        -e "MASTER_PLIST_URL=https://raw.githubusercontent.com/sickcodes/osx-serial-generator/master/config-custom.plist" \
-        "sickcodes/docker-osx:${MACOS_VERSION}"
+        --device /dev/kvm \
+        --device /dev/net/tun \
+        --cap-add NET_ADMIN \
+        -p "${WEB_PORT}:8006" \
+        -p "${VNC_PORT}:5900" \
+        -p "${SSH_PORT}:22" \
+        -v "${STORAGE_VOLUME}:/storage" \
+        -v "${PROJECT_ROOT}:/mnt/php-packages:cached" \
+        -e "VERSION=${MACOS_VERSION}" \
+        -e "DISK_SIZE=64G" \
+        -e "RAM_SIZE=8G" \
+        -e "CPU_CORES=4" \
+        --restart unless-stopped \
+        --stop-timeout 120 \
+        dockurr/macos
 
     log_success "Container started!"
     log_info ""
-    log_info "macOS is booting... This takes 5-10 minutes on first run."
+    log_info "============================================"
+    log_info "  macOS is starting..."
+    log_info "============================================"
     log_info ""
-    log_info "Connect via:"
-    log_info "  SSH: ssh ${SSH_USER}@localhost -p ${SSH_PORT}"
-    log_info "       Password: ${SSH_PASS}"
-    log_info "  VNC: localhost:${VNC_PORT}"
+    log_info "Access:"
+    log_info "  Web UI: http://localhost:${WEB_PORT}"
+    log_info "  VNC:    localhost:${VNC_PORT}"
+    log_info ""
+    log_info "First run setup:"
+    log_info "  1. Open http://localhost:${WEB_PORT}"
+    log_info "  2. Use Disk Utility to format the virtual disk"
+    log_info "  3. Install macOS (takes 15-30 minutes)"
+    log_info "  4. After setup, enable SSH:"
+    log_info "     System Preferences > Sharing > Remote Login"
     log_info ""
     log_info "Project mounted at: /mnt/php-packages"
     log_info ""
-    log_info "To check boot progress: docker logs -f ${CONTAINER_NAME}"
+    log_info "To check progress: docker logs -f ${CONTAINER_NAME}"
+}
+
+# Open web UI
+cmd_web() {
+    local url="http://localhost:${WEB_PORT}"
+    log_info "Opening web UI: ${url}"
+
+    if command -v xdg-open &>/dev/null; then
+        xdg-open "$url"
+    elif command -v open &>/dev/null; then
+        open "$url"
+    else
+        log_info "Open in browser: ${url}"
+    fi
 }
 
 # SSH into container
@@ -151,100 +157,22 @@ cmd_ssh() {
         exit 1
     fi
 
-    # Try to connect
-    log_info "Connecting to ${SSH_USER}@localhost:${SSH_PORT}..."
-    log_info "Password: ${SSH_PASS}"
+    log_info "Connecting to localhost:${SSH_PORT}..."
+    log_warn "Make sure SSH is enabled in macOS: System Preferences > Sharing > Remote Login"
+    log_info ""
 
     ssh -o StrictHostKeyChecking=no \
         -o UserKnownHostsFile=/dev/null \
         -p "$SSH_PORT" \
-        "${SSH_USER}@localhost"
-}
-
-# Build PHP in container
-cmd_build() {
-    local php_version="${1:-}"
-
-    if [[ -z "$php_version" ]]; then
-        log_error "Usage: ./local-test.sh build <php_version>"
-        log_info "Example: ./local-test.sh build 8.5.0"
-        exit 1
-    fi
-
-    log_info "Building PHP ${php_version} in Docker-OSX..."
-
-    # Check if container is running
-    if ! docker ps --format '{{.Names}}' | grep -q "^${CONTAINER_NAME}$"; then
-        log_error "Container not running. Start with: ./local-test.sh start"
-        exit 1
-    fi
-
-    # Execute build commands via SSH
-    log_info "Executing build via SSH..."
-
-    ssh -o StrictHostKeyChecking=no \
-        -o UserKnownHostsFile=/dev/null \
-        -p "$SSH_PORT" \
-        "${SSH_USER}@localhost" << EOF
-cd /mnt/php-packages
-
-# Install Homebrew if not present
-if ! command -v brew &>/dev/null; then
-    echo "Installing Homebrew..."
-    /bin/bash -c "\$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-    eval "\$(/opt/homebrew/bin/brew shellenv)" || eval "\$(/usr/local/bin/brew shellenv)"
-fi
-
-# Install dependencies
-echo "Installing build dependencies..."
-brew install -q autoconf automake bison re2c pkg-config libtool cmake \\
-    openssl@3 libzip icu4c readline libxml2 libxslt \\
-    sqlite lz4 zstd oniguruma jpeg-turbo libpng freetype webp \\
-    libpq bzip2 curl libiconv jq \\
-    rabbitmq-c libmemcached imagemagick libmcrypt libev librdkafka mpdecimal
-
-# Make scripts executable
-chmod +x scripts/*.sh
-
-# Build PHP
-echo "Building PHP ${php_version}..."
-./scripts/build-php-core.sh ${php_version}
-
-# Build extensions
-echo "Building extensions..."
-./scripts/build-all-extensions.sh ${php_version} --continue-on-error
-
-# List results
-echo ""
-echo "Build complete! Packages:"
-ls -la dist/*.tar.zst 2>/dev/null || echo "No packages found"
-EOF
-
-    log_success "Build complete!"
-    log_info "Packages are in: ${PROJECT_ROOT}/dist/"
-}
-
-# Copy files from container
-cmd_copy() {
-    log_info "Copying built packages from container..."
-
-    # Check if container is running
-    if ! docker ps --format '{{.Names}}' | grep -q "^${CONTAINER_NAME}$"; then
-        log_error "Container not running"
-        exit 1
-    fi
-
-    # Files are already available via volume mount
-    log_info "Packages are available at: ${PROJECT_ROOT}/dist/"
-    ls -la "${PROJECT_ROOT}/dist/"*.tar.zst 2>/dev/null || log_warn "No packages found"
+        localhost
 }
 
 # Stop container
 cmd_stop() {
-    log_info "Stopping Docker-OSX container..."
+    log_info "Stopping macOS container..."
 
     if docker ps --format '{{.Names}}' | grep -q "^${CONTAINER_NAME}$"; then
-        docker stop "$CONTAINER_NAME"
+        docker stop -t 120 "$CONTAINER_NAME"
         log_success "Container stopped"
     else
         log_warn "Container not running"
@@ -253,36 +181,58 @@ cmd_stop() {
 
 # Clean up
 cmd_clean() {
-    log_info "Cleaning up Docker-OSX environment..."
+    log_info "Cleaning up macOS environment..."
 
     docker rm -f "$CONTAINER_NAME" 2>/dev/null || true
+
+    log_info "Removing storage volume..."
+    docker volume rm "$STORAGE_VOLUME" 2>/dev/null || true
 
     log_success "Cleanup complete"
     log_info ""
     log_info "Note: Docker image is still present. To remove it:"
-    log_info "  docker rmi sickcodes/docker-osx:${MACOS_VERSION}"
+    log_info "  docker rmi dockurr/macos"
+}
+
+# Show logs
+cmd_logs() {
+    if ! docker ps -a --format '{{.Names}}' | grep -q "^${CONTAINER_NAME}$"; then
+        log_error "Container not found"
+        exit 1
+    fi
+
+    docker logs -f "$CONTAINER_NAME"
 }
 
 # Show status
 cmd_status() {
-    log_info "Docker-OSX Status"
-    log_info "================="
+    log_info "macOS Container Status"
+    log_info "======================"
 
     if docker ps --format '{{.Names}}' | grep -q "^${CONTAINER_NAME}$"; then
         log_success "Container: Running"
-        log_info "  SSH: ssh ${SSH_USER}@localhost -p ${SSH_PORT}"
+        log_info "  Web UI: http://localhost:${WEB_PORT}"
         log_info "  VNC: localhost:${VNC_PORT}"
+        log_info "  SSH: localhost:${SSH_PORT} (if enabled in macOS)"
     elif docker ps -a --format '{{.Names}}' | grep -q "^${CONTAINER_NAME}$"; then
         log_warn "Container: Stopped"
+        log_info "  Start with: ./local-test.sh start"
     else
         log_info "Container: Not created"
+        log_info "  Create with: ./local-test.sh start"
     fi
 
     log_info ""
     log_info "Project: ${PROJECT_ROOT}"
 
+    if docker volume ls -q | grep -q "^${STORAGE_VOLUME}$"; then
+        log_info "Storage volume: exists"
+    else
+        log_info "Storage volume: not created"
+    fi
+
     if [[ -d "${PROJECT_ROOT}/dist" ]]; then
-        local count=$(ls "${PROJECT_ROOT}/dist/"*.tar.zst 2>/dev/null | wc -l)
+        local count=$(ls "${PROJECT_ROOT}/dist/"*.tar.zst 2>/dev/null | wc -l || echo 0)
         log_info "Built packages: ${count}"
     fi
 }
@@ -290,49 +240,66 @@ cmd_status() {
 # Show help
 cmd_help() {
     cat << 'EOF'
-Local Testing with Docker-OSX
-=============================
+Local Testing with macOS in Docker
+===================================
 
-This script helps you test PHP builds locally using Docker-OSX,
-which runs macOS in a Docker container.
+This script helps you test PHP builds locally using dockur/macos,
+which runs macOS in a Docker container via QEMU/KVM.
 
 Commands:
-  setup              Download Docker-OSX image (~15-20GB)
   start              Start macOS container
-  ssh                SSH into running container
-  build <version>    Build PHP + extensions (e.g., build 8.5.0)
-  copy               Show location of built packages
-  stop               Stop container
-  clean              Remove container
+  web                Open web UI in browser
+  ssh                SSH into macOS (after enabling SSH)
+  logs               Show container logs
+  stop               Stop container (graceful shutdown)
+  clean              Remove container and storage volume
   status             Show current status
   help               Show this help
 
 Environment Variables:
+  WEB_PORT           Web UI port (default: 8006)
+  VNC_PORT           VNC port (default: 5900)
   SSH_PORT           SSH port (default: 10022)
-  VNC_PORT           VNC port (default: 5999)
-  MACOS_VERSION      macOS version: sonoma, ventura, monterey (default: ventura)
+  MACOS_VERSION      macOS version: 11-15 (default: 15)
 
-Examples:
-  # First-time setup
-  ./local-test.sh setup
-  ./local-test.sh start
+First Run Setup:
+  1. ./local-test.sh start
+  2. ./local-test.sh web (opens http://localhost:8006)
+  3. In the web UI:
+     - Open Disk Utility
+     - Select the largest disk (VirtIO)
+     - Click Erase, name it "Macintosh HD", format APFS
+     - Close Disk Utility
+     - Click "Reinstall macOS"
+  4. Wait for installation (15-30 minutes)
+  5. Complete macOS setup wizard
+  6. Enable SSH:
+     System Preferences > Sharing > Remote Login
+  7. ./local-test.sh ssh
 
-  # Wait for macOS to boot, then:
-  ./local-test.sh build 8.5.0
+Building PHP:
+  After SSH into macOS:
 
-  # Or manually:
-  ./local-test.sh ssh
-  # In macOS shell:
   cd /mnt/php-packages
+
+  # Install Homebrew (if not installed)
+  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+  # Install dependencies
+  ./scripts/install-deps.sh
+
+  # Build PHP
   ./scripts/build-php-core.sh 8.5.0
   ./scripts/build-all-extensions.sh 8.5.0
 
 Requirements:
-  - Docker with KVM support (Linux) or Docker Desktop (macOS)
+  - Linux with KVM support (/dev/kvm)
+  - Docker
   - 50GB+ free disk space
-  - 8GB+ RAM
+  - 8GB+ RAM (16GB recommended)
 
-Note: First boot takes 5-10 minutes. Subsequent boots are faster.
+Note: This does NOT work on macOS or Windows hosts.
+      For macOS hosts, build natively instead.
 EOF
 }
 
@@ -342,11 +309,10 @@ main() {
     shift || true
 
     case "$cmd" in
-        setup)  cmd_setup "$@" ;;
         start)  cmd_start "$@" ;;
+        web)    cmd_web "$@" ;;
         ssh)    cmd_ssh "$@" ;;
-        build)  cmd_build "$@" ;;
-        copy)   cmd_copy "$@" ;;
+        logs)   cmd_logs "$@" ;;
         stop)   cmd_stop "$@" ;;
         clean)  cmd_clean "$@" ;;
         status) cmd_status "$@" ;;

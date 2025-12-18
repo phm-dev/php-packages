@@ -118,23 +118,26 @@ make deps
 make php VERSION=8.5.0
 ```
 
-### Docker-OSX (Linux/macOS)
+### Docker (Linux only)
 
-For testing on non-macOS systems using [Docker-OSX](https://github.com/sickcodes/Docker-OSX):
+For testing on Linux using [dockur/macos](https://github.com/dockur/macos):
 
 ```bash
-# First-time setup (downloads ~15-20GB image)
-./scripts/local-test.sh setup
-
 # Start macOS container
 ./scripts/local-test.sh start
 
-# Wait for boot (5-10 min first time), then build
-./scripts/local-test.sh build 8.5.0
+# Open web UI for initial setup
+./scripts/local-test.sh web  # opens http://localhost:8006
 
-# Or manually via SSH
+# First run: format disk, install macOS, enable SSH
+# Then connect via SSH
 ./scripts/local-test.sh ssh
-# In macOS: cd /mnt/php-packages && ./scripts/build-php-core.sh 8.5.0
+
+# In macOS shell:
+cd /mnt/php-packages
+./scripts/install-deps.sh
+./scripts/build-php-core.sh 8.5.0
+./scripts/build-all-extensions.sh 8.5.0
 
 # Stop when done
 ./scripts/local-test.sh stop
@@ -144,17 +147,17 @@ Or with docker-compose:
 
 ```bash
 docker-compose up -d
-# Wait for boot...
-ssh user@localhost -p 10022  # password: alpine
-cd /mnt/php-packages
-./scripts/build-php-core.sh 8.5.0
-./scripts/build-all-extensions.sh 8.5.0
+# Open http://localhost:8006 for web UI
+# After macOS setup, enable SSH and connect:
+ssh your-user@localhost -p 10022
 ```
 
-**Requirements for Docker-OSX:**
-- Linux: KVM support (`/dev/kvm`)
-- macOS: Docker Desktop
+**Requirements:**
+- Linux with KVM support (`/dev/kvm`)
+- Docker
 - 50GB+ disk space, 8GB+ RAM
+
+**Note:** Does NOT work on macOS/Windows hosts. Use native build on macOS.
 
 ## Directory Structure
 
@@ -212,5 +215,5 @@ When a new version is detected:
 
 - **PHM CLI**: https://github.com/phm-dev/phm
 - **PHP Packages**: https://github.com/phm-dev/php-packages
-- **Docker-OSX**: https://github.com/sickcodes/Docker-OSX
+- **dockur/macos**: https://github.com/dockur/macos
 - **PIE**: https://github.com/php/pie
