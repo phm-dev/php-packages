@@ -1,0 +1,296 @@
+name: Build
+
+on:
+  schedule:
+    - cron: '0 2 * * *'  # Daily at 2:00 UTC
+  workflow_dispatch:
+    inputs:
+      php_version:
+        description: 'PHP version to build (e.g. "8.5.0", empty=check for updates)'
+        type: string
+        default: ''
+      force_build:
+        description: 'Force build all versions'
+        type: boolean
+        default: false
+
+env:
+  HOMEBREW_NO_AUTO_UPDATE: 1
+  HOMEBREW_NO_INSTALL_CLEANUP: 1
+  HOMEBREW_NO_ENV_HINTS: 1
+
+permissions:
+  contents: write
+
+jobs:
+  check-updates:
+    name: Check for updates
+    runs-on: ubuntu-latest
+    outputs:
+      php_versions: ${{ steps.check.outputs.php_versions }}
+      ext_versions: ${{ steps.check.outputs.ext_versions }}
+      has_builds: ${{ steps.check.outputs.has_builds }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install jq
+        run: sudo apt-get install -y jq
+
+      - name: Make scripts executable
+        run: chmod +x scripts/*.sh
+
+      - name: Check for updates
+        id: check
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          FORCE_BUILD: ${{ inputs.force_build }}
+          INPUT_PHP_VERSION: ${{ inputs.php_version }}
+        run: |
+          # If specific PHP version provided, build only that
+          if [[ -n "$INPUT_PHP_VERSION" ]]; then
+            echo "Building specific PHP version: $INPUT_PHP_VERSION"
+            echo "php_versions=[\"$INPUT_PHP_VERSION\"]" >> $GITHUB_OUTPUT
+            echo "has_builds=true" >> $GITHUB_OUTPUT
+
+            # Still need to get extension versions
+            EXT_VERSIONS="{}"
+            for ext in $(jq -r '.extensions | keys[]' extensions/config.json); do
+              [[ "$ext" == "opcache" || "$ext" == "relay" ]] && continue
+              PACKAGIST=$(jq -r ".extensions.${ext}.packagist // empty" extensions/config.json)
+              [[ -z "$PACKAGIST" || "$PACKAGIST" == "null" ]] && continue
+              VERSION=$(./scripts/get-extension-version.sh "$PACKAGIST" 2>/dev/null || echo "")
+              [[ -n "$VERSION" ]] && EXT_VERSIONS=$(echo "$EXT_VERSIONS" | jq --arg e "$ext" --arg v "$VERSION" '. + {($e): $v}')
+            done
+            echo "ext_versions=$EXT_VERSIONS" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          # Run check-updates script
+          if [[ "$FORCE_BUILD" == "true" ]]; then
+            OUTPUT=$(./scripts/check-updates.sh --force 2>&1)
+          else
+            OUTPUT=$(./scripts/check-updates.sh 2>&1)
+          fi
+
+          echo "Check output:"
+          echo "$OUTPUT"
+
+          # Parse output
+          PHP_VERSIONS=$(echo "$OUTPUT" | grep "^php_versions=" | cut -d= -f2-)
+          EXT_VERSIONS=$(echo "$OUTPUT" | grep "^ext_versions=" | cut -d= -f2-)
+          HAS_BUILDS=$(echo "$OUTPUT" | grep "^has_builds=" | cut -d= -f2-)
+
+          echo "php_versions=$PHP_VERSIONS" >> $GITHUB_OUTPUT
+          echo "ext_versions=$EXT_VERSIONS" >> $GITHUB_OUTPUT
+          echo "has_builds=$HAS_BUILDS" >> $GITHUB_OUTPUT
+
+          echo "PHP versions to build: $PHP_VERSIONS"
+          echo "Has builds: $HAS_BUILDS"
+
+  build:
+    name: Build PHP ${{ matrix.php_version }} (${{ matrix.platform.name }})
+    needs: check-updates
+    if: needs.check-updates.outputs.has_builds == 'true'
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        php_version: ${{ fromJson(needs.check-updates.outputs.php_versions) }}
+        platform:
+          - { os: macos-26, name: darwin-arm64 }
+          - { os: macos-15-intel, name: darwin-amd64 }
+    runs-on: ${{ matrix.platform.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        run: |
+          brew install -q autoconf automake bison re2c pkg-config libtool cmake \
+            openssl@3 libzip icu4c readline libxml2 libxslt \
+            sqlite lz4 zstd oniguruma jpeg-turbo libpng freetype webp \
+            libpq bzip2 curl libiconv \
+            rabbitmq-c libmemcached imagemagick libmcrypt libev librdkafka mpdecimal
+
+      - name: Make scripts executable
+        run: chmod +x scripts/*.sh
+
+      - name: Build PHP core packages
+        run: ./scripts/build-php-core.sh ${{ matrix.php_version }}
+        env:
+          CC: clang
+          CXX: clang++
+
+      - name: Build all extensions
+        run: ./scripts/build-all-extensions.sh ${{ matrix.php_version }} --continue-on-error
+        env:
+          CC: clang
+          CXX: clang++
+          EXT_VERSIONS: ${{ needs.check-updates.outputs.ext_versions }}
+
+      - name: List built packages
+        run: |
+          echo "Built packages:"
+          ls -la dist/*.tar.zst 2>/dev/null || echo "No packages found"
+          echo ""
+          echo "Package count: $(ls dist/*.tar.zst 2>/dev/null | wc -l)"
+
+      - name: Upload packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: php-${{ matrix.php_version }}-${{ matrix.platform.name }}
+          path: dist/*.tar.zst
+          retention-days: 7
+
+  publish:
+    name: Publish PHP ${{ matrix.php_version }}
+    needs: [check-updates, build]
+    if: needs.check-updates.outputs.has_builds == 'true'
+    strategy:
+      fail-fast: false
+      max-parallel: 1  # Sequential to avoid rate limits
+      matrix:
+        php_version: ${{ fromJson(needs.check-updates.outputs.php_versions) }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: php-${{ matrix.php_version }}-*
+          path: artifacts/
+          merge-multiple: true
+
+      - name: List packages
+        run: |
+          echo "Packages for PHP ${{ matrix.php_version }}:"
+          ls -la artifacts/
+          echo ""
+          echo "Total: $(ls artifacts/*.tar.zst 2>/dev/null | wc -l) packages"
+
+      - name: Create release with batched upload
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="${{ matrix.php_version }}"
+          TAG="php-${VERSION}"
+          MINOR="${VERSION%.*}"
+
+          # Create release notes
+          cat > release_notes.md << EOF
+          ## PHP ${VERSION}
+
+          Pre-built PHP ${VERSION} packages for macOS with extensions.
+
+          **Platforms:**
+          - darwin-arm64 (Apple Silicon)
+          - darwin-amd64 (Intel Mac)
+
+          **Core packages:**
+          - php${VERSION}-common - shared files
+          - php${VERSION}-cli - command line
+          - php${VERSION}-fpm - FastCGI Process Manager
+          - php${VERSION}-cgi - CGI binary
+          - php${VERSION}-dev - development files
+
+          **Extensions included:**
+          - redis, igbinary, mongodb, amqp, xdebug
+          - swoole, pcov, apcu, decimal, imagick
+          - mcrypt, ev, opentelemetry, memcached, rdkafka
+
+          ### Installation
+
+          \`\`\`bash
+          phm install php${MINOR}-cli php${MINOR}-fpm php${MINOR}-redis
+          \`\`\`
+
+          ### Package naming
+
+          - Core: \`php{VERSION}-{type}_{platform}.tar.zst\`
+          - Extensions: \`php{VERSION}-{ext}{extver}_{platform}.tar.zst\`
+          EOF
+
+          # Delete existing release if present
+          gh release delete "$TAG" --yes 2>/dev/null || true
+          sleep 2
+
+          # Create release without assets first
+          gh release create "$TAG" \
+            --title "PHP ${VERSION}" \
+            --notes-file release_notes.md
+
+          # Upload files in batches of 10 with delay
+          cd artifacts
+          FILES=(*.tar.zst)
+          BATCH_SIZE=10
+          TOTAL=${#FILES[@]}
+
+          echo "Uploading $TOTAL files in batches of $BATCH_SIZE..."
+
+          for ((i=0; i<TOTAL; i+=BATCH_SIZE)); do
+            BATCH=("${FILES[@]:i:BATCH_SIZE}")
+            echo "Uploading batch $((i/BATCH_SIZE + 1)): ${BATCH[*]}"
+
+            # Retry logic
+            for attempt in 1 2 3; do
+              if gh release upload "$TAG" "${BATCH[@]}" --clobber; then
+                echo "Batch uploaded successfully"
+                break
+              else
+                echo "Upload failed, attempt $attempt/3"
+                sleep $((attempt * 5))
+              fi
+            done
+
+            # Delay between batches
+            sleep 3
+          done
+
+          echo "All files uploaded"
+
+  update-versions:
+    name: Update versions.json
+    needs: [check-updates, publish]
+    if: needs.check-updates.outputs.has_builds == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+
+      - name: Update versions.json
+        env:
+          PHP_VERSIONS: ${{ needs.check-updates.outputs.php_versions }}
+          EXT_VERSIONS: ${{ needs.check-updates.outputs.ext_versions }}
+        run: |
+          # Get current versions.json
+          CURRENT=$(cat versions.json)
+
+          # Update PHP versions
+          for ver in $(echo "$PHP_VERSIONS" | jq -r '.[]'); do
+            MINOR="${ver%.*}"
+            CURRENT=$(echo "$CURRENT" | jq --arg m "$MINOR" --arg v "$ver" '.php[$m] = $v')
+          done
+
+          # Update extension versions
+          for ext in $(echo "$EXT_VERSIONS" | jq -r 'keys[]'); do
+            ext_ver=$(echo "$EXT_VERSIONS" | jq -r --arg e "$ext" '.[$e]')
+            CURRENT=$(echo "$CURRENT" | jq --arg e "$ext" --arg v "$ext_ver" '.extensions[$e] = $v')
+          done
+
+          # Update timestamp
+          CURRENT=$(echo "$CURRENT" | jq --arg t "$(date -u +%Y-%m-%dT%H:%M:%SZ)" '.last_check = $t')
+
+          # Write back
+          echo "$CURRENT" | jq '.' > versions.json
+
+          echo "Updated versions.json:"
+          cat versions.json
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add versions.json
+          git diff --staged --quiet || git commit -m "Update versions.json after build"
+          git push
