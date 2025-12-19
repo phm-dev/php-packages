@@ -33,6 +33,16 @@ log_success() { echo -e "${GREEN}[OK]${NC} $*" >&2; }
 log_warn() { echo -e "${YELLOW}[WARN]${NC} $*" >&2; }
 log_change() { echo -e "${YELLOW}[CHANGE]${NC} $*" >&2; }
 
+# Compare semver versions, returns 0 if v1 > v2, 1 otherwise
+version_gt() {
+    local v1="$1" v2="$2"
+    [[ "$v1" == "$v2" ]] && return 1
+    # Use sort -V for version comparison
+    local highest
+    highest=$(printf '%s\n%s' "$v1" "$v2" | sort -V | tail -1)
+    [[ "$v1" == "$highest" ]]
+}
+
 FORCE_BUILD=false
 if [[ "${1:-}" == "--force" ]]; then
     FORCE_BUILD=true
@@ -141,14 +151,14 @@ fetch_extension_versions() {
 
         local version
         if version=$(fetch_extension_version "$ext" "$packagist"); then
-            ext_versions=$(echo "$ext_versions" | jq --arg ext "$ext" --arg ver "$version" '. + {($ext): $ver}')
+            ext_versions=$(echo "$ext_versions" | jq -c --arg ext "$ext" --arg ver "$version" '. + {($ext): $ver}')
             log_info "  $ext: $version"
         else
             log_warn "  $ext: failed to fetch version"
         fi
     done
 
-    echo "$ext_versions"
+    echo "$ext_versions" | jq -c '.'
 }
 
 # Compare versions and determine what to build
@@ -164,10 +174,13 @@ compare_versions() {
     log_info "Comparing PHP versions..."
     for minor in $(echo "$latest_php" | jq -r 'keys[]'); do
         local latest_ver=$(echo "$latest_php" | jq -r --arg m "$minor" '.[$m]')
-        local current_ver=$(echo "$current_versions" | jq -r --arg m "$minor" '.php[$m] // "none"')
+        local current_ver=$(echo "$current_versions" | jq -r --arg m "$minor" '.php[$m] // "0.0.0"')
 
-        if [[ "$latest_ver" != "$current_ver" ]]; then
-            log_change "PHP $minor: $current_ver -> $latest_ver"
+        if [[ "$current_ver" == "0.0.0" ]]; then
+            log_change "PHP $minor: NEW -> $latest_ver"
+            php_changed+=("$latest_ver")
+        elif version_gt "$latest_ver" "$current_ver"; then
+            log_change "PHP $minor: $current_ver -> $latest_ver (upgrade)"
             php_changed+=("$latest_ver")
         else
             log_info "  PHP $minor: $current_ver (unchanged)"
@@ -178,10 +191,13 @@ compare_versions() {
     log_info "Comparing extension versions..."
     for ext in $(echo "$latest_ext" | jq -r 'keys[]'); do
         local latest_ver=$(echo "$latest_ext" | jq -r --arg e "$ext" '.[$e]')
-        local current_ver=$(echo "$current_versions" | jq -r --arg e "$ext" '.extensions[$e] // "none"')
+        local current_ver=$(echo "$current_versions" | jq -r --arg e "$ext" '.extensions[$e] // "0.0.0"')
 
-        if [[ "$latest_ver" != "$current_ver" ]]; then
-            log_change "$ext: $current_ver -> $latest_ver"
+        if [[ "$current_ver" == "0.0.0" ]]; then
+            log_change "$ext: NEW -> $latest_ver"
+            ext_changed=true
+        elif version_gt "$latest_ver" "$current_ver"; then
+            log_change "$ext: $current_ver -> $latest_ver (upgrade)"
             ext_changed=true
         fi
     done
@@ -210,14 +226,14 @@ compare_versions() {
         has_builds="true"
     fi
 
-    # Create JSON array of PHP versions
+    # Create JSON array of PHP versions (compact format for GitHub Actions)
     local php_json="[]"
     for ver in "${php_to_build[@]}"; do
-        php_json=$(echo "$php_json" | jq --arg v "$ver" '. + [$v]')
+        php_json=$(echo "$php_json" | jq -c --arg v "$ver" '. + [$v]')
     done
 
     echo "php_versions=${php_json}"
-    echo "ext_versions=${latest_ext}"
+    echo "ext_versions=$(echo "$latest_ext" | jq -c '.')"
     echo "has_builds=${has_builds}"
 }
 
