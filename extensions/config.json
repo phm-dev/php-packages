@@ -56,12 +56,6 @@
       "brew_deps": [],
       "description": "APCu - APC User Cache"
     },
-    "decimal": {
-      "packagist": "php-decimal/ext-decimal",
-      "pie_options": [],
-      "brew_deps": ["mpdecimal"],
-      "description": "Arbitrary precision decimal arithmetic"
-    },
     "imagick": {
       "packagist": "imagick/imagick",
       "pie_options": [],
