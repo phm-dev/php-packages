@@ -38,7 +38,8 @@
         "--enable-openssl",
         "--enable-http2",
         "--enable-swoole-curl",
-        "--enable-swoole-pgsql"
+        "--enable-swoole-pgsql",
+        "--with-swoole-pgsql-dir=$(brew --prefix libpq)"
       ],
       "brew_deps": ["openssl@3", "libpq", "curl", "c-ares", "brotli"],
       "description": "Coroutine-based concurrency library for PHP"

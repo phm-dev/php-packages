@@ -128,6 +128,9 @@ jobs:
           CXX: clang++
           EXT_VERSIONS: ${{ needs.check-updates.outputs.ext_versions }}
           PKG_CONFIG_PATH: ${{ runner.arch == 'ARM64' && '/opt/homebrew/opt/libpq/lib/pkgconfig:/opt/homebrew/lib/pkgconfig' || '/usr/local/opt/libpq/lib/pkgconfig:/usr/local/lib/pkgconfig' }}
+          LIBPQ_DIR: ${{ runner.arch == 'ARM64' && '/opt/homebrew/opt/libpq' || '/usr/local/opt/libpq' }}
+          LIBPQ_CFLAGS: ${{ runner.arch == 'ARM64' && '-I/opt/homebrew/opt/libpq/include' || '-I/usr/local/opt/libpq/include' }}
+          LIBPQ_LIBS: ${{ runner.arch == 'ARM64' && '-L/opt/homebrew/opt/libpq/lib -lpq' || '-L/usr/local/opt/libpq/lib -lpq' }}
 
       - name: List built packages
         run: |
