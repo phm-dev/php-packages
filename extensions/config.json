@@ -82,9 +82,10 @@
     "memcached": {
       "packagist": "php-memcached/php-memcached",
       "pie_options": [
-        "--enable-memcached-json"
+        "--enable-memcached-json",
+        "--with-zlib-dir=$(brew --prefix zlib)"
       ],
-      "brew_deps": ["libmemcached"],
+      "brew_deps": ["libmemcached", "zlib"],
       "description": "Memcached client library"
     },
     "rdkafka": {

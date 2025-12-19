@@ -164,6 +164,21 @@ load_config() {
         done < <(echo "$ext_config" | jq -r '.pie_options[]? // empty' 2>/dev/null)
     fi
 
+    # Expand $(brew --prefix ...) in PIE_OPTIONS
+    local expanded_options=()
+    for opt in "${PIE_OPTIONS[@]}"; do
+        if [[ "$opt" =~ \$\(brew\ --prefix\ ([a-zA-Z0-9_-]+)\) ]]; then
+            local pkg="${BASH_REMATCH[1]}"
+            local prefix
+            prefix=$(brew --prefix "$pkg" 2>/dev/null || echo "")
+            if [[ -n "$prefix" ]]; then
+                opt="${opt//\$(brew --prefix $pkg)/$prefix}"
+            fi
+        fi
+        expanded_options+=("$opt")
+    done
+    PIE_OPTIONS=("${expanded_options[@]}")
+
     return 0
 }
 
