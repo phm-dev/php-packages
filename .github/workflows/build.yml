@@ -97,8 +97,8 @@ jobs:
       matrix:
         php_version: ${{ fromJson(needs.check-updates.outputs.php_versions) }}
         platform:
-          - { os: macos-15, name: darwin-arm64 }
-          - { os: macos-13, name: darwin-amd64 }
+          - { os: macos-latest, name: darwin-arm64 }
+          - { os: macos-15-intel, name: darwin-amd64 }
     runs-on: ${{ matrix.platform.os }}
     steps:
       - uses: actions/checkout@v4
