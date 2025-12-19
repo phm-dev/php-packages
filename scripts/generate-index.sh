@@ -237,13 +237,13 @@ for platform_file in "$TEMP_DIR/platforms"/*.json; do
         echo "," >> "${PROJECT_ROOT}/index.json"
     fi
 
-    # Count packages for this platform
-    PKG_COUNT=$(jq -s 'length' "$platform_file")
+    # Count packages for this platform (file is already a JSON array)
+    PKG_COUNT=$(jq 'length' "$platform_file")
 
     echo -n "    \"${PLATFORM_NAME}\": {\"packages\": " >> "${PROJECT_ROOT}/index.json"
 
-    # Add packages array
-    jq -s '.' "$platform_file" >> "${PROJECT_ROOT}/index.json"
+    # Add packages array (file is already a JSON array after deduplication)
+    cat "$platform_file" >> "${PROJECT_ROOT}/index.json"
 
     echo -n "}" >> "${PROJECT_ROOT}/index.json"
 
@@ -261,7 +261,7 @@ EOF
 jq '.' "${PROJECT_ROOT}/index.json" > "${PROJECT_ROOT}/index.json.tmp"
 mv "${PROJECT_ROOT}/index.json.tmp" "${PROJECT_ROOT}/index.json"
 
-TOTAL_PACKAGES=$(jq '[.platforms[].packages | length] | add // 0' "${PROJECT_ROOT}/index.json")
+TOTAL_PACKAGES=$(jq '[.platforms[].packages[]] | length' "${PROJECT_ROOT}/index.json")
 
 log_info "=========================================="
 log_info "Generated: ${PROJECT_ROOT}/index.json"
