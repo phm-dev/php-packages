@@ -3,24 +3,7 @@ name: Update Index
 on:
   workflow_run:
     workflows:
-      - "Build PHP"
-      - "Build Redis"
-      - "Build Igbinary"
-      - "Build MongoDB"
-      - "Build AMQP"
-      - "Build Xdebug"
-      - "Build Swoole"
-      - "Build PCOV"
-      - "Build APCu"
-      - "Build Decimal"
-      - "Build Imagick"
-      - "Build Mcrypt"
-      - "Build Ev"
-      - "Build OpenTelemetry"
-      - "Build Memcached"
-      - "Build RdKafka"
-      - "Build Relay"
-      - "Build OPcache"
+      - "Build"
     types: [completed]
   workflow_dispatch:
 
