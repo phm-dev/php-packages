@@ -191,10 +191,13 @@ main() {
 
     if [[ ${#failed_extensions[@]} -gt 0 ]]; then
         log_error "Failed extensions: ${failed_extensions[*]}"
-        exit 1
+        if [[ "$CONTINUE_ON_ERROR" != "true" ]]; then
+            exit 1
+        fi
+        log_warn "Continuing despite failures (--continue-on-error)"
+    else
+        log_success "All extensions built successfully!"
     fi
-
-    log_success "All extensions built successfully!"
 }
 
 main "$@"

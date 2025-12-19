@@ -126,6 +126,7 @@ jobs:
           CC: clang
           CXX: clang++
           EXT_VERSIONS: ${{ needs.check-updates.outputs.ext_versions }}
+          PKG_CONFIG_PATH: ${{ runner.arch == 'ARM64' && '/opt/homebrew/opt/libpq/lib/pkgconfig:/opt/homebrew/lib/pkgconfig' || '/usr/local/opt/libpq/lib/pkgconfig:/usr/local/lib/pkgconfig' }}
 
       - name: List built packages
         run: |
