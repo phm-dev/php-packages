@@ -433,9 +433,15 @@ create_pkg() {
 
     log_info "Creating package..."
 
-    # Get extension directory name
+    # Get extension directory name from php-config
     local ext_dir_name=""
-    if [[ -d "/opt/php/${PHP_MAJOR_MINOR}/lib/php/extensions" ]]; then
+    if [[ -x "${PHP_CONFIG}" ]]; then
+        local full_ext_dir
+        full_ext_dir=$("${PHP_CONFIG}" --extension-dir 2>/dev/null)
+        ext_dir_name=$(basename "$full_ext_dir")
+    fi
+    # Fallback to listing directory
+    if [[ -z "$ext_dir_name" ]] && [[ -d "/opt/php/${PHP_MAJOR_MINOR}/lib/php/extensions" ]]; then
         ext_dir_name=$(ls "/opt/php/${PHP_MAJOR_MINOR}/lib/php/extensions" 2>/dev/null | head -1)
     fi
 

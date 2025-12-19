@@ -321,11 +321,21 @@ create_extension_package_v2() {
 
     # Find the extension directory name if not provided
     if [[ -z "$ext_dir_name" ]]; then
-        if [[ -d "/opt/php/${php_major_minor}/lib/php/extensions" ]]; then
+        # Try to get from php-config (most reliable)
+        local php_config="/opt/php/${php_major_minor}/bin/php-config"
+        if [[ -x "$php_config" ]]; then
+            local full_ext_dir
+            full_ext_dir=$("$php_config" --extension-dir 2>/dev/null)
+            ext_dir_name=$(basename "$full_ext_dir")
+        fi
+        # Fallback to listing directory
+        if [[ -z "$ext_dir_name" ]] && [[ -d "/opt/php/${php_major_minor}/lib/php/extensions" ]]; then
             ext_dir_name=$(ls "/opt/php/${php_major_minor}/lib/php/extensions" 2>/dev/null | head -1)
         fi
+        # Last resort: error out (don't guess the date!)
         if [[ -z "$ext_dir_name" ]]; then
-            ext_dir_name="no-debug-non-zts-$(date +%Y%m%d)"
+            echo "[ERROR] Cannot determine extension directory - php-config not found"
+            return 1
         fi
     fi
 
