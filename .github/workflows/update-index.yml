@@ -58,6 +58,8 @@ jobs:
             echo "No changes to index.json"
           else
             git commit -m "Update index.json [skip ci]"
+            # Pull with rebase to handle concurrent pushes
+            git pull --rebase origin main || true
             git push
             echo "index.json updated and pushed"
           fi
