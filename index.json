@@ -1,1335 +1,1331 @@
 {
   "version": 1,
-  "generated": "2025-12-19T08:46:01Z",
+  "generated": "2025-12-19T08:49:51Z",
   "platforms": {
     "darwin-amd64": {
       "packages": [
-        [
-          {
-            "name": "php8.3-amqp",
-            "version": "2.1.2",
-            "revision": 1,
-            "description": "amqp extension for PHP 8.3",
-            "depends": [
-              "php8.3-common (>= 8.3.15)"
-            ],
-            "provides": [],
-            "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.15/php8.3.15-amqp2.1.2_darwin-amd64.tar.zst",
-            "sha256": "",
-            "size": 0,
-            "installed_size": 0
-          },
-          {
-            "name": "php8.3-apcu",
-            "version": "5.1.28",
-            "revision": 1,
-            "description": "apcu extension for PHP 8.3",
-            "depends": [
-              "php8.3-common (>= 8.3.15)"
-            ],
-            "provides": [],
-            "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.15/php8.3.15-apcu5.1.28_darwin-amd64.tar.zst",
-            "sha256": "",
-            "size": 0,
-            "installed_size": 0
-          },
-          {
-            "name": "php8.3-cgi",
-            "version": "8.3.15",
-            "revision": 1,
-            "description": "PHP 8.3 CGI binary",
-            "depends": [
-              "php8.3-common (>= 8.3.15)"
-            ],
-            "provides": [],
-            "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.15/php8.3.15-cgi_darwin-amd64.tar.zst",
-            "sha256": "",
-            "size": 0,
-            "installed_size": 0
-          },
-          {
-            "name": "php8.3-cli",
-            "version": "8.3.15",
-            "revision": 1,
-            "description": "PHP 8.3 CLI interpreter",
-            "depends": [
-              "php8.3-common (>= 8.3.15)"
-            ],
-            "provides": [],
-            "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.15/php8.3.15-cli_darwin-amd64.tar.zst",
-            "sha256": "",
-            "size": 0,
-            "installed_size": 0
-          },
-          {
-            "name": "php8.3-common",
-            "version": "8.3.15",
-            "revision": 1,
-            "description": "PHP 8.3 common files",
-            "depends": [],
-            "provides": [],
-            "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.15/php8.3.15-common_darwin-amd64.tar.zst",
-            "sha256": "",
-            "size": 0,
-            "installed_size": 0
-          },
-          {
-            "name": "php8.3-dev",
-            "version": "8.3.15",
-            "revision": 1,
-            "description": "PHP 8.3 development files",
-            "depends": [
-              "php8.3-common (>= 8.3.15)"
-            ],
-            "provides": [],
-            "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.15/php8.3.15-dev_darwin-amd64.tar.zst",
-            "sha256": "",
-            "size": 0,
-            "installed_size": 0
-          },
-          {
-            "name": "php8.3-ev",
-            "version": "1.2.2",
-            "revision": 1,
-            "description": "ev extension for PHP 8.3",
-            "depends": [
-              "php8.3-common (>= 8.3.15)"
-            ],
-            "provides": [],
-            "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.15/php8.3.15-ev1.2.2_darwin-amd64.tar.zst",
-            "sha256": "",
-            "size": 0,
-            "installed_size": 0
-          },
-          {
-            "name": "php8.3-fpm",
-            "version": "8.3.15",
-            "revision": 1,
-            "description": "PHP 8.3 FastCGI Process Manager",
-            "depends": [
-              "php8.3-common (>= 8.3.15)"
-            ],
-            "provides": [],
-            "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.15/php8.3.15-fpm_darwin-amd64.tar.zst",
-            "sha256": "",
-            "size": 0,
-            "installed_size": 0
-          },
-          {
-            "name": "php8.3-igbinary",
-            "version": "3.2.16",
-            "revision": 1,
-            "description": "igbinary extension for PHP 8.3",
-            "depends": [
-              "php8.3-common (>= 8.3.15)"
-            ],
-            "provides": [],
-            "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.15/php8.3.15-igbinary3.2.16_darwin-amd64.tar.zst",
-            "sha256": "",
-            "size": 0,
-            "installed_size": 0
-          },
-          {
-            "name": "php8.3-imagick",
-            "version": "3.8.1",
-            "revision": 1,
-            "description": "imagick extension for PHP 8.3",
-            "depends": [
-              "php8.3-common (>= 8.3.15)"
-            ],
-            "provides": [],
-            "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.15/php8.3.15-imagick3.8.1_darwin-amd64.tar.zst",
-            "sha256": "",
-            "size": 0,
-            "installed_size": 0
-          },
-          {
-            "name": "php8.3-mongodb",
-            "version": "2.1.4",
-            "revision": 1,
-            "description": "mongodb extension for PHP 8.3",
-            "depends": [
-              "php8.3-common (>= 8.3.15)"
-            ],
-            "provides": [],
-            "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.15/php8.3.15-mongodb2.1.4_darwin-amd64.tar.zst",
-            "sha256": "",
-            "size": 0,
-            "installed_size": 0
-          },
-          {
-            "name": "php8.3-opentelemetry",
-            "version": "1.2.1",
-            "revision": 1,
-            "description": "opentelemetry extension for PHP 8.3",
-            "depends": [
-              "php8.3-common (>= 8.3.15)"
-            ],
-            "provides": [],
-            "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.15/php8.3.15-opentelemetry1.2.1_darwin-amd64.tar.zst",
-            "sha256": "",
-            "size": 0,
-            "installed_size": 0
-          },
-          {
-            "name": "php8.3-pcov",
-            "version": "1.0.12",
-            "revision": 1,
-            "description": "pcov extension for PHP 8.3",
-            "depends": [
-              "php8.3-common (>= 8.3.15)"
-            ],
-            "provides": [],
-            "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.15/php8.3.15-pcov1.0.12_darwin-amd64.tar.zst",
-            "sha256": "",
-            "size": 0,
-            "installed_size": 0
-          },
-          {
-            "name": "php8.3-pear",
-            "version": "8.3.15",
-            "revision": 1,
-            "description": "PHP 8.3 PEAR/PECL tools",
-            "depends": [
-              "php8.3-cli (>= 8.3.15)"
-            ],
-            "provides": [],
-            "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.15/php8.3.15-pear_darwin-amd64.tar.zst",
-            "sha256": "",
-            "size": 0,
-            "installed_size": 0
-          },
-          {
-            "name": "php8.3-rdkafka",
-            "version": "6.0.5",
-            "revision": 1,
-            "description": "rdkafka extension for PHP 8.3",
-            "depends": [
-              "php8.3-common (>= 8.3.15)"
-            ],
-            "provides": [],
-            "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.15/php8.3.15-rdkafka6.0.5_darwin-amd64.tar.zst",
-            "sha256": "",
-            "size": 0,
-            "installed_size": 0
-          },
-          {
-            "name": "php8.3-redis",
-            "version": "6.3.0",
-            "revision": 1,
-            "description": "redis extension for PHP 8.3",
-            "depends": [
-              "php8.3-common (>= 8.3.15)"
-            ],
-            "provides": [],
-            "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.15/php8.3.15-redis6.3.0_darwin-amd64.tar.zst",
-            "sha256": "",
-            "size": 0,
-            "installed_size": 0
-          },
-          {
-            "name": "php8.3-xdebug",
-            "version": "3.5.0",
-            "revision": 1,
-            "description": "xdebug extension for PHP 8.3",
-            "depends": [
-              "php8.3-common (>= 8.3.15)"
-            ],
-            "provides": [],
-            "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.15/php8.3.15-xdebug3.5.0_darwin-amd64.tar.zst",
-            "sha256": "",
-            "size": 0,
-            "installed_size": 0
-          },
-          {
-            "name": "php8.4-amqp",
-            "version": "2.1.2",
-            "revision": 1,
-            "description": "amqp extension for PHP 8.4",
-            "depends": [
-              "php8.4-common (>= 8.4.7)"
-            ],
-            "provides": [],
-            "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.4.7/php8.4.7-amqp2.1.2_darwin-amd64.tar.zst",
-            "sha256": "",
-            "size": 0,
-            "installed_size": 0
-          },
-          {
-            "name": "php8.4-apcu",
-            "version": "5.1.28",
-            "revision": 1,
-            "description": "apcu extension for PHP 8.4",
-            "depends": [
-              "php8.4-common (>= 8.4.7)"
-            ],
-            "provides": [],
-            "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.4.7/php8.4.7-apcu5.1.28_darwin-amd64.tar.zst",
-            "sha256": "",
-            "size": 0,
-            "installed_size": 0
-          },
-          {
-            "name": "php8.4-cgi",
-            "version": "8.4.7",
-            "revision": 1,
-            "description": "PHP 8.4 CGI binary",
-            "depends": [
-              "php8.4-common (>= 8.4.7)"
-            ],
-            "provides": [],
-            "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.4.7/php8.4.7-cgi_darwin-amd64.tar.zst",
-            "sha256": "",
-            "size": 0,
-            "installed_size": 0
-          },
-          {
-            "name": "php8.4-cli",
-            "version": "8.4.7",
-            "revision": 1,
-            "description": "PHP 8.4 CLI interpreter",
-            "depends": [
-              "php8.4-common (>= 8.4.7)"
-            ],
-            "provides": [],
-            "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.4.7/php8.4.7-cli_darwin-amd64.tar.zst",
-            "sha256": "",
-            "size": 0,
-            "installed_size": 0
-          },
-          {
-            "name": "php8.4-common",
-            "version": "8.4.7",
-            "revision": 1,
-            "description": "PHP 8.4 common files",
-            "depends": [],
-            "provides": [],
-            "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.4.7/php8.4.7-common_darwin-amd64.tar.zst",
-            "sha256": "",
-            "size": 0,
-            "installed_size": 0
-          },
-          {
-            "name": "php8.4-dev",
-            "version": "8.4.7",
-            "revision": 1,
-            "description": "PHP 8.4 development files",
-            "depends": [
-              "php8.4-common (>= 8.4.7)"
-            ],
-            "provides": [],
-            "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.4.7/php8.4.7-dev_darwin-amd64.tar.zst",
-            "sha256": "",
-            "size": 0,
-            "installed_size": 0
-          },
-          {
-            "name": "php8.4-ev",
-            "version": "1.2.2",
-            "revision": 1,
-            "description": "ev extension for PHP 8.4",
-            "depends": [
-              "php8.4-common (>= 8.4.7)"
-            ],
-            "provides": [],
-            "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.4.7/php8.4.7-ev1.2.2_darwin-amd64.tar.zst",
-            "sha256": "",
-            "size": 0,
-            "installed_size": 0
-          },
-          {
-            "name": "php8.4-fpm",
-            "version": "8.4.7",
-            "revision": 1,
-            "description": "PHP 8.4 FastCGI Process Manager",
-            "depends": [
-              "php8.4-common (>= 8.4.7)"
-            ],
-            "provides": [],
-            "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.4.7/php8.4.7-fpm_darwin-amd64.tar.zst",
-            "sha256": "",
-            "size": 0,
-            "installed_size": 0
-          },
-          {
-            "name": "php8.4-igbinary",
-            "version": "3.2.16",
-            "revision": 1,
-            "description": "igbinary extension for PHP 8.4",
-            "depends": [
-              "php8.4-common (>= 8.4.7)"
-            ],
-            "provides": [],
-            "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.4.7/php8.4.7-igbinary3.2.16_darwin-amd64.tar.zst",
-            "sha256": "",
-            "size": 0,
-            "installed_size": 0
-          },
-          {
-            "name": "php8.4-imagick",
-            "version": "3.8.1",
-            "revision": 1,
-            "description": "imagick extension for PHP 8.4",
-            "depends": [
-              "php8.4-common (>= 8.4.7)"
-            ],
-            "provides": [],
-            "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.4.7/php8.4.7-imagick3.8.1_darwin-amd64.tar.zst",
-            "sha256": "",
-            "size": 0,
-            "installed_size": 0
-          },
-          {
-            "name": "php8.4-mongodb",
-            "version": "2.1.4",
-            "revision": 1,
-            "description": "mongodb extension for PHP 8.4",
-            "depends": [
-              "php8.4-common (>= 8.4.7)"
-            ],
-            "provides": [],
-            "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.4.7/php8.4.7-mongodb2.1.4_darwin-amd64.tar.zst",
-            "sha256": "",
-            "size": 0,
-            "installed_size": 0
-          },
-          {
-            "name": "php8.4-opentelemetry",
-            "version": "1.2.1",
-            "revision": 1,
-            "description": "opentelemetry extension for PHP 8.4",
-            "depends": [
-              "php8.4-common (>= 8.4.7)"
-            ],
-            "provides": [],
-            "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.4.7/php8.4.7-opentelemetry1.2.1_darwin-amd64.tar.zst",
-            "sha256": "",
-            "size": 0,
-            "installed_size": 0
-          },
-          {
-            "name": "php8.4-pcov",
-            "version": "1.0.12",
-            "revision": 1,
-            "description": "pcov extension for PHP 8.4",
-            "depends": [
-              "php8.4-common (>= 8.4.7)"
-            ],
-            "provides": [],
-            "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.4.7/php8.4.7-pcov1.0.12_darwin-amd64.tar.zst",
-            "sha256": "",
-            "size": 0,
-            "installed_size": 0
-          },
-          {
-            "name": "php8.4-pear",
-            "version": "8.4.7",
-            "revision": 1,
-            "description": "PHP 8.4 PEAR/PECL tools",
-            "depends": [
-              "php8.4-cli (>= 8.4.7)"
-            ],
-            "provides": [],
-            "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.4.7/php8.4.7-pear_darwin-amd64.tar.zst",
-            "sha256": "",
-            "size": 0,
-            "installed_size": 0
-          },
-          {
-            "name": "php8.4-rdkafka",
-            "version": "6.0.5",
-            "revision": 1,
-            "description": "rdkafka extension for PHP 8.4",
-            "depends": [
-              "php8.4-common (>= 8.4.7)"
-            ],
-            "provides": [],
-            "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.4.7/php8.4.7-rdkafka6.0.5_darwin-amd64.tar.zst",
-            "sha256": "",
-            "size": 0,
-            "installed_size": 0
-          },
-          {
-            "name": "php8.4-redis",
-            "version": "6.3.0",
-            "revision": 1,
-            "description": "redis extension for PHP 8.4",
-            "depends": [
-              "php8.4-common (>= 8.4.7)"
-            ],
-            "provides": [],
-            "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.4.7/php8.4.7-redis6.3.0_darwin-amd64.tar.zst",
-            "sha256": "",
-            "size": 0,
-            "installed_size": 0
-          },
-          {
-            "name": "php8.4-xdebug",
-            "version": "3.5.0",
-            "revision": 1,
-            "description": "xdebug extension for PHP 8.4",
-            "depends": [
-              "php8.4-common (>= 8.4.7)"
-            ],
-            "provides": [],
-            "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.4.7/php8.4.7-xdebug3.5.0_darwin-amd64.tar.zst",
-            "sha256": "",
-            "size": 0,
-            "installed_size": 0
-          },
-          {
-            "name": "php8.5-apcu",
-            "version": "5.1.28",
-            "revision": 1,
-            "description": "apcu extension for PHP 8.5",
-            "depends": [
-              "php8.5-common (>= 8.5.0)"
-            ],
-            "provides": [],
-            "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.5.0/php8.5.0-apcu5.1.28_darwin-amd64.tar.zst",
-            "sha256": "",
-            "size": 0,
-            "installed_size": 0
-          },
-          {
-            "name": "php8.5-cgi",
-            "version": "8.5.0",
-            "revision": 1,
-            "description": "PHP 8.5 CGI binary",
-            "depends": [
-              "php8.5-common (>= 8.5.0)"
-            ],
-            "provides": [],
-            "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.5.0/php8.5.0-cgi_darwin-amd64.tar.zst",
-            "sha256": "",
-            "size": 0,
-            "installed_size": 0
-          },
-          {
-            "name": "php8.5-cli",
-            "version": "8.5.0",
-            "revision": 1,
-            "description": "PHP 8.5 CLI interpreter",
-            "depends": [
-              "php8.5-common (>= 8.5.0)"
-            ],
-            "provides": [],
-            "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.5.0/php8.5.0-cli_darwin-amd64.tar.zst",
-            "sha256": "",
-            "size": 0,
-            "installed_size": 0
-          },
-          {
-            "name": "php8.5-common",
-            "version": "8.5.0",
-            "revision": 1,
-            "description": "PHP 8.5 common files",
-            "depends": [],
-            "provides": [],
-            "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.5.0/php8.5.0-common_darwin-amd64.tar.zst",
-            "sha256": "",
-            "size": 0,
-            "installed_size": 0
-          },
-          {
-            "name": "php8.5-dev",
-            "version": "8.5.0",
-            "revision": 1,
-            "description": "PHP 8.5 development files",
-            "depends": [
-              "php8.5-common (>= 8.5.0)"
-            ],
-            "provides": [],
-            "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.5.0/php8.5.0-dev_darwin-amd64.tar.zst",
-            "sha256": "",
-            "size": 0,
-            "installed_size": 0
-          },
-          {
-            "name": "php8.5-ev",
-            "version": "1.2.2",
-            "revision": 1,
-            "description": "ev extension for PHP 8.5",
-            "depends": [
-              "php8.5-common (>= 8.5.0)"
-            ],
-            "provides": [],
-            "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.5.0/php8.5.0-ev1.2.2_darwin-amd64.tar.zst",
-            "sha256": "",
-            "size": 0,
-            "installed_size": 0
-          },
-          {
-            "name": "php8.5-fpm",
-            "version": "8.5.0",
-            "revision": 1,
-            "description": "PHP 8.5 FastCGI Process Manager",
-            "depends": [
-              "php8.5-common (>= 8.5.0)"
-            ],
-            "provides": [],
-            "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.5.0/php8.5.0-fpm_darwin-amd64.tar.zst",
-            "sha256": "",
-            "size": 0,
-            "installed_size": 0
-          },
-          {
-            "name": "php8.5-imagick",
-            "version": "3.8.1",
-            "revision": 1,
-            "description": "imagick extension for PHP 8.5",
-            "depends": [
-              "php8.5-common (>= 8.5.0)"
-            ],
-            "provides": [],
-            "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.5.0/php8.5.0-imagick3.8.1_darwin-amd64.tar.zst",
-            "sha256": "",
-            "size": 0,
-            "installed_size": 0
-          },
-          {
-            "name": "php8.5-mongodb",
-            "version": "2.1.4",
-            "revision": 1,
-            "description": "mongodb extension for PHP 8.5",
-            "depends": [
-              "php8.5-common (>= 8.5.0)"
-            ],
-            "provides": [],
-            "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.5.0/php8.5.0-mongodb2.1.4_darwin-amd64.tar.zst",
-            "sha256": "",
-            "size": 0,
-            "installed_size": 0
-          },
-          {
-            "name": "php8.5-opentelemetry",
-            "version": "1.2.1",
-            "revision": 1,
-            "description": "opentelemetry extension for PHP 8.5",
-            "depends": [
-              "php8.5-common (>= 8.5.0)"
-            ],
-            "provides": [],
-            "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.5.0/php8.5.0-opentelemetry1.2.1_darwin-amd64.tar.zst",
-            "sha256": "",
-            "size": 0,
-            "installed_size": 0
-          },
-          {
-            "name": "php8.5-pcov",
-            "version": "1.0.12",
-            "revision": 1,
-            "description": "pcov extension for PHP 8.5",
-            "depends": [
-              "php8.5-common (>= 8.5.0)"
-            ],
-            "provides": [],
-            "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.5.0/php8.5.0-pcov1.0.12_darwin-amd64.tar.zst",
-            "sha256": "",
-            "size": 0,
-            "installed_size": 0
-          },
-          {
-            "name": "php8.5-pear",
-            "version": "8.5.0",
-            "revision": 1,
-            "description": "PHP 8.5 PEAR/PECL tools",
-            "depends": [
-              "php8.5-cli (>= 8.5.0)"
-            ],
-            "provides": [],
-            "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.5.0/php8.5.0-pear_darwin-amd64.tar.zst",
-            "sha256": "",
-            "size": 0,
-            "installed_size": 0
-          },
-          {
-            "name": "php8.5-rdkafka",
-            "version": "6.0.5",
-            "revision": 1,
-            "description": "rdkafka extension for PHP 8.5",
-            "depends": [
-              "php8.5-common (>= 8.5.0)"
-            ],
-            "provides": [],
-            "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.5.0/php8.5.0-rdkafka6.0.5_darwin-amd64.tar.zst",
-            "sha256": "",
-            "size": 0,
-            "installed_size": 0
-          },
-          {
-            "name": "php8.5-redis",
-            "version": "6.3.0",
-            "revision": 1,
-            "description": "redis extension for PHP 8.5",
-            "depends": [
-              "php8.5-common (>= 8.5.0)"
-            ],
-            "provides": [],
-            "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.5.0/php8.5.0-redis6.3.0_darwin-amd64.tar.zst",
-            "sha256": "",
-            "size": 0,
-            "installed_size": 0
-          },
-          {
-            "name": "php8.5-xdebug",
-            "version": "3.5.0",
-            "revision": 1,
-            "description": "xdebug extension for PHP 8.5",
-            "depends": [
-              "php8.5-common (>= 8.5.0)"
-            ],
-            "provides": [],
-            "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.5.0/php8.5.0-xdebug3.5.0_darwin-amd64.tar.zst",
-            "sha256": "",
-            "size": 0,
-            "installed_size": 0
-          }
-        ]
+        {
+          "name": "php8.3-amqp",
+          "version": "2.1.2",
+          "revision": 1,
+          "description": "amqp extension for PHP 8.3",
+          "depends": [
+            "php8.3-common (>= 8.3.15)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.15/php8.3.15-amqp2.1.2_darwin-amd64.tar.zst",
+          "sha256": "",
+          "size": 0,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.3-apcu",
+          "version": "5.1.28",
+          "revision": 1,
+          "description": "apcu extension for PHP 8.3",
+          "depends": [
+            "php8.3-common (>= 8.3.15)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.15/php8.3.15-apcu5.1.28_darwin-amd64.tar.zst",
+          "sha256": "",
+          "size": 0,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.3-cgi",
+          "version": "8.3.15",
+          "revision": 1,
+          "description": "PHP 8.3 CGI binary",
+          "depends": [
+            "php8.3-common (>= 8.3.15)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.15/php8.3.15-cgi_darwin-amd64.tar.zst",
+          "sha256": "",
+          "size": 0,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.3-cli",
+          "version": "8.3.15",
+          "revision": 1,
+          "description": "PHP 8.3 CLI interpreter",
+          "depends": [
+            "php8.3-common (>= 8.3.15)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.15/php8.3.15-cli_darwin-amd64.tar.zst",
+          "sha256": "",
+          "size": 0,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.3-common",
+          "version": "8.3.15",
+          "revision": 1,
+          "description": "PHP 8.3 common files",
+          "depends": [],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.15/php8.3.15-common_darwin-amd64.tar.zst",
+          "sha256": "",
+          "size": 0,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.3-dev",
+          "version": "8.3.15",
+          "revision": 1,
+          "description": "PHP 8.3 development files",
+          "depends": [
+            "php8.3-common (>= 8.3.15)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.15/php8.3.15-dev_darwin-amd64.tar.zst",
+          "sha256": "",
+          "size": 0,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.3-ev",
+          "version": "1.2.2",
+          "revision": 1,
+          "description": "ev extension for PHP 8.3",
+          "depends": [
+            "php8.3-common (>= 8.3.15)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.15/php8.3.15-ev1.2.2_darwin-amd64.tar.zst",
+          "sha256": "",
+          "size": 0,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.3-fpm",
+          "version": "8.3.15",
+          "revision": 1,
+          "description": "PHP 8.3 FastCGI Process Manager",
+          "depends": [
+            "php8.3-common (>= 8.3.15)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.15/php8.3.15-fpm_darwin-amd64.tar.zst",
+          "sha256": "",
+          "size": 0,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.3-igbinary",
+          "version": "3.2.16",
+          "revision": 1,
+          "description": "igbinary extension for PHP 8.3",
+          "depends": [
+            "php8.3-common (>= 8.3.15)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.15/php8.3.15-igbinary3.2.16_darwin-amd64.tar.zst",
+          "sha256": "",
+          "size": 0,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.3-imagick",
+          "version": "3.8.1",
+          "revision": 1,
+          "description": "imagick extension for PHP 8.3",
+          "depends": [
+            "php8.3-common (>= 8.3.15)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.15/php8.3.15-imagick3.8.1_darwin-amd64.tar.zst",
+          "sha256": "",
+          "size": 0,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.3-mongodb",
+          "version": "2.1.4",
+          "revision": 1,
+          "description": "mongodb extension for PHP 8.3",
+          "depends": [
+            "php8.3-common (>= 8.3.15)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.15/php8.3.15-mongodb2.1.4_darwin-amd64.tar.zst",
+          "sha256": "",
+          "size": 0,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.3-opentelemetry",
+          "version": "1.2.1",
+          "revision": 1,
+          "description": "opentelemetry extension for PHP 8.3",
+          "depends": [
+            "php8.3-common (>= 8.3.15)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.15/php8.3.15-opentelemetry1.2.1_darwin-amd64.tar.zst",
+          "sha256": "",
+          "size": 0,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.3-pcov",
+          "version": "1.0.12",
+          "revision": 1,
+          "description": "pcov extension for PHP 8.3",
+          "depends": [
+            "php8.3-common (>= 8.3.15)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.15/php8.3.15-pcov1.0.12_darwin-amd64.tar.zst",
+          "sha256": "",
+          "size": 0,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.3-pear",
+          "version": "8.3.15",
+          "revision": 1,
+          "description": "PHP 8.3 PEAR/PECL tools",
+          "depends": [
+            "php8.3-cli (>= 8.3.15)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.15/php8.3.15-pear_darwin-amd64.tar.zst",
+          "sha256": "",
+          "size": 0,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.3-rdkafka",
+          "version": "6.0.5",
+          "revision": 1,
+          "description": "rdkafka extension for PHP 8.3",
+          "depends": [
+            "php8.3-common (>= 8.3.15)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.15/php8.3.15-rdkafka6.0.5_darwin-amd64.tar.zst",
+          "sha256": "",
+          "size": 0,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.3-redis",
+          "version": "6.3.0",
+          "revision": 1,
+          "description": "redis extension for PHP 8.3",
+          "depends": [
+            "php8.3-common (>= 8.3.15)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.15/php8.3.15-redis6.3.0_darwin-amd64.tar.zst",
+          "sha256": "",
+          "size": 0,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.3-xdebug",
+          "version": "3.5.0",
+          "revision": 1,
+          "description": "xdebug extension for PHP 8.3",
+          "depends": [
+            "php8.3-common (>= 8.3.15)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.15/php8.3.15-xdebug3.5.0_darwin-amd64.tar.zst",
+          "sha256": "",
+          "size": 0,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.4-amqp",
+          "version": "2.1.2",
+          "revision": 1,
+          "description": "amqp extension for PHP 8.4",
+          "depends": [
+            "php8.4-common (>= 8.4.7)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.4.7/php8.4.7-amqp2.1.2_darwin-amd64.tar.zst",
+          "sha256": "",
+          "size": 0,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.4-apcu",
+          "version": "5.1.28",
+          "revision": 1,
+          "description": "apcu extension for PHP 8.4",
+          "depends": [
+            "php8.4-common (>= 8.4.7)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.4.7/php8.4.7-apcu5.1.28_darwin-amd64.tar.zst",
+          "sha256": "",
+          "size": 0,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.4-cgi",
+          "version": "8.4.7",
+          "revision": 1,
+          "description": "PHP 8.4 CGI binary",
+          "depends": [
+            "php8.4-common (>= 8.4.7)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.4.7/php8.4.7-cgi_darwin-amd64.tar.zst",
+          "sha256": "",
+          "size": 0,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.4-cli",
+          "version": "8.4.7",
+          "revision": 1,
+          "description": "PHP 8.4 CLI interpreter",
+          "depends": [
+            "php8.4-common (>= 8.4.7)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.4.7/php8.4.7-cli_darwin-amd64.tar.zst",
+          "sha256": "",
+          "size": 0,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.4-common",
+          "version": "8.4.7",
+          "revision": 1,
+          "description": "PHP 8.4 common files",
+          "depends": [],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.4.7/php8.4.7-common_darwin-amd64.tar.zst",
+          "sha256": "",
+          "size": 0,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.4-dev",
+          "version": "8.4.7",
+          "revision": 1,
+          "description": "PHP 8.4 development files",
+          "depends": [
+            "php8.4-common (>= 8.4.7)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.4.7/php8.4.7-dev_darwin-amd64.tar.zst",
+          "sha256": "",
+          "size": 0,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.4-ev",
+          "version": "1.2.2",
+          "revision": 1,
+          "description": "ev extension for PHP 8.4",
+          "depends": [
+            "php8.4-common (>= 8.4.7)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.4.7/php8.4.7-ev1.2.2_darwin-amd64.tar.zst",
+          "sha256": "",
+          "size": 0,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.4-fpm",
+          "version": "8.4.7",
+          "revision": 1,
+          "description": "PHP 8.4 FastCGI Process Manager",
+          "depends": [
+            "php8.4-common (>= 8.4.7)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.4.7/php8.4.7-fpm_darwin-amd64.tar.zst",
+          "sha256": "",
+          "size": 0,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.4-igbinary",
+          "version": "3.2.16",
+          "revision": 1,
+          "description": "igbinary extension for PHP 8.4",
+          "depends": [
+            "php8.4-common (>= 8.4.7)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.4.7/php8.4.7-igbinary3.2.16_darwin-amd64.tar.zst",
+          "sha256": "",
+          "size": 0,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.4-imagick",
+          "version": "3.8.1",
+          "revision": 1,
+          "description": "imagick extension for PHP 8.4",
+          "depends": [
+            "php8.4-common (>= 8.4.7)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.4.7/php8.4.7-imagick3.8.1_darwin-amd64.tar.zst",
+          "sha256": "",
+          "size": 0,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.4-mongodb",
+          "version": "2.1.4",
+          "revision": 1,
+          "description": "mongodb extension for PHP 8.4",
+          "depends": [
+            "php8.4-common (>= 8.4.7)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.4.7/php8.4.7-mongodb2.1.4_darwin-amd64.tar.zst",
+          "sha256": "",
+          "size": 0,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.4-opentelemetry",
+          "version": "1.2.1",
+          "revision": 1,
+          "description": "opentelemetry extension for PHP 8.4",
+          "depends": [
+            "php8.4-common (>= 8.4.7)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.4.7/php8.4.7-opentelemetry1.2.1_darwin-amd64.tar.zst",
+          "sha256": "",
+          "size": 0,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.4-pcov",
+          "version": "1.0.12",
+          "revision": 1,
+          "description": "pcov extension for PHP 8.4",
+          "depends": [
+            "php8.4-common (>= 8.4.7)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.4.7/php8.4.7-pcov1.0.12_darwin-amd64.tar.zst",
+          "sha256": "",
+          "size": 0,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.4-pear",
+          "version": "8.4.7",
+          "revision": 1,
+          "description": "PHP 8.4 PEAR/PECL tools",
+          "depends": [
+            "php8.4-cli (>= 8.4.7)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.4.7/php8.4.7-pear_darwin-amd64.tar.zst",
+          "sha256": "",
+          "size": 0,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.4-rdkafka",
+          "version": "6.0.5",
+          "revision": 1,
+          "description": "rdkafka extension for PHP 8.4",
+          "depends": [
+            "php8.4-common (>= 8.4.7)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.4.7/php8.4.7-rdkafka6.0.5_darwin-amd64.tar.zst",
+          "sha256": "",
+          "size": 0,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.4-redis",
+          "version": "6.3.0",
+          "revision": 1,
+          "description": "redis extension for PHP 8.4",
+          "depends": [
+            "php8.4-common (>= 8.4.7)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.4.7/php8.4.7-redis6.3.0_darwin-amd64.tar.zst",
+          "sha256": "",
+          "size": 0,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.4-xdebug",
+          "version": "3.5.0",
+          "revision": 1,
+          "description": "xdebug extension for PHP 8.4",
+          "depends": [
+            "php8.4-common (>= 8.4.7)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.4.7/php8.4.7-xdebug3.5.0_darwin-amd64.tar.zst",
+          "sha256": "",
+          "size": 0,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.5-apcu",
+          "version": "5.1.28",
+          "revision": 1,
+          "description": "apcu extension for PHP 8.5",
+          "depends": [
+            "php8.5-common (>= 8.5.0)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.5.0/php8.5.0-apcu5.1.28_darwin-amd64.tar.zst",
+          "sha256": "",
+          "size": 0,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.5-cgi",
+          "version": "8.5.0",
+          "revision": 1,
+          "description": "PHP 8.5 CGI binary",
+          "depends": [
+            "php8.5-common (>= 8.5.0)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.5.0/php8.5.0-cgi_darwin-amd64.tar.zst",
+          "sha256": "",
+          "size": 0,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.5-cli",
+          "version": "8.5.0",
+          "revision": 1,
+          "description": "PHP 8.5 CLI interpreter",
+          "depends": [
+            "php8.5-common (>= 8.5.0)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.5.0/php8.5.0-cli_darwin-amd64.tar.zst",
+          "sha256": "",
+          "size": 0,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.5-common",
+          "version": "8.5.0",
+          "revision": 1,
+          "description": "PHP 8.5 common files",
+          "depends": [],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.5.0/php8.5.0-common_darwin-amd64.tar.zst",
+          "sha256": "",
+          "size": 0,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.5-dev",
+          "version": "8.5.0",
+          "revision": 1,
+          "description": "PHP 8.5 development files",
+          "depends": [
+            "php8.5-common (>= 8.5.0)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.5.0/php8.5.0-dev_darwin-amd64.tar.zst",
+          "sha256": "",
+          "size": 0,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.5-ev",
+          "version": "1.2.2",
+          "revision": 1,
+          "description": "ev extension for PHP 8.5",
+          "depends": [
+            "php8.5-common (>= 8.5.0)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.5.0/php8.5.0-ev1.2.2_darwin-amd64.tar.zst",
+          "sha256": "",
+          "size": 0,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.5-fpm",
+          "version": "8.5.0",
+          "revision": 1,
+          "description": "PHP 8.5 FastCGI Process Manager",
+          "depends": [
+            "php8.5-common (>= 8.5.0)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.5.0/php8.5.0-fpm_darwin-amd64.tar.zst",
+          "sha256": "",
+          "size": 0,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.5-imagick",
+          "version": "3.8.1",
+          "revision": 1,
+          "description": "imagick extension for PHP 8.5",
+          "depends": [
+            "php8.5-common (>= 8.5.0)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.5.0/php8.5.0-imagick3.8.1_darwin-amd64.tar.zst",
+          "sha256": "",
+          "size": 0,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.5-mongodb",
+          "version": "2.1.4",
+          "revision": 1,
+          "description": "mongodb extension for PHP 8.5",
+          "depends": [
+            "php8.5-common (>= 8.5.0)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.5.0/php8.5.0-mongodb2.1.4_darwin-amd64.tar.zst",
+          "sha256": "",
+          "size": 0,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.5-opentelemetry",
+          "version": "1.2.1",
+          "revision": 1,
+          "description": "opentelemetry extension for PHP 8.5",
+          "depends": [
+            "php8.5-common (>= 8.5.0)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.5.0/php8.5.0-opentelemetry1.2.1_darwin-amd64.tar.zst",
+          "sha256": "",
+          "size": 0,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.5-pcov",
+          "version": "1.0.12",
+          "revision": 1,
+          "description": "pcov extension for PHP 8.5",
+          "depends": [
+            "php8.5-common (>= 8.5.0)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.5.0/php8.5.0-pcov1.0.12_darwin-amd64.tar.zst",
+          "sha256": "",
+          "size": 0,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.5-pear",
+          "version": "8.5.0",
+          "revision": 1,
+          "description": "PHP 8.5 PEAR/PECL tools",
+          "depends": [
+            "php8.5-cli (>= 8.5.0)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.5.0/php8.5.0-pear_darwin-amd64.tar.zst",
+          "sha256": "",
+          "size": 0,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.5-rdkafka",
+          "version": "6.0.5",
+          "revision": 1,
+          "description": "rdkafka extension for PHP 8.5",
+          "depends": [
+            "php8.5-common (>= 8.5.0)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.5.0/php8.5.0-rdkafka6.0.5_darwin-amd64.tar.zst",
+          "sha256": "",
+          "size": 0,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.5-redis",
+          "version": "6.3.0",
+          "revision": 1,
+          "description": "redis extension for PHP 8.5",
+          "depends": [
+            "php8.5-common (>= 8.5.0)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.5.0/php8.5.0-redis6.3.0_darwin-amd64.tar.zst",
+          "sha256": "",
+          "size": 0,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.5-xdebug",
+          "version": "3.5.0",
+          "revision": 1,
+          "description": "xdebug extension for PHP 8.5",
+          "depends": [
+            "php8.5-common (>= 8.5.0)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.5.0/php8.5.0-xdebug3.5.0_darwin-amd64.tar.zst",
+          "sha256": "",
+          "size": 0,
+          "installed_size": 0
+        }
       ]
     },
     "darwin-arm64": {
       "packages": [
-        [
-          {
-            "name": "php8.3-amqp",
-            "version": "2.1.2",
-            "revision": 1,
-            "description": "amqp extension for PHP 8.3",
-            "depends": [
-              "php8.3-common (>= 8.3.15)"
-            ],
-            "provides": [],
-            "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.15/php8.3.15-amqp2.1.2_darwin-arm64.tar.zst",
-            "sha256": "",
-            "size": 0,
-            "installed_size": 0
-          },
-          {
-            "name": "php8.3-apcu",
-            "version": "5.1.28",
-            "revision": 1,
-            "description": "apcu extension for PHP 8.3",
-            "depends": [
-              "php8.3-common (>= 8.3.15)"
-            ],
-            "provides": [],
-            "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.15/php8.3.15-apcu5.1.28_darwin-arm64.tar.zst",
-            "sha256": "",
-            "size": 0,
-            "installed_size": 0
-          },
-          {
-            "name": "php8.3-cgi",
-            "version": "8.3.15",
-            "revision": 1,
-            "description": "PHP 8.3 CGI binary",
-            "depends": [
-              "php8.3-common (>= 8.3.15)"
-            ],
-            "provides": [],
-            "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.15/php8.3.15-cgi_darwin-arm64.tar.zst",
-            "sha256": "",
-            "size": 0,
-            "installed_size": 0
-          },
-          {
-            "name": "php8.3-cli",
-            "version": "8.3.15",
-            "revision": 1,
-            "description": "PHP 8.3 CLI interpreter",
-            "depends": [
-              "php8.3-common (>= 8.3.15)"
-            ],
-            "provides": [],
-            "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.15/php8.3.15-cli_darwin-arm64.tar.zst",
-            "sha256": "",
-            "size": 0,
-            "installed_size": 0
-          },
-          {
-            "name": "php8.3-common",
-            "version": "8.3.15",
-            "revision": 1,
-            "description": "PHP 8.3 common files",
-            "depends": [],
-            "provides": [],
-            "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.15/php8.3.15-common_darwin-arm64.tar.zst",
-            "sha256": "",
-            "size": 0,
-            "installed_size": 0
-          },
-          {
-            "name": "php8.3-dev",
-            "version": "8.3.15",
-            "revision": 1,
-            "description": "PHP 8.3 development files",
-            "depends": [
-              "php8.3-common (>= 8.3.15)"
-            ],
-            "provides": [],
-            "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.15/php8.3.15-dev_darwin-arm64.tar.zst",
-            "sha256": "",
-            "size": 0,
-            "installed_size": 0
-          },
-          {
-            "name": "php8.3-ev",
-            "version": "1.2.2",
-            "revision": 1,
-            "description": "ev extension for PHP 8.3",
-            "depends": [
-              "php8.3-common (>= 8.3.15)"
-            ],
-            "provides": [],
-            "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.15/php8.3.15-ev1.2.2_darwin-arm64.tar.zst",
-            "sha256": "",
-            "size": 0,
-            "installed_size": 0
-          },
-          {
-            "name": "php8.3-fpm",
-            "version": "8.3.15",
-            "revision": 1,
-            "description": "PHP 8.3 FastCGI Process Manager",
-            "depends": [
-              "php8.3-common (>= 8.3.15)"
-            ],
-            "provides": [],
-            "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.15/php8.3.15-fpm_darwin-arm64.tar.zst",
-            "sha256": "",
-            "size": 0,
-            "installed_size": 0
-          },
-          {
-            "name": "php8.3-igbinary",
-            "version": "3.2.16",
-            "revision": 1,
-            "description": "igbinary extension for PHP 8.3",
-            "depends": [
-              "php8.3-common (>= 8.3.15)"
-            ],
-            "provides": [],
-            "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.15/php8.3.15-igbinary3.2.16_darwin-arm64.tar.zst",
-            "sha256": "",
-            "size": 0,
-            "installed_size": 0
-          },
-          {
-            "name": "php8.3-imagick",
-            "version": "3.8.1",
-            "revision": 1,
-            "description": "imagick extension for PHP 8.3",
-            "depends": [
-              "php8.3-common (>= 8.3.15)"
-            ],
-            "provides": [],
-            "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.15/php8.3.15-imagick3.8.1_darwin-arm64.tar.zst",
-            "sha256": "",
-            "size": 0,
-            "installed_size": 0
-          },
-          {
-            "name": "php8.3-mongodb",
-            "version": "2.1.4",
-            "revision": 1,
-            "description": "mongodb extension for PHP 8.3",
-            "depends": [
-              "php8.3-common (>= 8.3.15)"
-            ],
-            "provides": [],
-            "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.15/php8.3.15-mongodb2.1.4_darwin-arm64.tar.zst",
-            "sha256": "",
-            "size": 0,
-            "installed_size": 0
-          },
-          {
-            "name": "php8.3-opentelemetry",
-            "version": "1.2.1",
-            "revision": 1,
-            "description": "opentelemetry extension for PHP 8.3",
-            "depends": [
-              "php8.3-common (>= 8.3.15)"
-            ],
-            "provides": [],
-            "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.15/php8.3.15-opentelemetry1.2.1_darwin-arm64.tar.zst",
-            "sha256": "",
-            "size": 0,
-            "installed_size": 0
-          },
-          {
-            "name": "php8.3-pcov",
-            "version": "1.0.12",
-            "revision": 1,
-            "description": "pcov extension for PHP 8.3",
-            "depends": [
-              "php8.3-common (>= 8.3.15)"
-            ],
-            "provides": [],
-            "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.15/php8.3.15-pcov1.0.12_darwin-arm64.tar.zst",
-            "sha256": "",
-            "size": 0,
-            "installed_size": 0
-          },
-          {
-            "name": "php8.3-pear",
-            "version": "8.3.15",
-            "revision": 1,
-            "description": "PHP 8.3 PEAR/PECL tools",
-            "depends": [
-              "php8.3-cli (>= 8.3.15)"
-            ],
-            "provides": [],
-            "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.15/php8.3.15-pear_darwin-arm64.tar.zst",
-            "sha256": "",
-            "size": 0,
-            "installed_size": 0
-          },
-          {
-            "name": "php8.3-redis",
-            "version": "6.3.0",
-            "revision": 1,
-            "description": "redis extension for PHP 8.3",
-            "depends": [
-              "php8.3-common (>= 8.3.15)"
-            ],
-            "provides": [],
-            "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.15/php8.3.15-redis6.3.0_darwin-arm64.tar.zst",
-            "sha256": "",
-            "size": 0,
-            "installed_size": 0
-          },
-          {
-            "name": "php8.3-xdebug",
-            "version": "3.5.0",
-            "revision": 1,
-            "description": "xdebug extension for PHP 8.3",
-            "depends": [
-              "php8.3-common (>= 8.3.15)"
-            ],
-            "provides": [],
-            "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.15/php8.3.15-xdebug3.5.0_darwin-arm64.tar.zst",
-            "sha256": "",
-            "size": 0,
-            "installed_size": 0
-          },
-          {
-            "name": "php8.4-amqp",
-            "version": "2.1.2",
-            "revision": 1,
-            "description": "amqp extension for PHP 8.4",
-            "depends": [
-              "php8.4-common (>= 8.4.7)"
-            ],
-            "provides": [],
-            "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.4.7/php8.4.7-amqp2.1.2_darwin-arm64.tar.zst",
-            "sha256": "",
-            "size": 0,
-            "installed_size": 0
-          },
-          {
-            "name": "php8.4-apcu",
-            "version": "5.1.28",
-            "revision": 1,
-            "description": "apcu extension for PHP 8.4",
-            "depends": [
-              "php8.4-common (>= 8.4.7)"
-            ],
-            "provides": [],
-            "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.4.7/php8.4.7-apcu5.1.28_darwin-arm64.tar.zst",
-            "sha256": "",
-            "size": 0,
-            "installed_size": 0
-          },
-          {
-            "name": "php8.4-cgi",
-            "version": "8.4.7",
-            "revision": 1,
-            "description": "PHP 8.4 CGI binary",
-            "depends": [
-              "php8.4-common (>= 8.4.7)"
-            ],
-            "provides": [],
-            "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.4.7/php8.4.7-cgi_darwin-arm64.tar.zst",
-            "sha256": "",
-            "size": 0,
-            "installed_size": 0
-          },
-          {
-            "name": "php8.4-cli",
-            "version": "8.4.7",
-            "revision": 1,
-            "description": "PHP 8.4 CLI interpreter",
-            "depends": [
-              "php8.4-common (>= 8.4.7)"
-            ],
-            "provides": [],
-            "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.4.7/php8.4.7-cli_darwin-arm64.tar.zst",
-            "sha256": "",
-            "size": 0,
-            "installed_size": 0
-          },
-          {
-            "name": "php8.4-common",
-            "version": "8.4.7",
-            "revision": 1,
-            "description": "PHP 8.4 common files",
-            "depends": [],
-            "provides": [],
-            "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.4.7/php8.4.7-common_darwin-arm64.tar.zst",
-            "sha256": "",
-            "size": 0,
-            "installed_size": 0
-          },
-          {
-            "name": "php8.4-dev",
-            "version": "8.4.7",
-            "revision": 1,
-            "description": "PHP 8.4 development files",
-            "depends": [
-              "php8.4-common (>= 8.4.7)"
-            ],
-            "provides": [],
-            "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.4.7/php8.4.7-dev_darwin-arm64.tar.zst",
-            "sha256": "",
-            "size": 0,
-            "installed_size": 0
-          },
-          {
-            "name": "php8.4-ev",
-            "version": "1.2.2",
-            "revision": 1,
-            "description": "ev extension for PHP 8.4",
-            "depends": [
-              "php8.4-common (>= 8.4.7)"
-            ],
-            "provides": [],
-            "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.4.7/php8.4.7-ev1.2.2_darwin-arm64.tar.zst",
-            "sha256": "",
-            "size": 0,
-            "installed_size": 0
-          },
-          {
-            "name": "php8.4-fpm",
-            "version": "8.4.7",
-            "revision": 1,
-            "description": "PHP 8.4 FastCGI Process Manager",
-            "depends": [
-              "php8.4-common (>= 8.4.7)"
-            ],
-            "provides": [],
-            "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.4.7/php8.4.7-fpm_darwin-arm64.tar.zst",
-            "sha256": "",
-            "size": 0,
-            "installed_size": 0
-          },
-          {
-            "name": "php8.4-igbinary",
-            "version": "3.2.16",
-            "revision": 1,
-            "description": "igbinary extension for PHP 8.4",
-            "depends": [
-              "php8.4-common (>= 8.4.7)"
-            ],
-            "provides": [],
-            "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.4.7/php8.4.7-igbinary3.2.16_darwin-arm64.tar.zst",
-            "sha256": "",
-            "size": 0,
-            "installed_size": 0
-          },
-          {
-            "name": "php8.4-imagick",
-            "version": "3.8.1",
-            "revision": 1,
-            "description": "imagick extension for PHP 8.4",
-            "depends": [
-              "php8.4-common (>= 8.4.7)"
-            ],
-            "provides": [],
-            "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.4.7/php8.4.7-imagick3.8.1_darwin-arm64.tar.zst",
-            "sha256": "",
-            "size": 0,
-            "installed_size": 0
-          },
-          {
-            "name": "php8.4-mongodb",
-            "version": "2.1.4",
-            "revision": 1,
-            "description": "mongodb extension for PHP 8.4",
-            "depends": [
-              "php8.4-common (>= 8.4.7)"
-            ],
-            "provides": [],
-            "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.4.7/php8.4.7-mongodb2.1.4_darwin-arm64.tar.zst",
-            "sha256": "",
-            "size": 0,
-            "installed_size": 0
-          },
-          {
-            "name": "php8.4-opentelemetry",
-            "version": "1.2.1",
-            "revision": 1,
-            "description": "opentelemetry extension for PHP 8.4",
-            "depends": [
-              "php8.4-common (>= 8.4.7)"
-            ],
-            "provides": [],
-            "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.4.7/php8.4.7-opentelemetry1.2.1_darwin-arm64.tar.zst",
-            "sha256": "",
-            "size": 0,
-            "installed_size": 0
-          },
-          {
-            "name": "php8.4-pcov",
-            "version": "1.0.12",
-            "revision": 1,
-            "description": "pcov extension for PHP 8.4",
-            "depends": [
-              "php8.4-common (>= 8.4.7)"
-            ],
-            "provides": [],
-            "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.4.7/php8.4.7-pcov1.0.12_darwin-arm64.tar.zst",
-            "sha256": "",
-            "size": 0,
-            "installed_size": 0
-          },
-          {
-            "name": "php8.4-pear",
-            "version": "8.4.7",
-            "revision": 1,
-            "description": "PHP 8.4 PEAR/PECL tools",
-            "depends": [
-              "php8.4-cli (>= 8.4.7)"
-            ],
-            "provides": [],
-            "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.4.7/php8.4.7-pear_darwin-arm64.tar.zst",
-            "sha256": "",
-            "size": 0,
-            "installed_size": 0
-          },
-          {
-            "name": "php8.4-redis",
-            "version": "6.3.0",
-            "revision": 1,
-            "description": "redis extension for PHP 8.4",
-            "depends": [
-              "php8.4-common (>= 8.4.7)"
-            ],
-            "provides": [],
-            "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.4.7/php8.4.7-redis6.3.0_darwin-arm64.tar.zst",
-            "sha256": "",
-            "size": 0,
-            "installed_size": 0
-          },
-          {
-            "name": "php8.4-xdebug",
-            "version": "3.5.0",
-            "revision": 1,
-            "description": "xdebug extension for PHP 8.4",
-            "depends": [
-              "php8.4-common (>= 8.4.7)"
-            ],
-            "provides": [],
-            "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.4.7/php8.4.7-xdebug3.5.0_darwin-arm64.tar.zst",
-            "sha256": "",
-            "size": 0,
-            "installed_size": 0
-          },
-          {
-            "name": "php8.5-apcu",
-            "version": "5.1.28",
-            "revision": 1,
-            "description": "apcu extension for PHP 8.5",
-            "depends": [
-              "php8.5-common (>= 8.5.0)"
-            ],
-            "provides": [],
-            "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.5.0/php8.5.0-apcu5.1.28_darwin-arm64.tar.zst",
-            "sha256": "",
-            "size": 0,
-            "installed_size": 0
-          },
-          {
-            "name": "php8.5-cgi",
-            "version": "8.5.0",
-            "revision": 1,
-            "description": "PHP 8.5 CGI binary",
-            "depends": [
-              "php8.5-common (>= 8.5.0)"
-            ],
-            "provides": [],
-            "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.5.0/php8.5.0-cgi_darwin-arm64.tar.zst",
-            "sha256": "",
-            "size": 0,
-            "installed_size": 0
-          },
-          {
-            "name": "php8.5-cli",
-            "version": "8.5.0",
-            "revision": 1,
-            "description": "PHP 8.5 CLI interpreter",
-            "depends": [
-              "php8.5-common (>= 8.5.0)"
-            ],
-            "provides": [],
-            "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.5.0/php8.5.0-cli_darwin-arm64.tar.zst",
-            "sha256": "",
-            "size": 0,
-            "installed_size": 0
-          },
-          {
-            "name": "php8.5-common",
-            "version": "8.5.0",
-            "revision": 1,
-            "description": "PHP 8.5 common files",
-            "depends": [],
-            "provides": [],
-            "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.5.0/php8.5.0-common_darwin-arm64.tar.zst",
-            "sha256": "",
-            "size": 0,
-            "installed_size": 0
-          },
-          {
-            "name": "php8.5-dev",
-            "version": "8.5.0",
-            "revision": 1,
-            "description": "PHP 8.5 development files",
-            "depends": [
-              "php8.5-common (>= 8.5.0)"
-            ],
-            "provides": [],
-            "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.5.0/php8.5.0-dev_darwin-arm64.tar.zst",
-            "sha256": "",
-            "size": 0,
-            "installed_size": 0
-          },
-          {
-            "name": "php8.5-ev",
-            "version": "1.2.2",
-            "revision": 1,
-            "description": "ev extension for PHP 8.5",
-            "depends": [
-              "php8.5-common (>= 8.5.0)"
-            ],
-            "provides": [],
-            "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.5.0/php8.5.0-ev1.2.2_darwin-arm64.tar.zst",
-            "sha256": "",
-            "size": 0,
-            "installed_size": 0
-          },
-          {
-            "name": "php8.5-fpm",
-            "version": "8.5.0",
-            "revision": 1,
-            "description": "PHP 8.5 FastCGI Process Manager",
-            "depends": [
-              "php8.5-common (>= 8.5.0)"
-            ],
-            "provides": [],
-            "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.5.0/php8.5.0-fpm_darwin-arm64.tar.zst",
-            "sha256": "",
-            "size": 0,
-            "installed_size": 0
-          },
-          {
-            "name": "php8.5-imagick",
-            "version": "3.8.1",
-            "revision": 1,
-            "description": "imagick extension for PHP 8.5",
-            "depends": [
-              "php8.5-common (>= 8.5.0)"
-            ],
-            "provides": [],
-            "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.5.0/php8.5.0-imagick3.8.1_darwin-arm64.tar.zst",
-            "sha256": "",
-            "size": 0,
-            "installed_size": 0
-          },
-          {
-            "name": "php8.5-mongodb",
-            "version": "2.1.4",
-            "revision": 1,
-            "description": "mongodb extension for PHP 8.5",
-            "depends": [
-              "php8.5-common (>= 8.5.0)"
-            ],
-            "provides": [],
-            "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.5.0/php8.5.0-mongodb2.1.4_darwin-arm64.tar.zst",
-            "sha256": "",
-            "size": 0,
-            "installed_size": 0
-          },
-          {
-            "name": "php8.5-opentelemetry",
-            "version": "1.2.1",
-            "revision": 1,
-            "description": "opentelemetry extension for PHP 8.5",
-            "depends": [
-              "php8.5-common (>= 8.5.0)"
-            ],
-            "provides": [],
-            "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.5.0/php8.5.0-opentelemetry1.2.1_darwin-arm64.tar.zst",
-            "sha256": "",
-            "size": 0,
-            "installed_size": 0
-          },
-          {
-            "name": "php8.5-pcov",
-            "version": "1.0.12",
-            "revision": 1,
-            "description": "pcov extension for PHP 8.5",
-            "depends": [
-              "php8.5-common (>= 8.5.0)"
-            ],
-            "provides": [],
-            "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.5.0/php8.5.0-pcov1.0.12_darwin-arm64.tar.zst",
-            "sha256": "",
-            "size": 0,
-            "installed_size": 0
-          },
-          {
-            "name": "php8.5-pear",
-            "version": "8.5.0",
-            "revision": 1,
-            "description": "PHP 8.5 PEAR/PECL tools",
-            "depends": [
-              "php8.5-cli (>= 8.5.0)"
-            ],
-            "provides": [],
-            "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.5.0/php8.5.0-pear_darwin-arm64.tar.zst",
-            "sha256": "",
-            "size": 0,
-            "installed_size": 0
-          },
-          {
-            "name": "php8.5-redis",
-            "version": "6.3.0",
-            "revision": 1,
-            "description": "redis extension for PHP 8.5",
-            "depends": [
-              "php8.5-common (>= 8.5.0)"
-            ],
-            "provides": [],
-            "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.5.0/php8.5.0-redis6.3.0_darwin-arm64.tar.zst",
-            "sha256": "",
-            "size": 0,
-            "installed_size": 0
-          },
-          {
-            "name": "php8.5-xdebug",
-            "version": "3.5.0",
-            "revision": 1,
-            "description": "xdebug extension for PHP 8.5",
-            "depends": [
-              "php8.5-common (>= 8.5.0)"
-            ],
-            "provides": [],
-            "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.5.0/php8.5.0-xdebug3.5.0_darwin-arm64.tar.zst",
-            "sha256": "",
-            "size": 0,
-            "installed_size": 0
-          }
-        ]
+        {
+          "name": "php8.3-amqp",
+          "version": "2.1.2",
+          "revision": 1,
+          "description": "amqp extension for PHP 8.3",
+          "depends": [
+            "php8.3-common (>= 8.3.15)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.15/php8.3.15-amqp2.1.2_darwin-arm64.tar.zst",
+          "sha256": "",
+          "size": 0,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.3-apcu",
+          "version": "5.1.28",
+          "revision": 1,
+          "description": "apcu extension for PHP 8.3",
+          "depends": [
+            "php8.3-common (>= 8.3.15)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.15/php8.3.15-apcu5.1.28_darwin-arm64.tar.zst",
+          "sha256": "",
+          "size": 0,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.3-cgi",
+          "version": "8.3.15",
+          "revision": 1,
+          "description": "PHP 8.3 CGI binary",
+          "depends": [
+            "php8.3-common (>= 8.3.15)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.15/php8.3.15-cgi_darwin-arm64.tar.zst",
+          "sha256": "",
+          "size": 0,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.3-cli",
+          "version": "8.3.15",
+          "revision": 1,
+          "description": "PHP 8.3 CLI interpreter",
+          "depends": [
+            "php8.3-common (>= 8.3.15)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.15/php8.3.15-cli_darwin-arm64.tar.zst",
+          "sha256": "",
+          "size": 0,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.3-common",
+          "version": "8.3.15",
+          "revision": 1,
+          "description": "PHP 8.3 common files",
+          "depends": [],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.15/php8.3.15-common_darwin-arm64.tar.zst",
+          "sha256": "",
+          "size": 0,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.3-dev",
+          "version": "8.3.15",
+          "revision": 1,
+          "description": "PHP 8.3 development files",
+          "depends": [
+            "php8.3-common (>= 8.3.15)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.15/php8.3.15-dev_darwin-arm64.tar.zst",
+          "sha256": "",
+          "size": 0,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.3-ev",
+          "version": "1.2.2",
+          "revision": 1,
+          "description": "ev extension for PHP 8.3",
+          "depends": [
+            "php8.3-common (>= 8.3.15)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.15/php8.3.15-ev1.2.2_darwin-arm64.tar.zst",
+          "sha256": "",
+          "size": 0,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.3-fpm",
+          "version": "8.3.15",
+          "revision": 1,
+          "description": "PHP 8.3 FastCGI Process Manager",
+          "depends": [
+            "php8.3-common (>= 8.3.15)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.15/php8.3.15-fpm_darwin-arm64.tar.zst",
+          "sha256": "",
+          "size": 0,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.3-igbinary",
+          "version": "3.2.16",
+          "revision": 1,
+          "description": "igbinary extension for PHP 8.3",
+          "depends": [
+            "php8.3-common (>= 8.3.15)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.15/php8.3.15-igbinary3.2.16_darwin-arm64.tar.zst",
+          "sha256": "",
+          "size": 0,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.3-imagick",
+          "version": "3.8.1",
+          "revision": 1,
+          "description": "imagick extension for PHP 8.3",
+          "depends": [
+            "php8.3-common (>= 8.3.15)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.15/php8.3.15-imagick3.8.1_darwin-arm64.tar.zst",
+          "sha256": "",
+          "size": 0,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.3-mongodb",
+          "version": "2.1.4",
+          "revision": 1,
+          "description": "mongodb extension for PHP 8.3",
+          "depends": [
+            "php8.3-common (>= 8.3.15)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.15/php8.3.15-mongodb2.1.4_darwin-arm64.tar.zst",
+          "sha256": "",
+          "size": 0,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.3-opentelemetry",
+          "version": "1.2.1",
+          "revision": 1,
+          "description": "opentelemetry extension for PHP 8.3",
+          "depends": [
+            "php8.3-common (>= 8.3.15)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.15/php8.3.15-opentelemetry1.2.1_darwin-arm64.tar.zst",
+          "sha256": "",
+          "size": 0,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.3-pcov",
+          "version": "1.0.12",
+          "revision": 1,
+          "description": "pcov extension for PHP 8.3",
+          "depends": [
+            "php8.3-common (>= 8.3.15)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.15/php8.3.15-pcov1.0.12_darwin-arm64.tar.zst",
+          "sha256": "",
+          "size": 0,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.3-pear",
+          "version": "8.3.15",
+          "revision": 1,
+          "description": "PHP 8.3 PEAR/PECL tools",
+          "depends": [
+            "php8.3-cli (>= 8.3.15)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.15/php8.3.15-pear_darwin-arm64.tar.zst",
+          "sha256": "",
+          "size": 0,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.3-redis",
+          "version": "6.3.0",
+          "revision": 1,
+          "description": "redis extension for PHP 8.3",
+          "depends": [
+            "php8.3-common (>= 8.3.15)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.15/php8.3.15-redis6.3.0_darwin-arm64.tar.zst",
+          "sha256": "",
+          "size": 0,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.3-xdebug",
+          "version": "3.5.0",
+          "revision": 1,
+          "description": "xdebug extension for PHP 8.3",
+          "depends": [
+            "php8.3-common (>= 8.3.15)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.15/php8.3.15-xdebug3.5.0_darwin-arm64.tar.zst",
+          "sha256": "",
+          "size": 0,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.4-amqp",
+          "version": "2.1.2",
+          "revision": 1,
+          "description": "amqp extension for PHP 8.4",
+          "depends": [
+            "php8.4-common (>= 8.4.7)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.4.7/php8.4.7-amqp2.1.2_darwin-arm64.tar.zst",
+          "sha256": "",
+          "size": 0,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.4-apcu",
+          "version": "5.1.28",
+          "revision": 1,
+          "description": "apcu extension for PHP 8.4",
+          "depends": [
+            "php8.4-common (>= 8.4.7)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.4.7/php8.4.7-apcu5.1.28_darwin-arm64.tar.zst",
+          "sha256": "",
+          "size": 0,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.4-cgi",
+          "version": "8.4.7",
+          "revision": 1,
+          "description": "PHP 8.4 CGI binary",
+          "depends": [
+            "php8.4-common (>= 8.4.7)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.4.7/php8.4.7-cgi_darwin-arm64.tar.zst",
+          "sha256": "",
+          "size": 0,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.4-cli",
+          "version": "8.4.7",
+          "revision": 1,
+          "description": "PHP 8.4 CLI interpreter",
+          "depends": [
+            "php8.4-common (>= 8.4.7)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.4.7/php8.4.7-cli_darwin-arm64.tar.zst",
+          "sha256": "",
+          "size": 0,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.4-common",
+          "version": "8.4.7",
+          "revision": 1,
+          "description": "PHP 8.4 common files",
+          "depends": [],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.4.7/php8.4.7-common_darwin-arm64.tar.zst",
+          "sha256": "",
+          "size": 0,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.4-dev",
+          "version": "8.4.7",
+          "revision": 1,
+          "description": "PHP 8.4 development files",
+          "depends": [
+            "php8.4-common (>= 8.4.7)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.4.7/php8.4.7-dev_darwin-arm64.tar.zst",
+          "sha256": "",
+          "size": 0,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.4-ev",
+          "version": "1.2.2",
+          "revision": 1,
+          "description": "ev extension for PHP 8.4",
+          "depends": [
+            "php8.4-common (>= 8.4.7)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.4.7/php8.4.7-ev1.2.2_darwin-arm64.tar.zst",
+          "sha256": "",
+          "size": 0,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.4-fpm",
+          "version": "8.4.7",
+          "revision": 1,
+          "description": "PHP 8.4 FastCGI Process Manager",
+          "depends": [
+            "php8.4-common (>= 8.4.7)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.4.7/php8.4.7-fpm_darwin-arm64.tar.zst",
+          "sha256": "",
+          "size": 0,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.4-igbinary",
+          "version": "3.2.16",
+          "revision": 1,
+          "description": "igbinary extension for PHP 8.4",
+          "depends": [
+            "php8.4-common (>= 8.4.7)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.4.7/php8.4.7-igbinary3.2.16_darwin-arm64.tar.zst",
+          "sha256": "",
+          "size": 0,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.4-imagick",
+          "version": "3.8.1",
+          "revision": 1,
+          "description": "imagick extension for PHP 8.4",
+          "depends": [
+            "php8.4-common (>= 8.4.7)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.4.7/php8.4.7-imagick3.8.1_darwin-arm64.tar.zst",
+          "sha256": "",
+          "size": 0,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.4-mongodb",
+          "version": "2.1.4",
+          "revision": 1,
+          "description": "mongodb extension for PHP 8.4",
+          "depends": [
+            "php8.4-common (>= 8.4.7)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.4.7/php8.4.7-mongodb2.1.4_darwin-arm64.tar.zst",
+          "sha256": "",
+          "size": 0,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.4-opentelemetry",
+          "version": "1.2.1",
+          "revision": 1,
+          "description": "opentelemetry extension for PHP 8.4",
+          "depends": [
+            "php8.4-common (>= 8.4.7)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.4.7/php8.4.7-opentelemetry1.2.1_darwin-arm64.tar.zst",
+          "sha256": "",
+          "size": 0,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.4-pcov",
+          "version": "1.0.12",
+          "revision": 1,
+          "description": "pcov extension for PHP 8.4",
+          "depends": [
+            "php8.4-common (>= 8.4.7)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.4.7/php8.4.7-pcov1.0.12_darwin-arm64.tar.zst",
+          "sha256": "",
+          "size": 0,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.4-pear",
+          "version": "8.4.7",
+          "revision": 1,
+          "description": "PHP 8.4 PEAR/PECL tools",
+          "depends": [
+            "php8.4-cli (>= 8.4.7)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.4.7/php8.4.7-pear_darwin-arm64.tar.zst",
+          "sha256": "",
+          "size": 0,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.4-redis",
+          "version": "6.3.0",
+          "revision": 1,
+          "description": "redis extension for PHP 8.4",
+          "depends": [
+            "php8.4-common (>= 8.4.7)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.4.7/php8.4.7-redis6.3.0_darwin-arm64.tar.zst",
+          "sha256": "",
+          "size": 0,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.4-xdebug",
+          "version": "3.5.0",
+          "revision": 1,
+          "description": "xdebug extension for PHP 8.4",
+          "depends": [
+            "php8.4-common (>= 8.4.7)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.4.7/php8.4.7-xdebug3.5.0_darwin-arm64.tar.zst",
+          "sha256": "",
+          "size": 0,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.5-apcu",
+          "version": "5.1.28",
+          "revision": 1,
+          "description": "apcu extension for PHP 8.5",
+          "depends": [
+            "php8.5-common (>= 8.5.0)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.5.0/php8.5.0-apcu5.1.28_darwin-arm64.tar.zst",
+          "sha256": "",
+          "size": 0,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.5-cgi",
+          "version": "8.5.0",
+          "revision": 1,
+          "description": "PHP 8.5 CGI binary",
+          "depends": [
+            "php8.5-common (>= 8.5.0)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.5.0/php8.5.0-cgi_darwin-arm64.tar.zst",
+          "sha256": "",
+          "size": 0,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.5-cli",
+          "version": "8.5.0",
+          "revision": 1,
+          "description": "PHP 8.5 CLI interpreter",
+          "depends": [
+            "php8.5-common (>= 8.5.0)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.5.0/php8.5.0-cli_darwin-arm64.tar.zst",
+          "sha256": "",
+          "size": 0,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.5-common",
+          "version": "8.5.0",
+          "revision": 1,
+          "description": "PHP 8.5 common files",
+          "depends": [],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.5.0/php8.5.0-common_darwin-arm64.tar.zst",
+          "sha256": "",
+          "size": 0,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.5-dev",
+          "version": "8.5.0",
+          "revision": 1,
+          "description": "PHP 8.5 development files",
+          "depends": [
+            "php8.5-common (>= 8.5.0)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.5.0/php8.5.0-dev_darwin-arm64.tar.zst",
+          "sha256": "",
+          "size": 0,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.5-ev",
+          "version": "1.2.2",
+          "revision": 1,
+          "description": "ev extension for PHP 8.5",
+          "depends": [
+            "php8.5-common (>= 8.5.0)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.5.0/php8.5.0-ev1.2.2_darwin-arm64.tar.zst",
+          "sha256": "",
+          "size": 0,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.5-fpm",
+          "version": "8.5.0",
+          "revision": 1,
+          "description": "PHP 8.5 FastCGI Process Manager",
+          "depends": [
+            "php8.5-common (>= 8.5.0)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.5.0/php8.5.0-fpm_darwin-arm64.tar.zst",
+          "sha256": "",
+          "size": 0,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.5-imagick",
+          "version": "3.8.1",
+          "revision": 1,
+          "description": "imagick extension for PHP 8.5",
+          "depends": [
+            "php8.5-common (>= 8.5.0)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.5.0/php8.5.0-imagick3.8.1_darwin-arm64.tar.zst",
+          "sha256": "",
+          "size": 0,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.5-mongodb",
+          "version": "2.1.4",
+          "revision": 1,
+          "description": "mongodb extension for PHP 8.5",
+          "depends": [
+            "php8.5-common (>= 8.5.0)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.5.0/php8.5.0-mongodb2.1.4_darwin-arm64.tar.zst",
+          "sha256": "",
+          "size": 0,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.5-opentelemetry",
+          "version": "1.2.1",
+          "revision": 1,
+          "description": "opentelemetry extension for PHP 8.5",
+          "depends": [
+            "php8.5-common (>= 8.5.0)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.5.0/php8.5.0-opentelemetry1.2.1_darwin-arm64.tar.zst",
+          "sha256": "",
+          "size": 0,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.5-pcov",
+          "version": "1.0.12",
+          "revision": 1,
+          "description": "pcov extension for PHP 8.5",
+          "depends": [
+            "php8.5-common (>= 8.5.0)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.5.0/php8.5.0-pcov1.0.12_darwin-arm64.tar.zst",
+          "sha256": "",
+          "size": 0,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.5-pear",
+          "version": "8.5.0",
+          "revision": 1,
+          "description": "PHP 8.5 PEAR/PECL tools",
+          "depends": [
+            "php8.5-cli (>= 8.5.0)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.5.0/php8.5.0-pear_darwin-arm64.tar.zst",
+          "sha256": "",
+          "size": 0,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.5-redis",
+          "version": "6.3.0",
+          "revision": 1,
+          "description": "redis extension for PHP 8.5",
+          "depends": [
+            "php8.5-common (>= 8.5.0)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.5.0/php8.5.0-redis6.3.0_darwin-arm64.tar.zst",
+          "sha256": "",
+          "size": 0,
+          "installed_size": 0
+        },
+        {
+          "name": "php8.5-xdebug",
+          "version": "3.5.0",
+          "revision": 1,
+          "description": "xdebug extension for PHP 8.5",
+          "depends": [
+            "php8.5-common (>= 8.5.0)"
+          ],
+          "provides": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.5.0/php8.5.0-xdebug3.5.0_darwin-arm64.tar.zst",
+          "sha256": "",
+          "size": 0,
+          "installed_size": 0
+        }
       ]
     }
   }
