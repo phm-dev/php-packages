@@ -93,6 +93,18 @@
       "brew_deps": ["librdkafka"],
       "description": "Apache Kafka client for PHP"
     },
+    "ssh2": {
+      "packagist": "ext-ssh2/ext-ssh2",
+      "pie_options": [],
+      "brew_deps": ["libssh2"],
+      "description": "SSH2 bindings for PHP"
+    },
+    "uuid": {
+      "packagist": "pecl/uuid",
+      "pie_options": [],
+      "brew_deps": ["ossp-uuid"],
+      "description": "UUID generation functions"
+    },
     "relay": {
       "packagist": "cachewerk/ext-relay",
       "pie_options": [],

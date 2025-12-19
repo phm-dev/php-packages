@@ -109,7 +109,8 @@ jobs:
             openssl@3 libzip icu4c readline libxml2 libxslt libsodium \
             sqlite lz4 zstd oniguruma jpeg-turbo libpng freetype webp \
             libpq bzip2 curl libiconv \
-            rabbitmq-c libmemcached imagemagick libev librdkafka mpdecimal
+            rabbitmq-c libmemcached imagemagick libev librdkafka mpdecimal \
+            libssh2 ossp-uuid
 
       - name: Make scripts executable
         run: chmod +x scripts/*.sh
