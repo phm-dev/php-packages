@@ -106,7 +106,7 @@ jobs:
       - name: Install build dependencies
         run: |
           brew install -q autoconf automake bison re2c pkg-config libtool cmake \
-            openssl@3 libzip icu4c readline libxml2 libxslt \
+            openssl@3 libzip icu4c readline libxml2 libxslt libsodium \
             sqlite lz4 zstd oniguruma jpeg-turbo libpng freetype webp \
             libpq bzip2 curl libiconv \
             rabbitmq-c libmemcached imagemagick libev librdkafka mpdecimal

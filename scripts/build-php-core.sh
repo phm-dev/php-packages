@@ -135,6 +135,7 @@ if [[ "$(uname -s)" == "Darwin" ]]; then
     SQLITE_DIR="$(brew --prefix sqlite)"
     CURL_DIR="$(brew --prefix curl)"
     ICONV_DIR="$(brew --prefix libiconv)"
+    SODIUM_DIR="$(brew --prefix libsodium)"
 
     # Add bison to PATH (required for PHP build)
     export PATH="$(brew --prefix bison)/bin:$PATH"
@@ -195,6 +196,7 @@ CONFIGURE_OPTS=(
     --with-readline="${READLINE_DIR}"
     --with-curl="${CURL_DIR}"
     --with-iconv="${ICONV_DIR}"
+    --with-sodium="${SODIUM_DIR}"
     --with-zip
     --with-pear
 
