@@ -132,6 +132,32 @@ jobs:
           LIBPQ_CFLAGS: ${{ runner.arch == 'ARM64' && '-I/opt/homebrew/opt/libpq/include' || '-I/usr/local/opt/libpq/include' }}
           LIBPQ_LIBS: ${{ runner.arch == 'ARM64' && '-L/opt/homebrew/opt/libpq/lib -lpq' || '-L/usr/local/opt/libpq/lib -lpq' }}
 
+      - name: Show build report
+        if: always()
+        run: |
+          echo "========================================"
+          echo "  Extension Build Report"
+          echo "========================================"
+          if [[ -f dist/build-report.json ]]; then
+            echo ""
+            echo "Summary:"
+            jq -r '.summary | "  Total: \(.total) | Success: \(.success) | Failed: \(.failed)"' dist/build-report.json
+            echo ""
+
+            echo "Successful builds:"
+            jq -r '.extensions[] | select(.status == "success") | "  ✓ \(.name) \(.version)"' dist/build-report.json || echo "  (none)"
+            echo ""
+
+            echo "Failed builds:"
+            jq -r '.extensions[] | select(.status == "failed") | "  ✗ \(.name) \(.version): \(.error)"' dist/build-report.json || echo "  (none)"
+            echo ""
+
+            # Save report for artifact
+            cp dist/build-report.json dist/logs/ 2>/dev/null || true
+          else
+            echo "No build report found"
+          fi
+
       - name: List built packages
         run: |
           echo "Built packages:"
@@ -145,6 +171,17 @@ jobs:
           name: php-${{ matrix.php_version }}-${{ matrix.platform.name }}
           path: dist/*.tar.zst
           retention-days: 7
+
+      - name: Upload build logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-logs-${{ matrix.php_version }}-${{ matrix.platform.name }}
+          path: |
+            dist/logs/
+            dist/build-report.json
+          retention-days: 14
+          if-no-files-found: ignore
 
   publish:
     name: Publish PHP ${{ matrix.php_version }}
@@ -181,6 +218,26 @@ jobs:
           TAG="php-${VERSION}"
           MINOR="${VERSION%.*}"
 
+          # Extract list of built extensions from package filenames
+          EXTENSIONS=""
+          for pkg in artifacts/php${VERSION}-*_*.tar.zst; do
+            [[ ! -f "$pkg" ]] && continue
+            basename="$(basename "$pkg")"
+            # Match extension packages: php8.5.0-redis6.3.0_darwin-arm64.tar.zst
+            if [[ "$basename" =~ ^php[0-9.]+\-([a-z]+)[0-9]+\.[0-9] ]]; then
+              ext="${BASH_REMATCH[1]}"
+              # Skip core packages
+              [[ "$ext" =~ ^(cli|fpm|cgi|common|dev|pear)$ ]] && continue
+              # Add to list if not already present
+              if [[ ! "$EXTENSIONS" =~ "$ext" ]]; then
+                EXTENSIONS="${EXTENSIONS:+$EXTENSIONS, }$ext"
+              fi
+            fi
+          done
+
+          # Fallback if no extensions detected
+          [[ -z "$EXTENSIONS" ]] && EXTENSIONS="(none built successfully)"
+
           # Create release notes
           cat > release_notes.md << EOF
           ## PHP ${VERSION}
@@ -199,9 +256,7 @@ jobs:
           - php${VERSION}-dev - development files
 
           **Extensions included:**
-          - redis, igbinary, mongodb, amqp, xdebug
-          - swoole, pcov, apcu, decimal, imagick
-          - mcrypt, ev, opentelemetry, memcached, rdkafka
+          ${EXTENSIONS}
 
           ### Installation
 
@@ -214,6 +269,9 @@ jobs:
           - Core: \`php{VERSION}-{type}_{platform}.tar.zst\`
           - Extensions: \`php{VERSION}-{ext}{extver}_{platform}.tar.zst\`
           EOF
+
+          echo "Release notes:"
+          cat release_notes.md
 
           # Delete existing release if present
           gh release delete "$TAG" --yes 2>/dev/null || true
