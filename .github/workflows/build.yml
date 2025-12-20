@@ -110,7 +110,7 @@ jobs:
             sqlite lz4 zstd oniguruma jpeg-turbo libpng freetype webp \
             libpq bzip2 curl libiconv \
             rabbitmq-c libmemcached imagemagick libev librdkafka \
-            libssh2 ossp-uuid
+            libssh2 ossp-uuid e2fsprogs
 
       - name: Make scripts executable
         run: chmod +x scripts/*.sh
@@ -213,7 +213,7 @@ jobs:
       - name: Validate required extensions
         run: |
           VERSION="${{ matrix.php_version }}"
-          REQUIRED_EXTENSIONS="redis igbinary xdebug"
+          REQUIRED_EXTENSIONS="redis xdebug"
 
           echo "Checking required extensions: $REQUIRED_EXTENSIONS"
           echo ""
