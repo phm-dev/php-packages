@@ -110,7 +110,7 @@ jobs:
             sqlite lz4 zstd oniguruma jpeg-turbo libpng freetype webp \
             libpq bzip2 curl libiconv \
             rabbitmq-c libmemcached imagemagick libev librdkafka \
-            libssh2 ossp-uuid
+            libssh2 ossp-uuid e2fsprogs
 
       - name: Make scripts executable
         run: chmod +x scripts/*.sh
@@ -210,6 +210,35 @@ jobs:
           echo ""
           echo "Total: $(ls artifacts/*.tar.zst 2>/dev/null | wc -l) packages"
 
+      - name: Validate required extensions
+        run: |
+          VERSION="${{ matrix.php_version }}"
+          REQUIRED_EXTENSIONS="redis xdebug"
+
+          echo "Checking required extensions: $REQUIRED_EXTENSIONS"
+          echo ""
+
+          MISSING=""
+          for ext in $REQUIRED_EXTENSIONS; do
+            # Check if extension package exists for at least one platform
+            if ls artifacts/php${VERSION}-${ext}*_*.tar.zst 1>/dev/null 2>&1; then
+              echo "✓ $ext: found"
+            else
+              echo "✗ $ext: MISSING"
+              MISSING="${MISSING:+$MISSING }$ext"
+            fi
+          done
+
+          echo ""
+          if [[ -n "$MISSING" ]]; then
+            echo "::error::Required extensions missing: $MISSING"
+            echo "Build failed - cannot publish release without required extensions."
+            echo "Check build logs for extension build failures."
+            exit 1
+          fi
+
+          echo "All required extensions present - proceeding with release."
+
       - name: Create release with batched upload
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -217,6 +246,24 @@ jobs:
           VERSION="${{ matrix.php_version }}"
           TAG="php-${VERSION}"
           MINOR="${VERSION%.*}"
+
+          # Delete ALL old releases for this minor version (e.g., php-8.5.0 when building 8.5.1)
+          echo "Checking for old releases of PHP ${MINOR}..."
+          OLD_RELEASES=$(gh release list --json tagName -q '.[].tagName' | grep "^php-${MINOR}\." || true)
+
+          if [[ -n "$OLD_RELEASES" ]]; then
+            echo "Found old releases to remove:"
+            echo "$OLD_RELEASES"
+            for old_tag in $OLD_RELEASES; do
+              if [[ "$old_tag" != "$TAG" ]]; then
+                echo "Deleting old release: $old_tag"
+                gh release delete "$old_tag" --yes --cleanup-tag 2>/dev/null || true
+              fi
+            done
+            sleep 2
+          else
+            echo "No old releases found for PHP ${MINOR}"
+          fi
 
           # Extract list of built extensions from package filenames
           EXTENSIONS=""
@@ -273,9 +320,12 @@ jobs:
           echo "Release notes:"
           cat release_notes.md
 
-          # Delete existing release if present
-          gh release delete "$TAG" --yes 2>/dev/null || true
-          sleep 2
+          # Delete existing release if present (rebuild case)
+          if gh release view "$TAG" &>/dev/null; then
+            echo "Deleting existing release: $TAG"
+            gh release delete "$TAG" --yes --cleanup-tag 2>/dev/null || true
+            sleep 2
+          fi
 
           # Create release without assets first
           gh release create "$TAG" \
