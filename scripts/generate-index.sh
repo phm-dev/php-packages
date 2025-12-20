@@ -168,7 +168,7 @@ echo "$RELEASES" | jq -r '.[].tagName' | while read -r TAG; do
 
         DOWNLOAD_URL="${BASE_URL}/${TAG}/${ASSET}"
 
-        # Create package entry JSON
+        # Create package entry JSON (minimal - only essential fields)
         PACKAGE_ENTRY=$(jq -n \
             --arg name "$PKG_NAME" \
             --arg version "$PKG_VERSION" \
@@ -178,14 +178,9 @@ echo "$RELEASES" | jq -r '.[].tagName' | while read -r TAG; do
             '{
                 name: $name,
                 version: $version,
-                revision: 1,
                 description: $description,
                 depends: $depends,
-                provides: [],
-                url: $url,
-                sha256: "",
-                size: 0,
-                installed_size: 0
+                url: $url
             }')
 
         # Append to platform file
