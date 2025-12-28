@@ -38,8 +38,8 @@ NPROC="${NPROC:-$(sysctl -n hw.ncpu 2>/dev/null || nproc 2>/dev/null || echo 4)}
 export CC="${CC:-clang}"
 export CXX="${CXX:-clang++}"
 
-# Target macOS 15.4+ (strchrnul requires 15.4, simplifies builds)
-export MACOSX_DEPLOYMENT_TARGET="15.4"
+# Target macOS 26 (matches macos-26 runner)
+export MACOSX_DEPLOYMENT_TARGET="26.0"
 
 export CFLAGS="-O2 -fPIC -mmacosx-version-min=${MACOSX_DEPLOYMENT_TARGET}"
 export CXXFLAGS="-O2 -fPIC"
