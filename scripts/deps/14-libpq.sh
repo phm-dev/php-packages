@@ -60,6 +60,9 @@ cd "$BUILD_DIR"
 # Build only the interface libraries (libpq)
 cd src/interfaces/libpq
 make -j"$NPROC"
+# Skip libpq-refs-stamp check (fails on macOS 26 SDK due to atexit/pthread_exit refs)
+# We only use static library anyway, so dylib check is irrelevant
+touch libpq-refs-stamp
 make install
 
 # Build common and port libraries (required by libpq for static linking)
