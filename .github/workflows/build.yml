@@ -13,11 +13,16 @@ on:
         description: 'Force build all versions'
         type: boolean
         default: false
+      rebuild_deps:
+        description: 'Force rebuild static dependencies'
+        type: boolean
+        default: false
 
 env:
   HOMEBREW_NO_AUTO_UPDATE: 1
   HOMEBREW_NO_INSTALL_CLEANUP: 1
   HOMEBREW_NO_ENV_HINTS: 1
+  DEPS_VERSION: "v1"  # Increment to invalidate deps cache
 
 permissions:
   contents: write
@@ -97,23 +102,59 @@ jobs:
       matrix:
         php_version: ${{ fromJson(needs.check-updates.outputs.php_versions) }}
         platform:
-          - { os: macos-latest, name: darwin-arm64 }
-          - { os: macos-15-intel, name: darwin-amd64 }
+          - { os: macos-latest, name: darwin-arm64, arch: arm64 }
+          # Intel builds temporarily disabled - focusing on ARM64 first
+          # - { os: macos-15-intel, name: darwin-amd64, arch: amd64 }
     runs-on: ${{ matrix.platform.os }}
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install build dependencies
+      - name: Install build tools
         run: |
-          brew install -q autoconf automake bison re2c pkg-config libtool cmake \
-            openssl@3 libzip icu4c readline libxml2 libxslt libsodium \
-            sqlite lz4 zstd oniguruma jpeg-turbo libpng freetype webp \
-            libpq bzip2 curl libiconv \
-            rabbitmq-c libmemcached imagemagick libev librdkafka \
-            libssh2 ossp-uuid e2fsprogs
+          # Only install build tools, not libraries (we build those statically)
+          brew install -q autoconf automake bison re2c pkg-config libtool cmake zstd
 
       - name: Make scripts executable
-        run: chmod +x scripts/*.sh
+        run: chmod +x scripts/*.sh scripts/deps/*.sh
+
+      # Cache static dependencies
+      - name: Cache static dependencies
+        id: cache-deps
+        uses: actions/cache@v4
+        with:
+          path: /opt/phm-deps/${{ matrix.platform.name }}
+          key: phm-deps-${{ matrix.platform.name }}-${{ env.DEPS_VERSION }}-${{ hashFiles('scripts/deps/*.sh') }}
+          restore-keys: |
+            phm-deps-${{ matrix.platform.name }}-${{ env.DEPS_VERSION }}-
+
+      - name: Build static dependencies
+        if: steps.cache-deps.outputs.cache-hit != 'true' || inputs.rebuild_deps == true
+        run: |
+          echo "Building static dependencies for ${{ matrix.platform.name }}..."
+          sudo mkdir -p /opt/phm-deps/${{ matrix.platform.name }}
+          sudo chown -R $USER /opt/phm-deps
+          ./scripts/deps/build-all-deps.sh
+        env:
+          CC: clang
+          CXX: clang++
+
+      - name: Verify static dependencies
+        run: |
+          DEPS_PREFIX="/opt/phm-deps/${{ matrix.platform.name }}"
+          echo "Checking static dependencies at $DEPS_PREFIX..."
+
+          # Check critical libraries
+          for lib in libz.a libssl.a libcrypto.a libedit.a libxml2.a libcurl.a libsqlite3.a libpq.a; do
+            if [[ -f "${DEPS_PREFIX}/lib/${lib}" ]]; then
+              echo "✓ ${lib}"
+            else
+              echo "✗ ${lib} - MISSING"
+              exit 1
+            fi
+          done
+
+          echo ""
+          echo "All static dependencies verified."
 
       - name: Build PHP core packages
         run: ./scripts/build-php-core.sh ${{ matrix.php_version }}
@@ -127,10 +168,27 @@ jobs:
           CC: clang
           CXX: clang++
           EXT_VERSIONS: ${{ needs.check-updates.outputs.ext_versions }}
-          PKG_CONFIG_PATH: ${{ runner.arch == 'ARM64' && '/opt/homebrew/opt/libpq/lib/pkgconfig:/opt/homebrew/lib/pkgconfig' || '/usr/local/opt/libpq/lib/pkgconfig:/usr/local/lib/pkgconfig' }}
-          LIBPQ_DIR: ${{ runner.arch == 'ARM64' && '/opt/homebrew/opt/libpq' || '/usr/local/opt/libpq' }}
-          LIBPQ_CFLAGS: ${{ runner.arch == 'ARM64' && '-I/opt/homebrew/opt/libpq/include' || '-I/usr/local/opt/libpq/include' }}
-          LIBPQ_LIBS: ${{ runner.arch == 'ARM64' && '-L/opt/homebrew/opt/libpq/lib -lpq' || '-L/usr/local/opt/libpq/lib -lpq' }}
+
+      - name: Verify PHP binary is static
+        run: |
+          echo "Checking PHP binary dependencies..."
+          PHP_BIN="/opt/php/${PHP_VERSION%.*}/bin/php"
+
+          if [[ -f "$PHP_BIN" ]]; then
+            echo "Dependencies:"
+            otool -L "$PHP_BIN"
+
+            # Check for Homebrew dependencies
+            if otool -L "$PHP_BIN" | grep -q "/opt/homebrew\|/usr/local/opt"; then
+              echo ""
+              echo "::warning::PHP binary has Homebrew dependencies!"
+            else
+              echo ""
+              echo "✓ PHP binary has no Homebrew dependencies"
+            fi
+          fi
+        env:
+          PHP_VERSION: ${{ matrix.php_version }}
 
       - name: Show build report
         if: always()
@@ -291,9 +349,10 @@ jobs:
 
           Pre-built PHP ${VERSION} packages for macOS with extensions.
 
+          **Note:** These packages are statically linked and do not require Homebrew.
+
           **Platforms:**
           - darwin-arm64 (Apple Silicon)
-          - darwin-amd64 (Intel Mac)
 
           **Core packages:**
           - php${VERSION}-common - shared files
