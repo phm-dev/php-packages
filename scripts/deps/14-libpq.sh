@@ -49,12 +49,14 @@ extract_source "$TARBALL" "$BUILD_DIR"
 # Build - we only need libpq, not the full PostgreSQL server
 cd "$BUILD_DIR"
 
+# Disable -Werror for availability checks - PostgreSQL uses strchrnul which
+# is only available on macOS 15.4+ but we want to support older versions
 ./configure \
     --prefix="$DEPS_PREFIX" \
     --without-readline \
     --with-openssl \
     --without-icu \
-    CFLAGS="${CFLAGS} -I${DEPS_PREFIX}/include" \
+    CFLAGS="${CFLAGS} -I${DEPS_PREFIX}/include -Wno-error=unguarded-availability-new" \
     LDFLAGS="${LDFLAGS} -L${DEPS_PREFIX}/lib"
 
 # Build only the interface libraries (libpq)
