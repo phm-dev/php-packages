@@ -12,7 +12,8 @@ source "${SCRIPT_DIR}/common.sh"
 
 NAME="bzip2"
 VERSION="1.0.8"
-URL="https://sourceware.org/pub/bzip2/bzip2-${VERSION}.tar.gz"
+# Mirror - sourceware.org is often unreliable
+URL="https://gitlab.com/bzip2/bzip2/-/archive/bzip2-${VERSION}/bzip2-bzip2-${VERSION}.tar.gz"
 
 if is_built "$NAME"; then
     log_info "$NAME already built, skipping"
