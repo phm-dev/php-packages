@@ -60,10 +60,11 @@ cd "$BUILD_DIR"
 # Build only the interface libraries (libpq)
 cd src/interfaces/libpq
 make -j"$NPROC"
-# Skip libpq-refs-stamp check (fails on macOS 26 SDK due to atexit/pthread_exit refs)
-# We only use static library anyway, so dylib check is irrelevant
-touch libpq-refs-stamp
-make install
+# Manual install - skip make install which runs libpq-refs-stamp check
+# (fails on macOS 26 SDK due to atexit/pthread_exit refs in dylib)
+mkdir -p "${DEPS_PREFIX}/lib" "${DEPS_PREFIX}/include"
+cp libpq.a "${DEPS_PREFIX}/lib/"
+cp libpq-fe.h libpq-events.h "${DEPS_PREFIX}/include/"
 
 # Build common and port libraries (required by libpq for static linking)
 cd ../../common
