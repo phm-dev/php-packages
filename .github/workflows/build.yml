@@ -102,7 +102,7 @@ jobs:
       matrix:
         php_version: ${{ fromJson(needs.check-updates.outputs.php_versions) }}
         platform:
-          - { os: macos-latest, name: darwin-arm64, arch: arm64 }
+          - { os: macos-26, name: darwin-arm64, arch: arm64 }
           # Intel builds temporarily disabled - focusing on ARM64 first
           # - { os: macos-15-intel, name: darwin-amd64, arch: amd64 }
     runs-on: ${{ matrix.platform.os }}
