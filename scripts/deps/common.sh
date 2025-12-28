@@ -37,7 +37,11 @@ NPROC="${NPROC:-$(sysctl -n hw.ncpu 2>/dev/null || nproc 2>/dev/null || echo 4)}
 # Compiler settings - explicitly avoid Homebrew paths
 export CC="${CC:-clang}"
 export CXX="${CXX:-clang++}"
-export CFLAGS="-O2 -fPIC"
+
+# Target macOS 15+ (all ARM Macs support it, simplifies builds)
+export MACOSX_DEPLOYMENT_TARGET="15.0"
+
+export CFLAGS="-O2 -fPIC -mmacosx-version-min=${MACOSX_DEPLOYMENT_TARGET}"
 export CXXFLAGS="-O2 -fPIC"
 export LDFLAGS=""
 # Clear any Homebrew pkg-config paths
