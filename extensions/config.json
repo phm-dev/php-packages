@@ -102,9 +102,19 @@
     },
     "uuid": {
       "packagist": "pecl/uuid",
-      "pie_options": [],
-      "brew_deps": ["ossp-uuid"],
+      "pie_options": [
+        "--with-uuid=/opt/phm-deps/darwin-arm64"
+      ],
+      "brew_deps": [],
       "description": "UUID generation functions"
+    },
+    "zstd": {
+      "packagist": "kjdev/php-ext-zstd",
+      "pie_options": [
+        "--with-libzstd=/opt/phm-deps/darwin-arm64"
+      ],
+      "brew_deps": [],
+      "description": "Zstandard compression extension"
     },
     "relay": {
       "packagist": "cachewerk/ext-relay",

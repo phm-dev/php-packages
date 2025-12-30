@@ -103,13 +103,15 @@ main() {
     "${SCRIPT_DIR}/17-curl.sh"
     "${SCRIPT_DIR}/18-sqlite.sh"
 
-    # Phase 6: Extension dependencies (for amqp, memcached, imagick)
+    # Phase 6: Extension dependencies (for amqp, memcached, imagick, etc.)
     log_info ""
     log_info "=== Phase 6: Extension dependencies ==="
     "${SCRIPT_DIR}/19-rabbitmq-c.sh"   # For amqp extension
     "${SCRIPT_DIR}/20-libevent.sh"      # For libmemcached
     "${SCRIPT_DIR}/21-libmemcached.sh"  # For memcached extension
     "${SCRIPT_DIR}/22-imagemagick.sh"   # For imagick extension
+    "${SCRIPT_DIR}/23-zstd.sh"          # For mongodb, redis (optional), zstd extension
+    "${SCRIPT_DIR}/24-ossp-uuid.sh"     # For uuid extension
 
     # Calculate elapsed time
     local elapsed=$((SECONDS - start_time))
