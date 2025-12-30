@@ -164,17 +164,17 @@ load_config() {
         done < <(echo "$ext_config" | jq -r '.pie_options[]? // empty' 2>/dev/null)
     fi
 
-    # Expand $(brew --prefix ...) in PIE_OPTIONS (only if not empty)
+    # Expand $(brew --prefix ...) in PIE_OPTIONS to use our static deps
     if [[ ${#PIE_OPTIONS[@]} -gt 0 ]]; then
         local expanded_options=()
+        local platform
+        platform="$(detect_platform)"
+        local deps_prefix="/opt/phm-deps/${platform}"
+
         for opt in "${PIE_OPTIONS[@]}"; do
-            if [[ "$opt" =~ \$\(brew\ --prefix\ ([a-zA-Z0-9_-]+)\) ]]; then
-                local pkg="${BASH_REMATCH[1]}"
-                local prefix
-                prefix=$(brew --prefix "$pkg" 2>/dev/null || echo "")
-                if [[ -n "$prefix" ]]; then
-                    opt="${opt//\$(brew --prefix $pkg)/$prefix}"
-                fi
+            # Replace any $(brew --prefix ...) with our deps prefix
+            if [[ "$opt" =~ \$\(brew\ --prefix\ ([a-zA-Z0-9_@-]+)\) ]]; then
+                opt="${opt//\$(brew --prefix *)/$deps_prefix}"
             fi
             expanded_options+=("$opt")
         done
@@ -184,19 +184,14 @@ load_config() {
     return 0
 }
 
-# Install brew dependencies
+# Install brew dependencies - DISABLED, using static deps from /opt/phm-deps
 install_brew_deps() {
-    if [[ ${#BREW_DEPS[@]} -eq 0 ]]; then
-        return 0
+    # We use pre-built static dependencies instead of Homebrew
+    # See scripts/deps/ for how these are built
+    if [[ ${#BREW_DEPS[@]} -gt 0 ]]; then
+        log_info "Skipping brew deps (using static deps): ${BREW_DEPS[*]}"
     fi
-
-    log_info "Installing brew dependencies: ${BREW_DEPS[*]}"
-
-    for dep in "${BREW_DEPS[@]}"; do
-        if [[ -n "$dep" ]]; then
-            brew install "$dep" 2>/dev/null || true
-        fi
-    done
+    return 0
 }
 
 # Set up environment
@@ -205,11 +200,20 @@ setup_env() {
     export CC=clang
     export CXX=clang++
 
-    if [[ "$OSTYPE" == "darwin"* ]]; then
-        BREW_PREFIX="$(brew --prefix)"
-        export PKG_CONFIG_PATH="${BREW_PREFIX}/lib/pkgconfig:${BREW_PREFIX}/opt/openssl@3/lib/pkgconfig"
-        export LDFLAGS="-L${BREW_PREFIX}/lib"
-        export CPPFLAGS="-I${BREW_PREFIX}/include"
+    # Use our static deps, not Homebrew
+    local platform
+    platform="$(detect_platform)"
+    DEPS_PREFIX="/opt/phm-deps/${platform}"
+
+    if [[ -d "$DEPS_PREFIX" ]]; then
+        export PKG_CONFIG_PATH="${DEPS_PREFIX}/lib/pkgconfig"
+        export PKG_CONFIG_LIBDIR="${DEPS_PREFIX}/lib/pkgconfig"
+        export LDFLAGS="-L${DEPS_PREFIX}/lib"
+        export CPPFLAGS="-I${DEPS_PREFIX}/include"
+        export CFLAGS="-I${DEPS_PREFIX}/include"
+        log_info "Using static deps from: ${DEPS_PREFIX}"
+    else
+        log_warn "Static deps not found at ${DEPS_PREFIX}, falling back to system"
     fi
 }
 

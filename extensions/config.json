@@ -3,7 +3,7 @@
     "redis": {
       "packagist": "phpredis/phpredis",
       "pie_options": [],
-      "brew_deps": ["lz4", "zstd"],
+      "brew_deps": [],
       "description": "Redis extension for PHP"
     },
     "igbinary": {
@@ -15,13 +15,15 @@
     "mongodb": {
       "packagist": "mongodb/mongodb-extension",
       "pie_options": [],
-      "brew_deps": ["openssl@3"],
+      "brew_deps": [],
       "description": "MongoDB driver for PHP"
     },
     "amqp": {
       "packagist": "pdezwart/php-amqp",
-      "pie_options": [],
-      "brew_deps": ["rabbitmq-c"],
+      "pie_options": [
+        "--with-librabbitmq-dir=/opt/phm-deps/darwin-arm64"
+      ],
+      "brew_deps": [],
       "description": "AMQP extension for PHP (RabbitMQ)"
     },
     "xdebug": {
@@ -39,9 +41,9 @@
         "--enable-http2",
         "--enable-swoole-curl",
         "--enable-swoole-pgsql",
-        "--with-swoole-pgsql-dir=$(brew --prefix libpq)"
+        "--with-swoole-pgsql-dir=/opt/phm-deps/darwin-arm64"
       ],
-      "brew_deps": ["openssl@3", "libpq", "curl", "c-ares", "brotli"],
+      "brew_deps": [],
       "description": "Coroutine-based concurrency library for PHP"
     },
     "pcov": {
@@ -58,8 +60,10 @@
     },
     "imagick": {
       "packagist": "imagick/imagick",
-      "pie_options": [],
-      "brew_deps": ["imagemagick"],
+      "pie_options": [
+        "--with-imagick=/opt/phm-deps/darwin-arm64"
+      ],
+      "brew_deps": [],
       "description": "ImageMagick binding for PHP"
     },
     "ev": {
@@ -78,9 +82,10 @@
       "packagist": "php-memcached/php-memcached",
       "pie_options": [
         "--enable-memcached-json",
-        "--with-zlib-dir=$(brew --prefix zlib)"
+        "--with-zlib-dir=/opt/phm-deps/darwin-arm64",
+        "--with-libmemcached-dir=/opt/phm-deps/darwin-arm64"
       ],
-      "brew_deps": ["libmemcached", "zlib"],
+      "brew_deps": [],
       "description": "Memcached client library"
     },
     "rdkafka": {
