@@ -44,6 +44,8 @@ extract_source "$TARBALL" "$BUILD_DIR"
 # Build
 cd "$BUILD_DIR"
 
+# Disable gearmand server and tests - they require boost
+# We only need libgearman client library for PHP extension
 ./configure \
     --prefix="$DEPS_PREFIX" \
     --enable-static \
@@ -53,6 +55,7 @@ cd "$BUILD_DIR"
     --disable-libpq \
     --disable-hiredis \
     --disable-tokyocabinet \
+    --disable-gearmand \
     --without-mysql \
     --without-postgresql \
     --with-boost=no \
@@ -63,8 +66,14 @@ cd "$BUILD_DIR"
     LIBEVENT_CFLAGS="-I${DEPS_PREFIX}/include" \
     LIBEVENT_LIBS="-L${DEPS_PREFIX}/lib -levent"
 
-make -j"$NPROC"
-make install
+# Build only libgearman client library (not gearmand server)
+# Using direct targets as this is a non-recursive automake Makefile
+make -j"$NPROC" libgearman/libgearman.la
+
+# Install library, headers, and pkgconfig
+make install-libLTLIBRARIES
+make install-nobase_includeHEADERS
+make install-pkgconfigDATA
 
 # Remove any shared libs
 rm -f "${DEPS_PREFIX}/lib"/libgearman*.so* "${DEPS_PREFIX}/lib"/libgearman*.dylib* 2>/dev/null || true

@@ -174,8 +174,14 @@ clean_build() {
 
 # Initialize deps directories
 init_deps_dirs() {
-    sudo mkdir -p "$DEPS_PREFIX"/{lib,include,bin,licenses}
-    sudo chown -R "$(whoami)" "$DEPS_PREFIX"
+    # Only use sudo if directory doesn't exist or isn't writable
+    if [[ ! -d "$DEPS_PREFIX" ]]; then
+        sudo mkdir -p "$DEPS_PREFIX"/{lib,include,bin,licenses}
+        sudo chown -R "$(whoami)" "$DEPS_PREFIX"
+    elif [[ ! -w "$DEPS_PREFIX" ]]; then
+        sudo chown -R "$(whoami)" "$DEPS_PREFIX"
+    fi
+    mkdir -p "$DEPS_PREFIX"/{lib,include,bin,licenses}
     mkdir -p "$DEPS_SRC"
     mkdir -p "$DEPS_BUILD"
     mkdir -p "${DEPS_PREFIX}/lib/pkgconfig"

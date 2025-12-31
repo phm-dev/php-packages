@@ -42,6 +42,13 @@ extract_source "$TARBALL" "$BUILD_DIR"
 # Build
 cd "$BUILD_DIR"
 
+# libmcrypt is old (2007) and its config.sub doesn't recognize modern macOS
+# Update config.sub and config.guess with modern versions
+log_info "Updating config.sub and config.guess for modern macOS..."
+curl -fsSL -o config.sub 'https://git.savannah.gnu.org/cgit/config.git/plain/config.sub'
+curl -fsSL -o config.guess 'https://git.savannah.gnu.org/cgit/config.git/plain/config.guess'
+chmod +x config.sub config.guess
+
 # libmcrypt is old and may need some fixes for modern compilers
 # Disable -Werror if present
 ./configure \
@@ -49,7 +56,7 @@ cd "$BUILD_DIR"
     --enable-static \
     --disable-shared \
     --disable-posix-threads \
-    CFLAGS="${CFLAGS} -Wno-implicit-function-declaration" \
+    CFLAGS="${CFLAGS} -Wno-implicit-function-declaration -Wno-implicit-int -Wno-return-type" \
     LDFLAGS="${LDFLAGS}"
 
 make -j"$NPROC"
