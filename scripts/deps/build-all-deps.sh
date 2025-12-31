@@ -120,6 +120,8 @@ main() {
     "${SCRIPT_DIR}/30-lua.sh"           # For lua extension
     "${SCRIPT_DIR}/31-libgearman.sh"    # For gearman extension
     "${SCRIPT_DIR}/32-libev.sh"         # For ev extension
+    "${SCRIPT_DIR}/33-libssh2.sh"       # For ssh2 extension
+    "${SCRIPT_DIR}/34-libmcrypt.sh"     # For mcrypt extension
 
     # Calculate elapsed time
     local elapsed=$((SECONDS - start_time))

@@ -38,7 +38,7 @@ EXTENSION=""
 EXT_VERSION=""
 PHP_VERSION=""
 QUIET=false
-declare -a PIE_OPTIONS=()
+declare -a CLI_OPTIONS=()
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -47,7 +47,7 @@ while [[ $# -gt 0 ]]; do
             shift
             ;;
         --*)
-            PIE_OPTIONS+=("$1")
+            CLI_OPTIONS+=("$1")
             shift
             ;;
         *)
@@ -64,7 +64,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 if [[ -z "$EXTENSION" || -z "$EXT_VERSION" || -z "$PHP_VERSION" ]]; then
-    echo "Usage: $0 <extension> <ext_version> <php_version> [pie_options...]"
+    echo "Usage: $0 <extension> <ext_version> <php_version> [options...]"
     echo "Example: $0 redis 6.3.0 8.5.0 --enable-redis-igbinary"
     exit 1
 fi
@@ -146,51 +146,43 @@ load_config() {
 
     # Load config values
     PACKAGIST=$(echo "$ext_config" | jq -r '.packagist // empty')
+    PECL_NAME=$(echo "$ext_config" | jq -r '.pecl // empty')
     IS_ZEND=$(echo "$ext_config" | jq -r '.zend_extension // false')
     PRIORITY=$(echo "$ext_config" | jq -r '.priority // 20')
     DESCRIPTION=$(echo "$ext_config" | jq -r '.description // empty')
     SPECIAL_BUILD=$(echo "$ext_config" | jq -r '.special_build // false')
 
-    # Load brew dependencies into array (Bash 3.2 compatible)
-    BREW_DEPS=()
-    while IFS= read -r dep; do
-        [[ -n "$dep" ]] && BREW_DEPS+=("$dep")
-    done < <(echo "$ext_config" | jq -r '.brew_deps[]? // empty' 2>/dev/null)
-
-    # Load default PIE options from config (if not provided via CLI)
-    if [[ ${#PIE_OPTIONS[@]} -eq 0 ]]; then
-        while IFS= read -r opt; do
-            [[ -n "$opt" ]] && PIE_OPTIONS+=("$opt")
-        done < <(echo "$ext_config" | jq -r '.pie_options[]? // empty' 2>/dev/null)
+    # Determine build method based on config
+    if [[ -n "$PACKAGIST" ]]; then
+        BUILD_METHOD="pie"
+        # Load PIE options from config (unless CLI options provided)
+        if [[ ${#CLI_OPTIONS[@]} -gt 0 ]]; then
+            BUILD_OPTIONS=("${CLI_OPTIONS[@]}")
+        else
+            while IFS= read -r opt; do
+                [[ -n "$opt" ]] && BUILD_OPTIONS+=("$opt")
+            done < <(echo "$ext_config" | jq -r '.pie_options[]? // empty' 2>/dev/null)
+        fi
+    elif [[ -n "$PECL_NAME" ]]; then
+        BUILD_METHOD="pecl"
+        # Load PECL options from config (unless CLI options provided)
+        if [[ ${#CLI_OPTIONS[@]} -gt 0 ]]; then
+            BUILD_OPTIONS=("${CLI_OPTIONS[@]}")
+        else
+            while IFS= read -r opt; do
+                [[ -n "$opt" ]] && BUILD_OPTIONS+=("$opt")
+            done < <(echo "$ext_config" | jq -r '.pecl_options[]? // empty' 2>/dev/null)
+        fi
+    else
+        BUILD_METHOD="pecl"
+        PECL_NAME="$EXTENSION"
+        if [[ ${#CLI_OPTIONS[@]} -gt 0 ]]; then
+            BUILD_OPTIONS=("${CLI_OPTIONS[@]}")
+        fi
     fi
 
-    # Expand $(brew --prefix ...) in PIE_OPTIONS to use our static deps
-    if [[ ${#PIE_OPTIONS[@]} -gt 0 ]]; then
-        local expanded_options=()
-        local platform
-        platform="$(detect_platform)"
-        local deps_prefix="/opt/phm-deps/${platform}"
+    log_info "Build method: $BUILD_METHOD"
 
-        for opt in "${PIE_OPTIONS[@]}"; do
-            # Replace any $(brew --prefix ...) with our deps prefix
-            if [[ "$opt" =~ \$\(brew\ --prefix\ ([a-zA-Z0-9_@-]+)\) ]]; then
-                opt="${opt//\$(brew --prefix *)/$deps_prefix}"
-            fi
-            expanded_options+=("$opt")
-        done
-        PIE_OPTIONS=("${expanded_options[@]}")
-    fi
-
-    return 0
-}
-
-# Install brew dependencies - DISABLED, using static deps from /opt/phm-deps
-install_brew_deps() {
-    # We use pre-built static dependencies instead of Homebrew
-    # See scripts/deps/ for how these are built
-    if [[ ${#BREW_DEPS[@]} -gt 0 ]]; then
-        log_info "Skipping brew deps (using static deps): ${BREW_DEPS[*]}"
-    fi
     return 0
 }
 
@@ -255,9 +247,9 @@ build_with_pie() {
     num_cpus=$(sysctl -n hw.ncpu 2>/dev/null || nproc 2>/dev/null || echo 4)
     pie_args+=("-j${num_cpus}")
 
-    # Add PIE options (configure options) - PIE accepts them directly
-    if [[ ${#PIE_OPTIONS[@]} -gt 0 ]]; then
-        for opt in "${PIE_OPTIONS[@]}"; do
+    # Add build options (configure options) - PIE accepts them directly
+    if [[ ${#BUILD_OPTIONS[@]} -gt 0 ]]; then
+        for opt in "${BUILD_OPTIONS[@]}"; do
             [[ -n "$opt" ]] && pie_args+=("$opt")
         done
     fi
@@ -283,9 +275,12 @@ build_with_pie() {
     fi
 }
 
-# Fallback to PECL binary (if available)
+# Build with PECL
 build_with_pecl() {
-    log_info "Attempting PECL build..."
+    log_info "Building with PECL..."
+
+    # Use PECL_NAME if set, otherwise fall back to EXTENSION
+    local pecl_pkg="${PECL_NAME:-$EXTENSION}"
 
     if [[ ! -x "$PECL_BIN" ]]; then
         log_warn "PECL not found at ${PECL_BIN}"
@@ -297,19 +292,19 @@ build_with_pecl() {
     : > "$BUILD_LOG"
 
     # Download and extract
-    log_info "Downloading ${EXTENSION}-${EXT_VERSION}..."
-    if ! run_build "$PECL_BIN" download "${EXTENSION}-${EXT_VERSION}"; then
+    log_info "Downloading ${pecl_pkg}-${EXT_VERSION}..."
+    if ! run_build "$PECL_BIN" download "${pecl_pkg}-${EXT_VERSION}"; then
         log_error "Failed to download extension"
         return 1
     fi
 
-    tar xf "${EXTENSION}-${EXT_VERSION}.tgz" 2>/dev/null || tar xf "${EXTENSION}"-*.tgz 2>/dev/null
-    cd "${EXTENSION}-${EXT_VERSION}" 2>/dev/null || cd "${EXTENSION}"-* 2>/dev/null
+    tar xf "${pecl_pkg}-${EXT_VERSION}.tgz" 2>/dev/null || tar xf "${pecl_pkg}"-*.tgz 2>/dev/null
+    cd "${pecl_pkg}-${EXT_VERSION}" 2>/dev/null || cd "${pecl_pkg}"-* 2>/dev/null
 
     # Build configure options string
     local configure_opts=("--with-php-config=${PHP_CONFIG}")
-    if [[ ${#PIE_OPTIONS[@]} -gt 0 ]]; then
-        for opt in "${PIE_OPTIONS[@]}"; do
+    if [[ ${#BUILD_OPTIONS[@]} -gt 0 ]]; then
+        for opt in "${BUILD_OPTIONS[@]}"; do
             [[ -n "$opt" ]] && configure_opts+=("$opt")
         done
     fi
@@ -335,34 +330,37 @@ build_with_pecl() {
     return 0
 }
 
-# Manual build from pecl.php.net (no pecl binary needed)
+# Manual build from pecl.php.net (fallback when pecl binary unavailable)
 build_manual() {
     log_info "Attempting manual build from pecl.php.net..."
+
+    # Use PECL_NAME if set, otherwise fall back to EXTENSION
+    local pecl_pkg="${PECL_NAME:-$EXTENSION}"
 
     mkdir -p "$BUILD_DIR"
     cd "$BUILD_DIR"
     : > "$BUILD_LOG"
 
     # Download from pecl.php.net
-    local pecl_url="https://pecl.php.net/get/${EXTENSION}-${EXT_VERSION}.tgz"
+    local pecl_url="https://pecl.php.net/get/${pecl_pkg}-${EXT_VERSION}.tgz"
     log_info "Downloading from ${pecl_url}..."
 
-    if ! curl -fsSL --retry 3 "$pecl_url" -o "${EXTENSION}-${EXT_VERSION}.tgz"; then
+    if ! curl -fsSL --retry 3 "$pecl_url" -o "${pecl_pkg}-${EXT_VERSION}.tgz"; then
         log_warn "Failed to download from pecl.php.net"
         return 1
     fi
 
     # Extract
-    tar xf "${EXTENSION}-${EXT_VERSION}.tgz" 2>/dev/null
-    cd "${EXTENSION}-${EXT_VERSION}" 2>/dev/null || cd "${EXTENSION}"-* 2>/dev/null || {
+    tar xf "${pecl_pkg}-${EXT_VERSION}.tgz" 2>/dev/null
+    cd "${pecl_pkg}-${EXT_VERSION}" 2>/dev/null || cd "${pecl_pkg}"-* 2>/dev/null || {
         log_warn "Failed to find extracted directory"
         return 1
     }
 
     # Build configure options string
     local configure_opts=("--with-php-config=${PHP_CONFIG}")
-    if [[ ${#PIE_OPTIONS[@]} -gt 0 ]]; then
-        for opt in "${PIE_OPTIONS[@]}"; do
+    if [[ ${#BUILD_OPTIONS[@]} -gt 0 ]]; then
+        for opt in "${BUILD_OPTIONS[@]}"; do
             [[ -n "$opt" ]] && configure_opts+=("$opt")
         done
     fi
@@ -492,11 +490,13 @@ main() {
 
     # Initialize defaults
     PACKAGIST=""
+    PECL_NAME=""
+    BUILD_METHOD="pecl"
+    BUILD_OPTIONS=()
     IS_ZEND="false"
     PRIORITY="20"
     DESCRIPTION="${EXTENSION} extension for PHP"
     SPECIAL_BUILD="false"
-    BREW_DEPS=()
 
     # Check PHP
     check_php
@@ -507,9 +507,6 @@ main() {
     # Load config (optional - provides defaults)
     load_config || true
 
-    # Install dependencies
-    install_brew_deps
-
     # Build extension
     local build_success=false
 
@@ -518,13 +515,20 @@ main() {
         if build_relay; then
             build_success=true
         fi
-    else
-        # Try build methods in order: PIE -> PECL -> Manual
+    elif [[ "$BUILD_METHOD" == "pie" ]]; then
+        # Use PIE (configured in config.json)
         if build_with_pie; then
             build_success=true
-        elif build_with_pecl; then
+        elif build_manual; then
+            # Fallback to manual if PIE fails
+            build_success=true
+        fi
+    else
+        # Use PECL (configured in config.json)
+        if build_with_pecl; then
             build_success=true
         elif build_manual; then
+            # Fallback to manual if PECL fails
             build_success=true
         fi
     fi

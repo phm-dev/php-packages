@@ -3,33 +3,28 @@
     "redis": {
       "packagist": "phpredis/phpredis",
       "pie_options": [],
-      "brew_deps": [],
       "description": "Redis extension for PHP"
     },
     "igbinary": {
-      "packagist": "igbinary/igbinary",
-      "pie_options": [],
-      "brew_deps": [],
+      "pecl": "igbinary",
+      "pecl_options": [],
       "description": "Binary serialization for PHP"
     },
     "mongodb": {
       "packagist": "mongodb/mongodb-extension",
       "pie_options": [],
-      "brew_deps": [],
       "description": "MongoDB driver for PHP"
     },
     "amqp": {
-      "packagist": "pdezwart/php-amqp",
-      "pie_options": [
+      "pecl": "amqp",
+      "pecl_options": [
         "--with-librabbitmq-dir=/opt/phm-deps/darwin-arm64"
       ],
-      "brew_deps": [],
       "description": "AMQP extension for PHP (RabbitMQ)"
     },
     "xdebug": {
       "packagist": "xdebug/xdebug",
       "pie_options": [],
-      "brew_deps": [],
       "zend_extension": true,
       "priority": 15,
       "description": "Xdebug debugger and profiler"
@@ -43,19 +38,16 @@
         "--enable-swoole-pgsql",
         "--with-swoole-pgsql-dir=/opt/phm-deps/darwin-arm64"
       ],
-      "brew_deps": [],
       "description": "Coroutine-based concurrency library for PHP"
     },
     "pcov": {
-      "packagist": "krakjoe/pcov",
-      "pie_options": [],
-      "brew_deps": [],
+      "pecl": "pcov",
+      "pecl_options": [],
       "description": "Code coverage driver"
     },
     "apcu": {
       "packagist": "apcu/apcu",
       "pie_options": [],
-      "brew_deps": [],
       "description": "APCu - APC User Cache"
     },
     "imagick": {
@@ -63,7 +55,6 @@
       "pie_options": [
         "--with-imagick=/opt/phm-deps/darwin-arm64"
       ],
-      "brew_deps": [],
       "description": "ImageMagick binding for PHP"
     },
     "ev": {
@@ -71,13 +62,11 @@
       "pie_options": [
         "--with-libev=/opt/phm-deps/darwin-arm64"
       ],
-      "brew_deps": [],
       "description": "Ev - high performance event loop"
     },
     "opentelemetry": {
       "packagist": "open-telemetry/ext-opentelemetry",
       "pie_options": [],
-      "brew_deps": [],
       "description": "OpenTelemetry instrumentation"
     },
     "memcached": {
@@ -87,54 +76,52 @@
         "--with-zlib-dir=/opt/phm-deps/darwin-arm64",
         "--with-libmemcached-dir=/opt/phm-deps/darwin-arm64"
       ],
-      "brew_deps": [],
       "description": "Memcached client library"
     },
     "rdkafka": {
-      "packagist": "kwn/php-rdkafka",
-      "pie_options": [
+      "pecl": "rdkafka",
+      "pecl_options": [
         "--with-rdkafka=/opt/phm-deps/darwin-arm64"
       ],
-      "brew_deps": [],
       "description": "Apache Kafka client for PHP"
     },
     "ssh2": {
-      "packagist": "ext-ssh2/ext-ssh2",
-      "pie_options": [],
-      "brew_deps": [],
-      "skip": true,
-      "skip_reason": "Requires libssh2 - TODO: add static build",
+      "pecl": "ssh2",
+      "pecl_options": [
+        "--with-ssh2=/opt/phm-deps/darwin-arm64"
+      ],
       "description": "SSH2 bindings for PHP"
+    },
+    "mcrypt": {
+      "packagist": "pecl/mcrypt",
+      "pie_options": [
+        "--with-mcrypt=/opt/phm-deps/darwin-arm64"
+      ],
+      "description": "Mcrypt encryption (deprecated, use sodium instead)"
     },
     "uuid": {
       "packagist": "pecl/uuid",
       "pie_options": [
         "--with-uuid=/opt/phm-deps/darwin-arm64"
       ],
-      "brew_deps": [],
       "description": "UUID generation functions"
     },
     "zstd": {
-      "packagist": "kjdev/php-ext-zstd",
-      "pie_options": [
+      "pecl": "zstd",
+      "pecl_options": [
         "--with-libzstd=/opt/phm-deps/darwin-arm64"
       ],
-      "brew_deps": [],
       "description": "Zstandard compression extension"
     },
     "relay": {
       "packagist": "cachewerk/ext-relay",
       "pie_options": [],
-      "brew_deps": [],
       "special_build": true,
       "description": "Relay - next-generation Redis cache"
     },
     "opcache": {
-      "packagist": null,
       "source": "php-src",
       "php_max_version": "8.4.99",
-      "pie_options": [],
-      "brew_deps": [],
       "zend_extension": true,
       "priority": 10,
       "description": "OPcache - built into PHP 8.5+, separate for older versions"
@@ -142,79 +129,66 @@
     "mailparse": {
       "packagist": "pecl/mailparse",
       "pie_options": [],
-      "brew_deps": [],
       "description": "Email message parsing"
     },
     "msgpack": {
-      "packagist": "msgpack/msgpack",
-      "pie_options": [],
-      "brew_deps": [],
+      "pecl": "msgpack",
+      "pecl_options": [],
       "description": "MessagePack serialization"
     },
     "ast": {
       "packagist": "nikic/php-ast",
       "pie_options": [],
-      "brew_deps": [],
       "description": "Abstract Syntax Tree"
     },
     "ds": {
-      "packagist": "php-ds/php-ds",
-      "pie_options": [],
-      "brew_deps": [],
+      "pecl": "ds",
+      "pecl_options": [],
       "description": "Data Structures"
     },
     "excimer": {
-      "packagist": "wikimedia/excimer",
-      "pie_options": [],
-      "brew_deps": [],
+      "pecl": "excimer",
+      "pecl_options": [],
       "description": "CPU profiler and tracer"
     },
     "uopz": {
-      "packagist": "krakjoe/uopz",
-      "pie_options": [],
-      "brew_deps": [],
+      "pecl": "uopz",
+      "pecl_options": [],
       "description": "User Operations for Zend"
     },
     "uploadprogress": {
-      "packagist": "pecl/uploadprogress",
-      "pie_options": [],
-      "brew_deps": [],
+      "pecl": "uploadprogress",
+      "pecl_options": [],
       "description": "Upload progress tracking"
     },
     "protobuf": {
-      "packagist": "google/protobuf",
-      "pie_options": [],
-      "brew_deps": [],
+      "pecl": "protobuf",
+      "pecl_options": [],
       "description": "Protocol Buffers"
     },
     "oauth": {
-      "packagist": "pecl/oauth",
-      "pie_options": [],
-      "brew_deps": [],
+      "pecl": "oauth",
+      "pecl_options": [],
       "description": "OAuth 1.0 consumer/provider"
     },
     "stomp": {
-      "packagist": "pecl/stomp",
-      "pie_options": [],
-      "brew_deps": [],
+      "pecl": "stomp",
+      "pecl_options": [],
       "description": "STOMP messaging protocol"
     },
     "inotify": {
-      "packagist": "pecl/inotify",
-      "pie_options": [],
-      "brew_deps": [],
+      "pecl": "inotify",
+      "pecl_options": [],
       "description": "Inotify file system events"
     },
     "dio": {
       "packagist": "pecl/dio",
       "pie_options": [],
-      "brew_deps": [],
       "description": "Direct I/O operations"
     },
     "decimal": {
-      "packagist": "php-decimal/php-decimal",
-      "pie_options": [],
-      "brew_deps": [],
+      "pecl": "decimal",
+      "pecl_options": [],
       "description": "Arbitrary precision decimal"
     },
     "yaml": {
@@ -222,59 +196,51 @@
       "pie_options": [
         "--with-yaml=/opt/phm-deps/darwin-arm64"
       ],
-      "brew_deps": [],
       "description": "YAML parser and emitter"
     },
     "lz4": {
-      "packagist": "kjdev/php-ext-lz4",
-      "pie_options": [
+      "pecl": "lz4",
+      "pecl_options": [
         "--with-lz4=/opt/phm-deps/darwin-arm64"
       ],
-      "brew_deps": [],
       "description": "LZ4 compression"
     },
     "maxminddb": {
-      "packagist": "maxmind-db/reader",
-      "pie_options": [
+      "pecl": "maxminddb",
+      "pecl_options": [
         "--with-maxminddb=/opt/phm-deps/darwin-arm64"
       ],
-      "brew_deps": [],
       "description": "MaxMind DB reader"
     },
     "gmagick": {
-      "packagist": "pecl/gmagick",
-      "pie_options": [
+      "pecl": "gmagick",
+      "pecl_options": [
         "--with-gmagick=/opt/phm-deps/darwin-arm64"
       ],
-      "brew_deps": [],
       "description": "GraphicsMagick binding"
     },
     "gearman": {
-      "packagist": "pecl/gearman",
-      "pie_options": [
+      "pecl": "gearman",
+      "pecl_options": [
         "--with-gearman=/opt/phm-deps/darwin-arm64"
       ],
-      "brew_deps": [],
       "description": "Gearman distributed job system"
     },
     "lua": {
-      "packagist": "pecl/lua",
-      "pie_options": [
+      "pecl": "lua",
+      "pecl_options": [
         "--with-lua=/opt/phm-deps/darwin-arm64"
       ],
-      "brew_deps": [],
       "description": "Lua scripting language"
     },
     "solr": {
       "packagist": "pecl/solr",
       "pie_options": [],
-      "brew_deps": [],
       "description": "Apache Solr client"
     },
     "pq": {
-      "packagist": "pecl/pq",
-      "pie_options": [],
-      "brew_deps": [],
+      "pecl": "pq",
+      "pecl_options": [],
       "description": "PostgreSQL async client"
     }
   },

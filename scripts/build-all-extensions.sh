@@ -131,21 +131,8 @@ build_extension() {
     # Create log file for this extension
     local log_file="${LOGS_DIR}/${ext}-${ext_version}.log"
 
-    # Get brew dependencies
-    local brew_deps
-    brew_deps=$(echo "$ext_config" | jq -r '.brew_deps[]? // empty' 2>/dev/null | tr '\n' ' ')
-
-    # Build PIE options array
-    local pie_opts=()
-    while IFS= read -r opt; do
-        [[ -n "$opt" ]] && pie_opts+=("$opt")
-    done < <(echo "$ext_config" | jq -r '.pie_options[]? // empty' 2>/dev/null)
-
-    # Run build-extension.sh
+    # Build arguments (options are loaded from config.json by build-extension.sh)
     local build_args=("$ext" "$ext_version" "$PHP_VERSION")
-    if [[ ${#pie_opts[@]} -gt 0 ]]; then
-        build_args+=("${pie_opts[@]}")
-    fi
 
     # Execute build and capture output
     local build_exit_code=0
