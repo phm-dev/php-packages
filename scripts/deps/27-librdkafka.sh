@@ -46,18 +46,19 @@ extract_source "$TARBALL" "$BUILD_DIR"
 # Build
 cd "$BUILD_DIR"
 
-# librdkafka's configure doesn't support --disable-shared
-# Static library is always built, we just remove the shared libs after install
+# librdkafka's configure expects env vars, not command-line args for CFLAGS etc.
+export CFLAGS="${CFLAGS}"
+export CPPFLAGS="-I${DEPS_PREFIX}/include"
+export LDFLAGS="${LDFLAGS} -L${DEPS_PREFIX}/lib"
+export PKG_CONFIG_PATH="${DEPS_PREFIX}/lib/pkgconfig"
+
 ./configure \
     --prefix="$DEPS_PREFIX" \
     --disable-gssapi \
     --disable-lz4-ext \
     --enable-static \
     --enable-ssl \
-    --enable-zstd \
-    CFLAGS="${CFLAGS}" \
-    CPPFLAGS="-I${DEPS_PREFIX}/include" \
-    LDFLAGS="${LDFLAGS} -L${DEPS_PREFIX}/lib"
+    --enable-zstd
 
 make -j"$NPROC"
 make install
