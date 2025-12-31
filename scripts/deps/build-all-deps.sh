@@ -106,12 +106,20 @@ main() {
     # Phase 6: Extension dependencies (for amqp, memcached, imagick, etc.)
     log_info ""
     log_info "=== Phase 6: Extension dependencies ==="
-    "${SCRIPT_DIR}/19-rabbitmq-c.sh"   # For amqp extension
-    "${SCRIPT_DIR}/20-libevent.sh"      # For libmemcached
+    "${SCRIPT_DIR}/19-rabbitmq-c.sh"    # For amqp extension
+    "${SCRIPT_DIR}/20-libevent.sh"      # For libmemcached, libgearman
     "${SCRIPT_DIR}/21-libmemcached.sh"  # For memcached extension
     "${SCRIPT_DIR}/22-imagemagick.sh"   # For imagick extension
-    "${SCRIPT_DIR}/23-zstd.sh"          # For mongodb, redis (optional), zstd extension
+    "${SCRIPT_DIR}/23-zstd.sh"          # For mongodb, redis, zstd extension
     "${SCRIPT_DIR}/24-ossp-uuid.sh"     # For uuid extension
+    "${SCRIPT_DIR}/25-libyaml.sh"       # For yaml extension
+    "${SCRIPT_DIR}/26-lz4.sh"           # For lz4, redis extension
+    "${SCRIPT_DIR}/27-librdkafka.sh"    # For rdkafka extension
+    "${SCRIPT_DIR}/28-libmaxminddb.sh"  # For maxminddb extension
+    "${SCRIPT_DIR}/29-graphicsmagick.sh" # For gmagick extension
+    "${SCRIPT_DIR}/30-lua.sh"           # For lua extension
+    "${SCRIPT_DIR}/31-libgearman.sh"    # For gearman extension
+    "${SCRIPT_DIR}/32-libev.sh"         # For ev extension
 
     # Calculate elapsed time
     local elapsed=$((SECONDS - start_time))
