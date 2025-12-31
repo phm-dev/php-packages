@@ -36,9 +36,10 @@ clean_build "$BUILD_DIR"
 extract_source "$TARBALL" "$BUILD_DIR"
 
 # Build using cmake for better control
-cd "$BUILD_DIR/build/cmake"
+mkdir -p "$BUILD_DIR/cmake-build"
+cd "$BUILD_DIR/cmake-build"
 
-cmake ../.. \
+cmake "$BUILD_DIR/build/cmake" \
     -DCMAKE_INSTALL_PREFIX="$DEPS_PREFIX" \
     -DCMAKE_BUILD_TYPE=Release \
     -DZSTD_BUILD_STATIC=ON \
