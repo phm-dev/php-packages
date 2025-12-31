@@ -46,12 +46,13 @@ extract_source "$TARBALL" "$BUILD_DIR"
 # Build
 cd "$BUILD_DIR"
 
+# librdkafka's configure doesn't support --disable-shared
+# Static library is always built, we just remove the shared libs after install
 ./configure \
     --prefix="$DEPS_PREFIX" \
     --disable-gssapi \
     --disable-lz4-ext \
     --enable-static \
-    --disable-shared \
     --enable-ssl \
     --enable-zstd \
     CFLAGS="${CFLAGS}" \
