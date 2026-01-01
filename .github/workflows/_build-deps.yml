@@ -135,13 +135,25 @@ jobs:
       - name: Merge dependencies
         if: steps.cache.outputs.cache-hit != 'true' || inputs.force_rebuild == true
         run: |
+          echo "=== Downloaded artifacts structure ==="
+          ls -la "${{ runner.temp }}/phm-deps/${{ inputs.platform }}-parts/" || echo "Parts dir doesn't exist"
+          for d in "${{ runner.temp }}/phm-deps/${{ inputs.platform }}-parts"/*; do
+            echo "--- $d ---"
+            ls -la "$d" 2>/dev/null || true
+            ls -la "$d/lib" 2>/dev/null || true
+          done
+
           mkdir -p "${{ runner.temp }}/phm-deps/${{ inputs.platform }}"/{lib/pkgconfig,include}
 
           for part in ${{ runner.temp }}/phm-deps/${{ inputs.platform }}-parts/dep-*; do
             [[ -d "$part" ]] || continue
-            cp -r "$part"/lib/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/lib/" 2>/dev/null || true
-            cp -r "$part"/include/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/include/" 2>/dev/null || true
+            echo "Copying from: $part"
+            cp -rv "$part"/lib/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/lib/" 2>&1 || echo "  No lib/ to copy"
+            cp -rv "$part"/include/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/include/" 2>&1 || echo "  No include/ to copy"
           done
+
+          echo "=== Final merged lib/ ==="
+          ls -la "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/lib/" || echo "lib/ empty"
 
       - name: Install build tools
         if: steps.cache.outputs.cache-hit != 'true' || inputs.force_rebuild == true
