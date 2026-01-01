@@ -189,8 +189,11 @@ jobs:
             [[ -f "${DEPS_PREFIX}/lib/${lib}" ]] && cp "${DEPS_PREFIX}/lib/${lib}" "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/lib/"
           done
           cp -r "${DEPS_PREFIX}/include" "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/" 2>/dev/null || true
-          mkdir -p "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/lib/pkgconfig"
-          cp "${DEPS_PREFIX}/lib/pkgconfig"/*${{ matrix.dep.name }}* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/lib/pkgconfig/" 2>/dev/null || true
+          cp -r "${DEPS_PREFIX}/bin" "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/" 2>/dev/null || true
+          if [[ -d "${DEPS_PREFIX}/lib/pkgconfig" ]]; then
+            mkdir -p "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/lib/pkgconfig"
+            cp -r "${DEPS_PREFIX}/lib/pkgconfig"/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/lib/pkgconfig/" 2>/dev/null || true
+          fi
         env:
           CC: clang
           CXX: clang++
