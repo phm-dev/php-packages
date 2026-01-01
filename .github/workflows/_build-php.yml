@@ -201,28 +201,28 @@ jobs:
           echo "Test 1 (simple): clang conftest.c"
           clang -o conftest1 conftest.c 2>&1 && echo "✓ PASSED" || echo "✗ FAILED"
 
-          # Test 2: With our LDFLAGS (source before flags - our diagnostic style)
+          # Test 2: With LDFLAGS only (no -l flags - correct approach)
           echo ""
-          echo "Test 2 (source before LDFLAGS):"
-          clang -o conftest2 conftest.c -L${DEPS_PREFIX}/lib -lsharpyuv -framework CoreFoundation -framework CoreServices -framework SystemConfiguration 2>&1 && echo "✓ PASSED" || echo "✗ FAILED"
+          echo "Test 2 (LDFLAGS without libraries):"
+          clang -L${DEPS_PREFIX}/lib -framework CoreFoundation -framework CoreServices -framework SystemConfiguration -framework Security conftest.c -o conftest2 2>&1 && echo "✓ PASSED" || echo "✗ FAILED"
 
-          # Test 3: Configure style (LDFLAGS before source)
+          # Test 3: Configure style (LDFLAGS before source, libs after)
           echo ""
-          echo "Test 3 (LDFLAGS before source - configure style):"
-          clang -L${DEPS_PREFIX}/lib -lsharpyuv -framework CoreFoundation -framework CoreServices -framework SystemConfiguration conftest.c -o conftest3 2>&1 && echo "✓ PASSED" || echo "✗ FAILED"
+          echo "Test 3 (configure style - LDFLAGS before, libs after source):"
+          clang -L${DEPS_PREFIX}/lib -framework CoreFoundation -framework CoreServices -framework SystemConfiguration -framework Security conftest.c -lz -o conftest3 2>&1 && echo "✓ PASSED" || echo "✗ FAILED"
 
           # Test 4: With ICU libs (simulating after intl check)
           echo ""
-          echo "Test 4 (with ICU LIBS):"
+          echo "Test 4 (with ICU LIBS after source):"
           ICU_LIBS=$(pkg-config --libs --static icu-uc 2>/dev/null || echo "-licuuc -licudata")
           echo "  ICU_LIBS=$ICU_LIBS"
-          clang -L${DEPS_PREFIX}/lib -lsharpyuv -framework CoreFoundation -framework CoreServices -framework SystemConfiguration conftest.c $ICU_LIBS -lstdc++ -o conftest4 2>&1 && echo "✓ PASSED" || echo "✗ FAILED"
+          clang -L${DEPS_PREFIX}/lib -framework CoreFoundation -framework CoreServices -framework SystemConfiguration conftest.c $ICU_LIBS -lstdc++ -o conftest4 2>&1 && echo "✓ PASSED" || echo "✗ FAILED"
 
-          # Test 5: With many static libs (simulating heavy linking)
+          # Test 5: With many static libs (simulating heavy linking - libs AFTER source)
           echo ""
-          echo "Test 5 (heavy static linking):"
-          clang -L${DEPS_PREFIX}/lib conftest.c -lz -lssl -lcrypto -lxml2 -lsqlite3 \
-            -licuuc -licudata -lstdc++ \
+          echo "Test 5 (heavy static linking - libs after source):"
+          clang -L${DEPS_PREFIX}/lib conftest.c \
+            -lz -lssl -lcrypto -lxml2 -lsqlite3 -licuuc -licudata -lstdc++ \
             -framework CoreFoundation -framework CoreServices -framework SystemConfiguration -framework Security \
             -o conftest5 2>&1 && echo "✓ PASSED" || echo "✗ FAILED"
 

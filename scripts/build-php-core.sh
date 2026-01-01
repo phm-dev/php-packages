@@ -141,10 +141,11 @@ if [[ "$(uname -s)" == "Darwin" ]]; then
     export PKG_CONFIG_LIBDIR="${DEPS_PREFIX}/lib/pkgconfig"
 
     # Compiler flags for static linking
-    # Include macOS frameworks required by static libcurl
-    # Include libsharpyuv required by static libwebp
-    # Note: libpq is now a combined library with pgcommon/pgport/explicit_bzero baked in
-    export LDFLAGS="-L${DEPS_PREFIX}/lib -lsharpyuv -framework CoreFoundation -framework CoreServices -framework SystemConfiguration"
+    # CRITICAL: LDFLAGS should only contain -L paths and framework flags, NOT libraries (-l flags)
+    # Libraries in LDFLAGS appear before object files and get discarded by the linker
+    # This breaks autoconf's AC_CHECK_FUNC tests (e.g., fork() check fails)
+    # Libraries like sharpyuv are handled via pkg-config when webp is detected
+    export LDFLAGS="-L${DEPS_PREFIX}/lib -framework CoreFoundation -framework CoreServices -framework SystemConfiguration -framework Security"
     export CPPFLAGS="-I${DEPS_PREFIX}/include -I${DEPS_PREFIX}/include/libxml2"
     export CFLAGS="-O2 -I${DEPS_PREFIX}/include -I${DEPS_PREFIX}/include/libxml2"
 
