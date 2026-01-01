@@ -103,7 +103,6 @@ jobs:
   deps:
     name: Dependencies
     needs: [check, debug]
-    if: needs.check.outputs.needs_build == 'true'
     uses: ./.github/workflows/_build-deps.yml
     with:
       platform: ${{ inputs.platform }}
