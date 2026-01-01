@@ -7,6 +7,7 @@
 # Depends on: zlib, bzip2, libpng
 # Pkgconfig: freetype2.pc
 #
+# Cache ref: v2 - ensure pkgconfig is included in artifact
 
 set -euo pipefail
 
