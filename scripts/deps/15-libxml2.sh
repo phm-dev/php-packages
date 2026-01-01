@@ -5,6 +5,7 @@
 # License: MIT
 #
 # Depends on: zlib, libiconv
+# Pkgconfig: libxml-2.0.pc
 #
 
 set -euo pipefail
