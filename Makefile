@@ -59,8 +59,11 @@ help:
 # =============================================================================
 
 deps:
-	@chmod +x $(SCRIPTS)/install-deps.sh
-	@$(SCRIPTS)/install-deps.sh
+	@echo "Installing build dependencies..."
+	@brew install -q autoconf automake bison re2c pkg-config libtool cmake zstd
+	@echo "Building static dependencies..."
+	@chmod +x $(SCRIPTS)/deps/build-all-deps.sh
+	@$(SCRIPTS)/deps/build-all-deps.sh
 
 php:
 	@chmod +x $(SCRIPTS)/build-php-core.sh $(SCRIPTS)/package.sh

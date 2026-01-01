@@ -4,11 +4,11 @@
 # Usage: ./generate-index.sh [--base-url <url>]
 #
 # Parses all releases (PHP and extensions) and generates a unified index.json
+# Keeps ALL package versions (8.5.0, 8.5.1, etc.) and provides "latest" mapping.
+#
 # New naming convention:
 #   - PHP core: php{VERSION}-{type}_{platform}.tar.zst
 #   - Extensions: php{VERSION}-{ext}{extver}_{platform}.tar.zst
-#
-# Compatible with Bash 3.2+ (macOS default)
 #
 
 set -euo pipefail
@@ -50,8 +50,9 @@ fi
 TEMP_DIR=$(mktemp -d)
 trap "rm -rf $TEMP_DIR" EXIT
 
-# Initialize platform files
+# Initialize platform files and version tracking
 mkdir -p "$TEMP_DIR/platforms"
+echo "{}" > "$TEMP_DIR/php_versions.json"
 
 log_info "Fetching releases from GitHub..."
 
@@ -84,14 +85,17 @@ echo "$RELEASES" | jq -r '.[].tagName' | while read -r TAG; do
 
     # Determine release type and version
     if [[ "$TAG" =~ ^php-([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
-        RELEASE_TYPE="php"
         PHP_FULL_VERSION="${BASH_REMATCH[1]}"
-        EXT_VERSION=""
-    elif [[ "$TAG" =~ ^([a-z]+)-([0-9]+\.[0-9]+\.?[0-9]*)$ ]]; then
-        RELEASE_TYPE="extension"
-        EXT_NAME="${BASH_REMATCH[1]}"
-        EXT_VERSION="${BASH_REMATCH[2]}"
-        PHP_FULL_VERSION=""
+        PHP_MINOR="${PHP_FULL_VERSION%.*}"
+
+        # Track PHP versions for "latest" mapping
+        CURRENT_VERSIONS=$(cat "$TEMP_DIR/php_versions.json")
+        CURRENT_LATEST=$(echo "$CURRENT_VERSIONS" | jq -r --arg m "$PHP_MINOR" '.[$m] // "0.0.0"')
+
+        # Compare versions and update if newer
+        if [[ $(printf '%s\n%s' "$PHP_FULL_VERSION" "$CURRENT_LATEST" | sort -V | tail -1) == "$PHP_FULL_VERSION" ]]; then
+            echo "$CURRENT_VERSIONS" | jq --arg m "$PHP_MINOR" --arg v "$PHP_FULL_VERSION" '.[$m] = $v' > "$TEMP_DIR/php_versions.json"
+        fi
     else
         log_info "  Unknown tag format: ${TAG}, skipping"
         continue
@@ -106,9 +110,10 @@ echo "$RELEASES" | jq -r '.[].tagName' | while read -r TAG; do
         # Parse asset filename
         # PHP core: php8.5.0-cli_darwin-arm64.tar.zst
         # Extension: php8.5.0-redis6.3.0_darwin-arm64.tar.zst
+        # Built-in ext: php8.5-bcmath_8.5.0-1_darwin-arm64.tar.zst
 
         if [[ "$ASSET" =~ ^php([0-9]+\.[0-9]+\.[0-9]+)-([a-z]+)_([a-z]+-[a-z0-9]+)\.tar\.zst$ ]]; then
-            # PHP core package
+            # PHP core package (new format)
             PKG_PHP_VERSION="${BASH_REMATCH[1]}"
             PKG_TYPE="${BASH_REMATCH[2]}"
             PLATFORM="${BASH_REMATCH[3]}"
@@ -148,8 +153,8 @@ echo "$RELEASES" | jq -r '.[].tagName' | while read -r TAG; do
                     ;;
             esac
 
-        elif [[ "$ASSET" =~ ^php([0-9]+\.[0-9]+\.[0-9]+)-([a-z]+)([0-9]+\.[0-9]+\.?[0-9]*)_([a-z]+-[a-z0-9]+)\.tar\.zst$ ]]; then
-            # Extension package
+        elif [[ "$ASSET" =~ ^php([0-9]+\.[0-9]+\.[0-9]+)-([a-z]+)([0-9]+\.[0-9]+[^_]*)_([a-z]+-[a-z0-9]+)\.tar\.zst$ ]]; then
+            # Extension package (new format)
             PKG_PHP_VERSION="${BASH_REMATCH[1]}"
             PKG_EXT_NAME="${BASH_REMATCH[2]}"
             PKG_EXT_VERSION="${BASH_REMATCH[3]}"
@@ -161,23 +166,47 @@ echo "$RELEASES" | jq -r '.[].tagName' | while read -r TAG; do
             DESCRIPTION="${PKG_EXT_NAME} extension for PHP ${PHP_MINOR}"
             DEPENDS="[\"php${PHP_MINOR}-common (>= ${PKG_PHP_VERSION})\"]"
 
+        elif [[ "$ASSET" =~ ^php([0-9]+\.[0-9]+)-([a-z]+)_([0-9]+\.[0-9]+\.[0-9]+)-[0-9]+_([a-z]+-[a-z0-9]+)\.tar\.zst$ ]]; then
+            # Built-in extension package (old format: php8.5-bcmath_8.5.0-1_darwin-arm64.tar.zst)
+            PHP_MINOR="${BASH_REMATCH[1]}"
+            PKG_TYPE="${BASH_REMATCH[2]}"
+            PKG_PHP_VERSION="${BASH_REMATCH[3]}"
+            PLATFORM="${BASH_REMATCH[4]}"
+
+            PKG_NAME="php${PHP_MINOR}-${PKG_TYPE}"
+            PKG_VERSION="$PKG_PHP_VERSION"
+            DESCRIPTION="${PKG_TYPE} extension for PHP ${PHP_MINOR}"
+            DEPENDS="[\"php${PHP_MINOR}-common (>= ${PKG_PHP_VERSION})\"]"
+
+        elif [[ "$ASSET" =~ ^php([0-9]+\.[0-9]+)_([0-9]+\.[0-9]+\.[0-9]+)-[0-9]+_([a-z]+-[a-z0-9]+)\.tar\.zst$ ]]; then
+            # Meta package (php8.5_8.5.0-1_darwin-arm64.tar.zst)
+            PHP_MINOR="${BASH_REMATCH[1]}"
+            PKG_PHP_VERSION="${BASH_REMATCH[2]}"
+            PLATFORM="${BASH_REMATCH[3]}"
+
+            PKG_NAME="php${PHP_MINOR}"
+            PKG_VERSION="$PKG_PHP_VERSION"
+            DESCRIPTION="PHP ${PHP_MINOR} meta package"
+            DEPENDS="[]"
+
         else
-            log_info "    Unknown asset format: ${ASSET}, skipping"
             continue
         fi
 
         DOWNLOAD_URL="${BASE_URL}/${TAG}/${ASSET}"
 
-        # Create package entry JSON (minimal - only essential fields)
+        # Create package entry JSON with php_version for filtering
         PACKAGE_ENTRY=$(jq -n \
             --arg name "$PKG_NAME" \
             --arg version "$PKG_VERSION" \
+            --arg php_version "$PKG_PHP_VERSION" \
             --arg description "$DESCRIPTION" \
             --argjson depends "$DEPENDS" \
             --arg url "$DOWNLOAD_URL" \
             '{
                 name: $name,
                 version: $version,
+                php_version: $php_version,
                 description: $description,
                 depends: $depends,
                 url: $url
@@ -189,31 +218,32 @@ echo "$RELEASES" | jq -r '.[].tagName' | while read -r TAG; do
     done
 done
 
-# Deduplicate and keep latest version for each package per platform
-log_info "Deduplicating packages (keeping latest versions)..."
+# Sort packages by name, then by version (descending) - NO deduplication
+log_info "Sorting packages..."
 
 for platform_file in "$TEMP_DIR/platforms"/*.json; do
     if [[ ! -f "$platform_file" ]]; then
         continue
     fi
 
-    PLATFORM_NAME=$(basename "$platform_file" .json)
-
-    # Sort by name then version (descending) and keep first occurrence of each name
-    jq -s 'sort_by(.name, .version) | reverse | unique_by(.name)' "$platform_file" > "${platform_file}.dedup"
-    mv "${platform_file}.dedup" "$platform_file"
+    # Sort by name, then by version descending (keeps all versions)
+    jq -s 'sort_by(.name, .version) | reverse' "$platform_file" > "${platform_file}.sorted"
+    mv "${platform_file}.sorted" "$platform_file"
 done
 
 # Build final index.json
 GENERATED_AT=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+LATEST_VERSIONS=$(cat "$TEMP_DIR/php_versions.json")
 
 log_info "Building index.json..."
+log_info "Latest PHP versions: $LATEST_VERSIONS"
 
-# Start JSON
+# Start JSON with latest mapping
 cat > "${PROJECT_ROOT}/index.json" << EOF
 {
-  "version": 1,
+  "version": 2,
   "generated": "${GENERATED_AT}",
+  "latest": ${LATEST_VERSIONS},
   "platforms": {
 EOF
 
@@ -232,12 +262,12 @@ for platform_file in "$TEMP_DIR/platforms"/*.json; do
         echo "," >> "${PROJECT_ROOT}/index.json"
     fi
 
-    # Count packages for this platform (file is already a JSON array)
+    # Count packages for this platform
     PKG_COUNT=$(jq 'length' "$platform_file")
 
     echo -n "    \"${PLATFORM_NAME}\": {\"packages\": " >> "${PROJECT_ROOT}/index.json"
 
-    # Add packages array (file is already a JSON array after deduplication)
+    # Add packages array
     cat "$platform_file" >> "${PROJECT_ROOT}/index.json"
 
     echo -n "}" >> "${PROJECT_ROOT}/index.json"
@@ -261,4 +291,6 @@ TOTAL_PACKAGES=$(jq '[.platforms[].packages[]] | length' "${PROJECT_ROOT}/index.
 log_info "=========================================="
 log_info "Generated: ${PROJECT_ROOT}/index.json"
 log_info "Total packages: ${TOTAL_PACKAGES}"
+log_info "Latest versions:"
+echo "$LATEST_VERSIONS" | jq -r 'to_entries[] | "  \(.key) -> \(.value)"'
 log_info "=========================================="

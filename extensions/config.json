@@ -3,31 +3,28 @@
     "redis": {
       "packagist": "phpredis/phpredis",
       "pie_options": [],
-      "brew_deps": ["lz4", "zstd"],
       "description": "Redis extension for PHP"
     },
     "igbinary": {
-      "packagist": "igbinary/igbinary",
-      "pie_options": [],
-      "brew_deps": [],
+      "pecl": "igbinary",
+      "pecl_options": [],
       "description": "Binary serialization for PHP"
     },
     "mongodb": {
       "packagist": "mongodb/mongodb-extension",
       "pie_options": [],
-      "brew_deps": ["openssl@3"],
       "description": "MongoDB driver for PHP"
     },
     "amqp": {
-      "packagist": "pdezwart/php-amqp",
-      "pie_options": [],
-      "brew_deps": ["rabbitmq-c"],
+      "pecl": "amqp",
+      "pecl_options": [
+        "--with-librabbitmq-dir=/opt/phm-deps/darwin-arm64"
+      ],
       "description": "AMQP extension for PHP (RabbitMQ)"
     },
     "xdebug": {
       "packagist": "xdebug/xdebug",
       "pie_options": [],
-      "brew_deps": [],
       "zend_extension": true,
       "priority": 15,
       "description": "Xdebug debugger and profiler"
@@ -39,84 +36,212 @@
         "--enable-http2",
         "--enable-swoole-curl",
         "--enable-swoole-pgsql",
-        "--with-swoole-pgsql-dir=$(brew --prefix libpq)"
+        "--with-swoole-pgsql-dir=/opt/phm-deps/darwin-arm64"
       ],
-      "brew_deps": ["openssl@3", "libpq", "curl", "c-ares", "brotli"],
       "description": "Coroutine-based concurrency library for PHP"
     },
     "pcov": {
-      "packagist": "krakjoe/pcov",
-      "pie_options": [],
-      "brew_deps": [],
+      "pecl": "pcov",
+      "pecl_options": [],
       "description": "Code coverage driver"
     },
     "apcu": {
       "packagist": "apcu/apcu",
       "pie_options": [],
-      "brew_deps": [],
       "description": "APCu - APC User Cache"
     },
     "imagick": {
       "packagist": "imagick/imagick",
-      "pie_options": [],
-      "brew_deps": ["imagemagick"],
+      "pie_options": [
+        "--with-imagick=/opt/phm-deps/darwin-arm64"
+      ],
       "description": "ImageMagick binding for PHP"
     },
     "ev": {
       "packagist": "osmanov/pecl-ev",
-      "pie_options": [],
-      "brew_deps": ["libev"],
+      "pie_options": [
+        "--with-libev=/opt/phm-deps/darwin-arm64"
+      ],
       "description": "Ev - high performance event loop"
     },
     "opentelemetry": {
       "packagist": "open-telemetry/ext-opentelemetry",
       "pie_options": [],
-      "brew_deps": [],
       "description": "OpenTelemetry instrumentation"
     },
     "memcached": {
       "packagist": "php-memcached/php-memcached",
       "pie_options": [
         "--enable-memcached-json",
-        "--with-zlib-dir=$(brew --prefix zlib)"
+        "--with-zlib-dir=/opt/phm-deps/darwin-arm64",
+        "--with-libmemcached-dir=/opt/phm-deps/darwin-arm64"
       ],
-      "brew_deps": ["libmemcached", "zlib"],
       "description": "Memcached client library"
     },
     "rdkafka": {
-      "packagist": "rdkafka/rdkafka",
-      "pie_options": [],
-      "brew_deps": ["librdkafka"],
+      "pecl": "rdkafka",
+      "pecl_options": [
+        "--with-rdkafka=/opt/phm-deps/darwin-arm64"
+      ],
       "description": "Apache Kafka client for PHP"
     },
     "ssh2": {
-      "packagist": "ext-ssh2/ext-ssh2",
-      "pie_options": [],
-      "brew_deps": ["libssh2"],
+      "pecl": "ssh2",
+      "pecl_options": [
+        "--with-ssh2=/opt/phm-deps/darwin-arm64"
+      ],
       "description": "SSH2 bindings for PHP"
+    },
+    "mcrypt": {
+      "packagist": "pecl/mcrypt",
+      "pie_options": [
+        "--with-mcrypt=/opt/phm-deps/darwin-arm64"
+      ],
+      "description": "Mcrypt encryption (deprecated, use sodium instead)"
     },
     "uuid": {
       "packagist": "pecl/uuid",
-      "pie_options": [],
-      "brew_deps": ["ossp-uuid"],
+      "pie_options": [
+        "--with-uuid=/opt/phm-deps/darwin-arm64"
+      ],
       "description": "UUID generation functions"
+    },
+    "zstd": {
+      "pecl": "zstd",
+      "pecl_options": [
+        "--with-libzstd=/opt/phm-deps/darwin-arm64"
+      ],
+      "description": "Zstandard compression extension"
     },
     "relay": {
       "packagist": "cachewerk/ext-relay",
       "pie_options": [],
-      "brew_deps": [],
       "special_build": true,
       "description": "Relay - next-generation Redis cache"
     },
     "opcache": {
-      "packagist": null,
       "source": "php-src",
       "php_max_version": "8.4.99",
-      "pie_options": [],
-      "brew_deps": [],
       "zend_extension": true,
       "priority": 10,
       "description": "OPcache - built into PHP 8.5+, separate for older versions"
+    },
+    "mailparse": {
+      "packagist": "pecl/mailparse",
+      "pie_options": [],
+      "description": "Email message parsing"
+    },
+    "msgpack": {
+      "pecl": "msgpack",
+      "pecl_options": [],
+      "description": "MessagePack serialization"
+    },
+    "ast": {
+      "packagist": "nikic/php-ast",
+      "pie_options": [],
+      "description": "Abstract Syntax Tree"
+    },
+    "ds": {
+      "pecl": "ds",
+      "pecl_options": [],
+      "description": "Data Structures"
+    },
+    "excimer": {
+      "pecl": "excimer",
+      "pecl_options": [],
+      "description": "CPU profiler and tracer"
+    },
+    "uopz": {
+      "pecl": "uopz",
+      "pecl_options": [],
+      "description": "User Operations for Zend"
+    },
+    "uploadprogress": {
+      "pecl": "uploadprogress",
+      "pecl_options": [],
+      "description": "Upload progress tracking"
+    },
+    "protobuf": {
+      "pecl": "protobuf",
+      "pecl_options": [],
+      "description": "Protocol Buffers"
+    },
+    "oauth": {
+      "pecl": "oauth",
+      "pecl_options": [],
+      "description": "OAuth 1.0 consumer/provider"
+    },
+    "stomp": {
+      "pecl": "stomp",
+      "pecl_options": [],
+      "description": "STOMP messaging protocol"
+    },
+    "inotify": {
+      "pecl": "inotify",
+      "pecl_options": [],
+      "description": "Inotify file system events"
+    },
+    "dio": {
+      "packagist": "pecl/dio",
+      "pie_options": [],
+      "description": "Direct I/O operations"
+    },
+    "decimal": {
+      "pecl": "decimal",
+      "pecl_options": [],
+      "description": "Arbitrary precision decimal"
+    },
+    "yaml": {
+      "packagist": "pecl/yaml",
+      "pie_options": [
+        "--with-yaml=/opt/phm-deps/darwin-arm64"
+      ],
+      "description": "YAML parser and emitter"
+    },
+    "lz4": {
+      "pecl": "lz4",
+      "pecl_options": [
+        "--with-lz4=/opt/phm-deps/darwin-arm64"
+      ],
+      "description": "LZ4 compression"
+    },
+    "maxminddb": {
+      "pecl": "maxminddb",
+      "pecl_options": [
+        "--with-maxminddb=/opt/phm-deps/darwin-arm64"
+      ],
+      "description": "MaxMind DB reader"
+    },
+    "gmagick": {
+      "pecl": "gmagick",
+      "pecl_options": [
+        "--with-gmagick=/opt/phm-deps/darwin-arm64"
+      ],
+      "description": "GraphicsMagick binding"
+    },
+    "gearman": {
+      "pecl": "gearman",
+      "pecl_options": [
+        "--with-gearman=/opt/phm-deps/darwin-arm64"
+      ],
+      "description": "Gearman distributed job system"
+    },
+    "lua": {
+      "pecl": "lua",
+      "pecl_options": [
+        "--with-lua=/opt/phm-deps/darwin-arm64"
+      ],
+      "description": "Lua scripting language"
+    },
+    "solr": {
+      "packagist": "pecl/solr",
+      "pie_options": [],
+      "description": "Apache Solr client"
+    },
+    "pq": {
+      "pecl": "pq",
+      "pecl_options": [],
+      "description": "PostgreSQL async client"
     }
   },
   "php_versions_api": "https://php.watch/api/v1/versions/secure",

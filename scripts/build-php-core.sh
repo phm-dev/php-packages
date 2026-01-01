@@ -108,37 +108,75 @@ export CXX=clang++
 
 log_info "Using compiler: CC=$CC, CXX=$CXX"
 
-# Set up paths for Homebrew dependencies (macOS)
+# Set up paths for static dependencies (macOS)
 # Check for macOS using uname (more reliable than $OSTYPE in some shells)
 if [[ "$(uname -s)" == "Darwin" ]]; then
-    BREW_PREFIX="$(brew --prefix)"
+    # Use our statically built dependencies instead of Homebrew
+    DEPS_PREFIX="/opt/phm-deps/${PLATFORM}"
 
-    export PKG_CONFIG_PATH="${BREW_PREFIX}/lib/pkgconfig:${BREW_PREFIX}/opt/openssl@3/lib/pkgconfig:${BREW_PREFIX}/opt/zlib/lib/pkgconfig:${BREW_PREFIX}/opt/icu4c/lib/pkgconfig"
-    export LDFLAGS="-L${BREW_PREFIX}/lib -L${BREW_PREFIX}/opt/openssl@3/lib -L${BREW_PREFIX}/opt/zlib/lib -L${BREW_PREFIX}/opt/bzip2/lib -L${BREW_PREFIX}/opt/readline/lib -L${BREW_PREFIX}/opt/icu4c/lib -L${BREW_PREFIX}/opt/libiconv/lib"
-    export CPPFLAGS="-I${BREW_PREFIX}/include -I${BREW_PREFIX}/opt/openssl@3/include -I${BREW_PREFIX}/opt/zlib/include -I${BREW_PREFIX}/opt/bzip2/include -I${BREW_PREFIX}/opt/readline/include -I${BREW_PREFIX}/opt/icu4c/include -I${BREW_PREFIX}/opt/libiconv/include"
+    if [[ ! -d "$DEPS_PREFIX" ]]; then
+        log_error "Static dependencies not found at ${DEPS_PREFIX}"
+        log_error "Run php-packages/scripts/deps/build-all-deps.sh first"
+        exit 1
+    fi
 
-    # Brew paths for configure
-    OPENSSL_DIR="$(brew --prefix openssl@3)"
-    ZLIB_DIR="$(brew --prefix zlib)"
-    BZ2_DIR="$(brew --prefix bzip2)"
-    READLINE_DIR="$(brew --prefix readline)"
-    ICU_DIR="$(brew --prefix icu4c)"
-    LIBPQ_DIR="$(brew --prefix libpq)"
-    LIBZIP_DIR="$(brew --prefix libzip)"
-    ONIGURUMA_DIR="$(brew --prefix oniguruma)"
-    FREETYPE_DIR="$(brew --prefix freetype)"
-    JPEG_DIR="$(brew --prefix jpeg-turbo)"
-    LIBPNG_DIR="$(brew --prefix libpng)"
-    WEBP_DIR="$(brew --prefix webp)"
-    LIBXML2_DIR="$(brew --prefix libxml2)"
-    LIBXSLT_DIR="$(brew --prefix libxslt)"
-    SQLITE_DIR="$(brew --prefix sqlite)"
-    CURL_DIR="$(brew --prefix curl)"
-    ICONV_DIR="$(brew --prefix libiconv)"
-    SODIUM_DIR="$(brew --prefix libsodium)"
+    # Verify critical dependencies exist
+    for lib in libz.a libssl.a libcrypto.a libedit.a libxml2.a libcurl.a libsqlite3.a; do
+        if [[ ! -f "${DEPS_PREFIX}/lib/${lib}" ]]; then
+            log_error "Missing required library: ${lib}"
+            log_error "Run php-packages/scripts/deps/build-all-deps.sh first"
+            exit 1
+        fi
+    done
 
-    # Add bison to PATH (required for PHP build)
-    export PATH="$(brew --prefix bison)/bin:$PATH"
+    log_info "Using static dependencies from: ${DEPS_PREFIX}"
+
+    # Set PKG_CONFIG to use ONLY our static libraries
+    export PKG_CONFIG_PATH="${DEPS_PREFIX}/lib/pkgconfig"
+    export PKG_CONFIG_LIBDIR="${DEPS_PREFIX}/lib/pkgconfig"
+
+    # Compiler flags for static linking
+    # Include macOS frameworks required by static libcurl
+    # Include libsharpyuv required by static libwebp
+    # Note: libpq is now a combined library with pgcommon/pgport/explicit_bzero baked in
+    export LDFLAGS="-L${DEPS_PREFIX}/lib -lsharpyuv -framework CoreFoundation -framework CoreServices -framework SystemConfiguration"
+    export CPPFLAGS="-I${DEPS_PREFIX}/include -I${DEPS_PREFIX}/include/libxml2"
+    export CFLAGS="-O2 -I${DEPS_PREFIX}/include -I${DEPS_PREFIX}/include/libxml2"
+
+    # All dependency paths point to our static build
+    DEPS_DIR="$DEPS_PREFIX"
+    OPENSSL_DIR="$DEPS_PREFIX"
+    ZLIB_DIR="$DEPS_PREFIX"
+    BZ2_DIR="$DEPS_PREFIX"
+    LIBEDIT_DIR="$DEPS_PREFIX"
+    ICU_DIR="$DEPS_PREFIX"
+    LIBPQ_DIR="$DEPS_PREFIX"
+    LIBZIP_DIR="$DEPS_PREFIX"
+    ONIGURUMA_DIR="$DEPS_PREFIX"
+    FREETYPE_DIR="$DEPS_PREFIX"
+    JPEG_DIR="$DEPS_PREFIX"
+    LIBPNG_DIR="$DEPS_PREFIX"
+    WEBP_DIR="$DEPS_PREFIX"
+    LIBXML2_DIR="$DEPS_PREFIX"
+    LIBXSLT_DIR="$DEPS_PREFIX"
+    CURL_DIR="$DEPS_PREFIX"
+    ICONV_DIR="$DEPS_PREFIX"
+    SODIUM_DIR="$DEPS_PREFIX"
+    SQLITE_DIR="$DEPS_PREFIX"
+
+    # Add our deps bin to PATH (for pg_config, etc.)
+    export PATH="${DEPS_PREFIX}/bin:$PATH"
+
+    # Add bison to PATH (required for PHP build) - still need Homebrew for bison
+    if command -v brew &>/dev/null; then
+        export PATH="$(brew --prefix bison)/bin:$PATH"
+    else
+        # Fallback: expect bison in PATH
+        if ! command -v bison &>/dev/null; then
+            log_error "bison not found in PATH. Install bison or Homebrew."
+            exit 1
+        fi
+    fi
 else
     log_error "This build script currently only supports macOS"
     exit 1
@@ -189,11 +227,11 @@ CONFIGURE_OPTS=(
     --enable-sysvsem
     --enable-sysvshm
 
-    # Extensions with external deps
+    # Extensions with external deps (using static libraries)
     --with-openssl="${OPENSSL_DIR}"
     --with-zlib="${ZLIB_DIR}"
     --with-bz2="${BZ2_DIR}"
-    --with-readline="${READLINE_DIR}"
+    --with-libedit="${LIBEDIT_DIR}"
     --with-curl="${CURL_DIR}"
     --with-iconv="${ICONV_DIR}"
     --with-sodium="${SODIUM_DIR}"
@@ -205,8 +243,8 @@ CONFIGURE_OPTS=(
     --with-mysqli
     --with-pdo-pgsql="${LIBPQ_DIR}"
     --with-pgsql="${LIBPQ_DIR}"
-    --with-pdo-sqlite
-    --with-sqlite3
+    --with-pdo-sqlite="${SQLITE_DIR}"
+    --with-sqlite3="${SQLITE_DIR}"
 
     # XML
     --enable-soap
@@ -579,7 +617,7 @@ BUILTIN_EXTENSIONS=(
     "bcmath:BCMath arbitrary precision"
     "sockets:Socket support"
     "pcntl:Process control"
-    "readline:Readline support"
+    "libedit:Libedit (readline alternative) support"
     "calendar:Calendar functions"
     "exif:EXIF metadata"
     "ftp:FTP support"
@@ -634,3 +672,22 @@ else
     log_error "PHP installation failed!"
     exit 1
 fi
+
+# =============================================================================
+# Verify static linking - ensure no Homebrew dependencies
+# =============================================================================
+log_info "Verifying library dependencies..."
+
+HOMEBREW_DEPS=$(otool -L "${INSTALL_PREFIX}/bin/php" 2>/dev/null | grep -E "/opt/homebrew|/usr/local/Cellar" || true)
+
+if [[ -n "$HOMEBREW_DEPS" ]]; then
+    log_warn "WARNING: PHP still links to Homebrew libraries:"
+    echo "$HOMEBREW_DEPS"
+    log_warn "This may cause issues on systems without Homebrew"
+else
+    log_info "SUCCESS: PHP has no Homebrew dependencies!"
+fi
+
+# Show all dynamic libraries for reference
+log_info "Dynamic library dependencies:"
+otool -L "${INSTALL_PREFIX}/bin/php" | head -20
