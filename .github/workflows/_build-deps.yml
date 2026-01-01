@@ -155,6 +155,14 @@ jobs:
           echo "=== Final merged lib/ ==="
           ls -la "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/lib/" || echo "lib/ empty"
 
+          # Create marker files for downloaded deps (needed by is_built() checks)
+          for part in ${{ runner.temp }}/phm-deps/${{ inputs.platform }}-parts/dep-*; do
+            [[ -d "$part" ]] || continue
+            name=$(basename "$part" | sed 's/dep-//;s/-${{ inputs.platform }}//')
+            echo "1.0" > "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/.built-${name}"
+            echo "  Created marker: .built-${name}"
+          done
+
       - name: Install build tools
         if: steps.cache.outputs.cache-hit != 'true' || inputs.force_rebuild == true
         run: brew install -q autoconf automake pkg-config libtool cmake
@@ -219,6 +227,12 @@ jobs:
             [[ -d "$part" ]] || continue
             cp -r "$part"/lib/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/lib/" 2>/dev/null || true
             cp -r "$part"/include/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/include/" 2>/dev/null || true
+          done
+          # Create marker files for downloaded deps
+          for part in ${{ runner.temp }}/phm-deps/${{ inputs.platform }}-parts/dep-*; do
+            [[ -d "$part" ]] || continue
+            name=$(basename "$part" | sed 's/dep-//;s/-${{ inputs.platform }}//')
+            echo "1.0" > "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/.built-${name}"
           done
 
       - name: Install build tools
@@ -290,6 +304,12 @@ jobs:
             cp -r "$part"/lib/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/lib/" 2>/dev/null || true
             cp -r "$part"/include/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/include/" 2>/dev/null || true
           done
+          # Create marker files for downloaded deps
+          for part in ${{ runner.temp }}/phm-deps/${{ inputs.platform }}-parts/dep-*; do
+            [[ -d "$part" ]] || continue
+            name=$(basename "$part" | sed 's/dep-//;s/-${{ inputs.platform }}//')
+            echo "1.0" > "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/.built-${name}"
+          done
 
       - name: Install build tools
         if: steps.cache.outputs.cache-hit != 'true' || inputs.force_rebuild == true
@@ -358,6 +378,12 @@ jobs:
             [[ -d "$part" ]] || continue
             cp -r "$part"/lib/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/lib/" 2>/dev/null || true
             cp -r "$part"/include/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/include/" 2>/dev/null || true
+          done
+          # Create marker files for downloaded deps
+          for part in ${{ runner.temp }}/phm-deps/${{ inputs.platform }}-parts/dep-*; do
+            [[ -d "$part" ]] || continue
+            name=$(basename "$part" | sed 's/dep-//;s/-${{ inputs.platform }}//')
+            echo "1.0" > "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/.built-${name}"
           done
 
       - name: Install build tools
@@ -437,6 +463,12 @@ jobs:
             cp -r "$part"/lib/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/lib/" 2>/dev/null || true
             cp -r "$part"/include/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/include/" 2>/dev/null || true
           done
+          # Create marker files for downloaded deps
+          for part in ${{ runner.temp }}/phm-deps/${{ inputs.platform }}-parts/dep-*; do
+            [[ -d "$part" ]] || continue
+            name=$(basename "$part" | sed 's/dep-//;s/-${{ inputs.platform }}//')
+            echo "1.0" > "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/.built-${name}"
+          done
 
       - name: Install build tools
         if: steps.cache.outputs.cache-hit != 'true' || inputs.force_rebuild == true
@@ -507,6 +539,12 @@ jobs:
             cp -r "$part"/lib/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/lib/" 2>/dev/null || true
             cp -r "$part"/include/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/include/" 2>/dev/null || true
           done
+          # Create marker files for downloaded deps
+          for part in ${{ runner.temp }}/phm-deps/${{ inputs.platform }}-parts/dep-*; do
+            [[ -d "$part" ]] || continue
+            name=$(basename "$part" | sed 's/dep-//;s/-${{ inputs.platform }}//')
+            echo "1.0" > "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/.built-${name}"
+          done
 
       - name: Install build tools
         if: steps.cache.outputs.cache-hit != 'true' || inputs.force_rebuild == true
@@ -575,6 +613,12 @@ jobs:
             [[ -d "$part" ]] || continue
             cp -r "$part"/lib/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/lib/" 2>/dev/null || true
             cp -r "$part"/include/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/include/" 2>/dev/null || true
+          done
+          # Create marker files for downloaded deps
+          for part in ${{ runner.temp }}/phm-deps/${{ inputs.platform }}-parts/dep-*; do
+            [[ -d "$part" ]] || continue
+            name=$(basename "$part" | sed 's/dep-//;s/-${{ inputs.platform }}//')
+            echo "1.0" > "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/.built-${name}"
           done
 
       - name: Install build tools
