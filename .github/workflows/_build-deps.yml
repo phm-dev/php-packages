@@ -89,6 +89,10 @@ jobs:
             mkdir -p "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/lib"
             cp -r "${DEPS_PREFIX}/lib/pkgconfig" "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/lib/" 2>/dev/null || true
           fi
+          # Copy bin (for things like xml2-config)
+          if [[ -d "${DEPS_PREFIX}/bin" ]]; then
+            cp -r "${DEPS_PREFIX}/bin" "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/" 2>/dev/null || true
+          fi
         env:
           CC: clang
           CXX: clang++
@@ -227,6 +231,7 @@ jobs:
             [[ -d "$part" ]] || continue
             cp -r "$part"/lib/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/lib/" 2>/dev/null || true
             cp -r "$part"/include/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/include/" 2>/dev/null || true
+            cp -r "$part"/bin/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/bin/" 2>/dev/null || true
           done
           # Create marker files for downloaded deps
           for part in ${{ runner.temp }}/phm-deps/${{ inputs.platform }}-parts/dep-*; do
@@ -303,6 +308,7 @@ jobs:
             [[ -d "$part" ]] || continue
             cp -r "$part"/lib/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/lib/" 2>/dev/null || true
             cp -r "$part"/include/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/include/" 2>/dev/null || true
+            cp -r "$part"/bin/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/bin/" 2>/dev/null || true
           done
           # Create marker files for downloaded deps
           for part in ${{ runner.temp }}/phm-deps/${{ inputs.platform }}-parts/dep-*; do
@@ -328,6 +334,7 @@ jobs:
             [[ -f "${DEPS_PREFIX}/lib/${lib}" ]] && cp "${DEPS_PREFIX}/lib/${lib}" "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/lib/"
           done
           cp -r "${DEPS_PREFIX}/include" "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/" 2>/dev/null || true
+          cp -r "${DEPS_PREFIX}/bin" "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/" 2>/dev/null || true
         env:
           CC: clang
           CXX: clang++
@@ -378,6 +385,7 @@ jobs:
             [[ -d "$part" ]] || continue
             cp -r "$part"/lib/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/lib/" 2>/dev/null || true
             cp -r "$part"/include/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/include/" 2>/dev/null || true
+            cp -r "$part"/bin/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/bin/" 2>/dev/null || true
           done
           # Create marker files for downloaded deps
           for part in ${{ runner.temp }}/phm-deps/${{ inputs.platform }}-parts/dep-*; do
@@ -403,6 +411,7 @@ jobs:
             [[ -f "${DEPS_PREFIX}/lib/${lib}" ]] && cp "${DEPS_PREFIX}/lib/${lib}" "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/lib/"
           done
           cp -r "${DEPS_PREFIX}/include" "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/" 2>/dev/null || true
+          cp -r "${DEPS_PREFIX}/bin" "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/" 2>/dev/null || true
         env:
           CC: clang
           CXX: clang++
@@ -462,6 +471,7 @@ jobs:
             [[ -d "$part" ]] || continue
             cp -r "$part"/lib/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/lib/" 2>/dev/null || true
             cp -r "$part"/include/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/include/" 2>/dev/null || true
+            cp -r "$part"/bin/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/bin/" 2>/dev/null || true
           done
           # Create marker files for downloaded deps
           for part in ${{ runner.temp }}/phm-deps/${{ inputs.platform }}-parts/dep-*; do
@@ -487,6 +497,7 @@ jobs:
             [[ -f "${DEPS_PREFIX}/lib/${lib}" ]] && cp "${DEPS_PREFIX}/lib/${lib}" "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/lib/"
           done
           cp -r "${DEPS_PREFIX}/include" "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/" 2>/dev/null || true
+          cp -r "${DEPS_PREFIX}/bin" "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/" 2>/dev/null || true
         env:
           CC: clang
           CXX: clang++
@@ -538,6 +549,7 @@ jobs:
             [[ -d "$part" ]] || continue
             cp -r "$part"/lib/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/lib/" 2>/dev/null || true
             cp -r "$part"/include/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/include/" 2>/dev/null || true
+            cp -r "$part"/bin/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/bin/" 2>/dev/null || true
           done
           # Create marker files for downloaded deps
           for part in ${{ runner.temp }}/phm-deps/${{ inputs.platform }}-parts/dep-*; do
@@ -563,6 +575,7 @@ jobs:
             [[ -f "${DEPS_PREFIX}/lib/${lib}" ]] && cp "${DEPS_PREFIX}/lib/${lib}" "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/lib/"
           done
           cp -r "${DEPS_PREFIX}/include" "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/" 2>/dev/null || true
+          cp -r "${DEPS_PREFIX}/bin" "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/" 2>/dev/null || true
         env:
           CC: clang
           CXX: clang++
@@ -613,6 +626,7 @@ jobs:
             [[ -d "$part" ]] || continue
             cp -r "$part"/lib/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/lib/" 2>/dev/null || true
             cp -r "$part"/include/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/include/" 2>/dev/null || true
+            cp -r "$part"/bin/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/bin/" 2>/dev/null || true
           done
           # Create marker files for downloaded deps
           for part in ${{ runner.temp }}/phm-deps/${{ inputs.platform }}-parts/dep-*; do
@@ -638,6 +652,7 @@ jobs:
             [[ -f "${DEPS_PREFIX}/lib/${lib}" ]] && cp "${DEPS_PREFIX}/lib/${lib}" "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/lib/"
           done
           cp -r "${DEPS_PREFIX}/include" "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/" 2>/dev/null || true
+          cp -r "${DEPS_PREFIX}/bin" "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/" 2>/dev/null || true
         env:
           CC: clang
           CXX: clang++
@@ -674,6 +689,7 @@ jobs:
             echo "  ← $name"
             cp -r "$part"/lib/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/lib/" 2>/dev/null || true
             cp -r "$part"/include/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/include/" 2>/dev/null || true
+            cp -r "$part"/bin/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/bin/" 2>/dev/null || true
           done
 
           echo ""
