@@ -1,0 +1,289 @@
+name: Build PHP (Reusable)
+
+on:
+  workflow_call:
+    inputs:
+      php_minor:
+        description: 'PHP minor version (e.g., 8.5)'
+        required: true
+        type: string
+      platform:
+        description: 'Target platform (darwin-arm64 or darwin-amd64)'
+        required: true
+        type: string
+      runner:
+        description: 'GitHub Actions runner'
+        required: true
+        type: string
+      force_build:
+        description: 'Force build even if version unchanged'
+        required: false
+        type: boolean
+        default: false
+      force_rebuild_deps:
+        description: 'Force rebuild dependencies'
+        required: false
+        type: boolean
+        default: false
+    outputs:
+      built:
+        description: 'Whether PHP was built'
+        value: ${{ jobs.build.outputs.built }}
+      version:
+        description: 'PHP version that was built'
+        value: ${{ jobs.check.outputs.php_version }}
+
+env:
+  HOMEBREW_NO_AUTO_UPDATE: 1
+  HOMEBREW_NO_INSTALL_CLEANUP: 1
+  HOMEBREW_NO_ENV_HINTS: 1
+
+jobs:
+  check:
+    name: Check PHP ${{ inputs.php_minor }}
+    runs-on: ubuntu-latest
+    outputs:
+      needs_build: ${{ steps.check.outputs.needs_build }}
+      php_version: ${{ steps.check.outputs.php_version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check for updates
+        id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PHP_MINOR: ${{ inputs.php_minor }}
+          FORCE_BUILD: ${{ inputs.force_build }}
+        run: |
+          echo "Checking PHP ${PHP_MINOR}..."
+
+          # Get latest patch version from php.net
+          LATEST=$(curl -fsSL "https://www.php.net/releases/index.php?json&version=${PHP_MINOR}" 2>/dev/null | jq -r '.version // empty')
+
+          if [[ -z "$LATEST" ]]; then
+            echo "::error::Could not fetch latest PHP ${PHP_MINOR} version"
+            echo "needs_build=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          echo "Latest PHP ${PHP_MINOR}: ${LATEST}"
+
+          # Check current release
+          CURRENT=$(jq -r --arg m "$PHP_MINOR" '.php[$m] // "0.0.0"' versions.json)
+          echo "Current: ${CURRENT}"
+
+          # Compare versions
+          if [[ "$FORCE_BUILD" == "true" ]]; then
+            echo "Force build requested"
+            echo "needs_build=true" >> $GITHUB_OUTPUT
+          elif [[ "$CURRENT" == "0.0.0" ]]; then
+            echo "New version detected"
+            echo "needs_build=true" >> $GITHUB_OUTPUT
+          elif [[ $(printf '%s\n%s' "$LATEST" "$CURRENT" | sort -V | tail -1) == "$LATEST" && "$LATEST" != "$CURRENT" ]]; then
+            echo "Upgrade available: $CURRENT -> $LATEST"
+            echo "needs_build=true" >> $GITHUB_OUTPUT
+          else
+            echo "Already up to date"
+            echo "needs_build=false" >> $GITHUB_OUTPUT
+          fi
+
+          echo "php_version=${LATEST}" >> $GITHUB_OUTPUT
+
+  deps:
+    name: Dependencies
+    needs: check
+    if: needs.check.outputs.needs_build == 'true'
+    uses: ./.github/workflows/_build-deps.yml
+    with:
+      platform: ${{ inputs.platform }}
+      runner: ${{ inputs.runner }}
+      force_rebuild: ${{ inputs.force_rebuild_deps }}
+
+  build:
+    name: Build PHP ${{ needs.check.outputs.php_version }}
+    needs: [check, deps]
+    if: needs.check.outputs.needs_build == 'true'
+    runs-on: ${{ inputs.runner }}
+    outputs:
+      built: ${{ steps.result.outputs.built }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install build tools
+        run: brew install -q autoconf automake bison re2c pkg-config libtool cmake zstd
+
+      - name: Make scripts executable
+        run: chmod +x scripts/*.sh scripts/deps/*.sh
+
+      - name: Download dependencies artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: deps-${{ inputs.platform }}
+          path: /opt/phm-deps/${{ inputs.platform }}
+
+      - name: Verify dependencies
+        run: |
+          DEPS_PREFIX="/opt/phm-deps/${{ inputs.platform }}"
+          sudo chown -R $USER /opt/phm-deps
+          echo "Verifying dependencies..."
+          for lib in libz.a libssl.a libcrypto.a libxml2.a libcurl.a; do
+            if [[ -f "${DEPS_PREFIX}/lib/${lib}" ]]; then
+              echo "  ✓ ${lib}"
+            else
+              echo "  ✗ ${lib} MISSING" && exit 1
+            fi
+          done
+          echo ""
+          echo "Total libraries: $(ls ${DEPS_PREFIX}/lib/*.a | wc -l)"
+
+      - name: Build PHP core packages
+        run: ./scripts/build-php-core.sh ${{ needs.check.outputs.php_version }}
+        env:
+          CC: clang
+          CXX: clang++
+          PLATFORM: ${{ inputs.platform }}
+
+      - name: Build all extensions
+        run: ./scripts/build-all-extensions.sh ${{ needs.check.outputs.php_version }} --continue-on-error
+        env:
+          CC: clang
+          CXX: clang++
+          PLATFORM: ${{ inputs.platform }}
+
+      - name: Verify PHP binary
+        run: |
+          PHP_MINOR="${{ inputs.php_minor }}"
+          PHP_BIN="/opt/php/${PHP_MINOR}/bin/php"
+
+          if [[ -f "$PHP_BIN" ]]; then
+            echo "PHP binary: $PHP_BIN"
+            "$PHP_BIN" -v
+            echo ""
+            echo "Dependencies:"
+            otool -L "$PHP_BIN"
+
+            if otool -L "$PHP_BIN" | grep -q "/opt/homebrew\|/usr/local/opt"; then
+              echo "::warning::PHP binary has Homebrew dependencies!"
+            else
+              echo "✓ PHP binary has no Homebrew dependencies"
+            fi
+          fi
+
+      - name: Show build report
+        if: always()
+        run: |
+          if [[ -f dist/build-report.json ]]; then
+            echo "=== Build Summary ==="
+            jq -r '.summary | "Total: \(.total) | Success: \(.success) | Failed: \(.failed)"' dist/build-report.json
+            echo ""
+            echo "=== Successful ==="
+            jq -r '.extensions[] | select(.status == "success") | "  ✓ \(.name) \(.version)"' dist/build-report.json || true
+            echo ""
+            echo "=== Failed ==="
+            jq -r '.extensions[] | select(.status == "failed") | "  ✗ \(.name): \(.error)"' dist/build-report.json || true
+          fi
+
+      - name: List packages
+        run: |
+          echo "Built packages:"
+          ls -la dist/*.tar.zst 2>/dev/null || echo "No packages found"
+          echo ""
+          echo "Total: $(ls dist/*.tar.zst 2>/dev/null | wc -l) packages"
+
+      - name: Upload packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: php-${{ needs.check.outputs.php_version }}-${{ inputs.platform }}
+          path: dist/*.tar.zst
+          retention-days: 7
+
+      - name: Upload build logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: logs-${{ needs.check.outputs.php_version }}-${{ inputs.platform }}
+          path: dist/logs/
+          retention-days: 14
+          if-no-files-found: ignore
+
+      - name: Set result
+        id: result
+        run: echo "built=true" >> $GITHUB_OUTPUT
+
+  publish:
+    name: Publish PHP ${{ needs.check.outputs.php_version }}
+    needs: [check, build]
+    if: needs.build.outputs.built == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: php-${{ needs.check.outputs.php_version }}-${{ inputs.platform }}
+          path: artifacts/
+
+      - name: Validate packages
+        run: |
+          echo "Packages for PHP ${{ needs.check.outputs.php_version }} (${{ inputs.platform }}):"
+          ls -la artifacts/
+
+          MINOR="${{ inputs.php_minor }}"
+          # Check required packages exist
+          for pkg in cli fpm common; do
+            if ls artifacts/php${MINOR}-${pkg}_*.tar.zst 1>/dev/null 2>&1; then
+              echo "  ✓ php${MINOR}-${pkg}"
+            else
+              echo "  ✗ php${MINOR}-${pkg} MISSING" && exit 1
+            fi
+          done
+
+      - name: Create/Update release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PHP_VERSION: ${{ needs.check.outputs.php_version }}
+          PLATFORM: ${{ inputs.platform }}
+        run: |
+          TAG="php-${PHP_VERSION}"
+
+          # Check if release exists
+          if gh release view "$TAG" &>/dev/null; then
+            echo "Release $TAG exists, uploading packages..."
+          else
+            echo "Creating release $TAG..."
+            gh release create "$TAG" \
+              --title "PHP ${PHP_VERSION}" \
+              --notes "Pre-built PHP ${PHP_VERSION} packages for macOS"
+          fi
+
+          # Upload packages
+          cd artifacts
+          for pkg in *.tar.zst; do
+            echo "Uploading: $pkg"
+            gh release upload "$TAG" "$pkg" --clobber
+          done
+
+      - name: Update versions.json
+        env:
+          PHP_VERSION: ${{ needs.check.outputs.php_version }}
+          PHP_MINOR: ${{ inputs.php_minor }}
+        run: |
+          # Update PHP version
+          CURRENT=$(cat versions.json)
+          CURRENT=$(echo "$CURRENT" | jq --arg m "$PHP_MINOR" --arg v "$PHP_VERSION" '.php[$m] = $v')
+          CURRENT=$(echo "$CURRENT" | jq --arg t "$(date -u +%Y-%m-%dT%H:%M:%SZ)" '.last_check = $t')
+          echo "$CURRENT" | jq '.' > versions.json
+
+          echo "Updated versions.json:"
+          cat versions.json
+
+      - name: Commit versions.json
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add versions.json
+          git diff --staged --quiet || git commit -m "Update PHP ${{ inputs.php_minor }} to ${{ needs.check.outputs.php_version }}"
+          git push
