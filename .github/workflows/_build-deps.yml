@@ -332,12 +332,21 @@ jobs:
           export PATH="${DEPS_PREFIX}/bin:$PATH"
           ./scripts/deps/${{ matrix.dep.script }}
 
+          # Debug: Show what's in DEPS_PREFIX/bin after build
+          echo "=== Contents of DEPS_PREFIX/bin ==="
+          ls -la "${DEPS_PREFIX}/bin/" 2>/dev/null || echo "  (bin/ is empty or doesn't exist)"
+
+          # Prepare artifact directory
           mkdir -p "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/lib"
           for lib in ${{ matrix.dep.libs }}; do
             [[ -f "${DEPS_PREFIX}/lib/${lib}" ]] && cp "${DEPS_PREFIX}/lib/${lib}" "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/lib/"
           done
           cp -r "${DEPS_PREFIX}/include" "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/" 2>/dev/null || true
           cp -r "${DEPS_PREFIX}/bin" "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/" 2>/dev/null || true
+
+          # Debug: Show what's in artifact directory
+          echo "=== Artifact directory structure ==="
+          find "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}" -type f | head -20
         env:
           CC: clang
           CXX: clang++
@@ -384,12 +393,24 @@ jobs:
         if: steps.cache.outputs.cache-hit != 'true' || inputs.force_rebuild == true
         run: |
           mkdir -p "${{ runner.temp }}/phm-deps/${{ inputs.platform }}"/{lib/pkgconfig,include,bin,licenses}
+
+          echo "=== Downloaded artifacts ==="
+          for part in ${{ runner.temp }}/phm-deps/${{ inputs.platform }}-parts/dep-*; do
+            [[ -d "$part" ]] || continue
+            echo "--- $part ---"
+            ls -la "$part/bin/" 2>/dev/null || echo "  (no bin/)"
+          done
+
           for part in ${{ runner.temp }}/phm-deps/${{ inputs.platform }}-parts/dep-*; do
             [[ -d "$part" ]] || continue
             cp -r "$part"/lib/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/lib/" 2>/dev/null || true
             cp -r "$part"/include/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/include/" 2>/dev/null || true
             cp -r "$part"/bin/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/bin/" 2>/dev/null || true
           done
+
+          echo "=== Merged bin/ directory ==="
+          ls -la "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/bin/" 2>/dev/null || echo "(empty)"
+
           # Create marker files for downloaded deps
           for part in ${{ runner.temp }}/phm-deps/${{ inputs.platform }}-parts/dep-*; do
             [[ -d "$part" ]] || continue
@@ -408,6 +429,13 @@ jobs:
           export DEPS_PREFIX="${{ runner.temp }}/phm-deps/${{ inputs.platform }}"
           export PLATFORM="${{ inputs.platform }}"
           export PATH="${DEPS_PREFIX}/bin:$PATH"
+
+          echo "=== PATH for build ==="
+          echo "$PATH"
+          echo "=== xml2-config check before build ==="
+          which xml2-config 2>/dev/null || echo "xml2-config not found in PATH"
+          ls -la "${DEPS_PREFIX}/bin/xml2-config" 2>/dev/null || echo "xml2-config not in DEPS_PREFIX/bin"
+
           ./scripts/deps/${{ matrix.dep.script }}
 
           mkdir -p "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/lib"
