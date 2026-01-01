@@ -449,7 +449,7 @@ jobs:
       matrix:
         dep:
           - { name: rabbitmq-c, script: "19-rabbitmq-c.sh", libs: "librabbitmq.a" }
-          - { name: libevent, script: "20-libevent.sh", libs: "libevent.a libevent_core.a" }
+          - { name: libevent, script: "20-libevent.sh", libs: "libevent.a libevent_core.a libevent_pthreads.a libevent_extra.a libevent_openssl.a" }
           - { name: zstd, script: "23-zstd.sh", libs: "libzstd.a" }
           - { name: ossp-uuid, script: "24-ossp-uuid.sh", libs: "libuuid.a" }
           - { name: libyaml, script: "25-libyaml.sh", libs: "libyaml.a" }
