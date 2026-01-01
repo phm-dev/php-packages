@@ -142,6 +142,60 @@ jobs:
           echo ""
           echo "Total libraries: $(ls ${DEPS_PREFIX}/lib/*.a | wc -l)"
 
+      - name: Diagnose build environment
+        run: |
+          DEPS_PREFIX="/opt/phm-deps/${{ inputs.platform }}"
+
+          echo "=== Environment Variables ==="
+          echo "PATH: $PATH"
+          echo "PKG_CONFIG_PATH: ${PKG_CONFIG_PATH:-<not set>}"
+          echo "PKG_CONFIG_LIBDIR: ${PKG_CONFIG_LIBDIR:-<not set>}"
+          echo "LDFLAGS: ${LDFLAGS:-<not set>}"
+          echo "CFLAGS: ${CFLAGS:-<not set>}"
+          echo "SDKROOT: ${SDKROOT:-<not set>}"
+
+          echo ""
+          echo "=== SDK Info ==="
+          xcrun --show-sdk-path
+          xcrun --show-sdk-version
+
+          echo ""
+          echo "=== Checking critical libraries ==="
+          ls -la "${DEPS_PREFIX}/lib/libsharpyuv.a" 2>&1 || echo "MISSING: libsharpyuv.a"
+          ls -la "${DEPS_PREFIX}/lib/libz.a" 2>&1 || echo "MISSING: libz.a"
+
+          echo ""
+          echo "=== Testing fork() compilation ==="
+          cd /tmp
+          cat > conftest.c << 'EOF'
+          char fork ();
+          int main () { return fork (); }
+          EOF
+
+          LDFLAGS="-L${DEPS_PREFIX}/lib -lsharpyuv -framework CoreFoundation -framework CoreServices -framework SystemConfiguration"
+
+          echo "Test with LDFLAGS: $LDFLAGS"
+          clang -o conftest conftest.c $LDFLAGS 2>&1 && echo "✓ fork() test PASSED" || echo "✗ fork() test FAILED"
+
+          echo ""
+          echo "Test without LDFLAGS:"
+          clang -o conftest2 conftest.c 2>&1 && echo "✓ fork() test PASSED" || echo "✗ fork() test FAILED"
+
+          rm -f conftest conftest.c conftest2
+
+          echo ""
+          echo "=== pkg-config check ==="
+          export PKG_CONFIG_PATH="${DEPS_PREFIX}/lib/pkgconfig"
+          export PKG_CONFIG_LIBDIR="${DEPS_PREFIX}/lib/pkgconfig"
+          pkg-config --variable=pc_path pkg-config || echo "pkg-config path: default"
+
+          echo ""
+          echo "=== ICU pkg-config output ==="
+          pkg-config --libs icu-uc 2>&1 || echo "Failed to get icu-uc flags"
+        env:
+          CC: clang
+          CXX: clang++
+
       - name: Build PHP core packages
         run: ./scripts/build-php-core.sh ${{ needs.check.outputs.php_version }}
         env:
@@ -202,6 +256,23 @@ jobs:
           name: php-${{ needs.check.outputs.php_version }}-${{ inputs.platform }}
           path: dist/*.tar.zst
           retention-days: 7
+
+      - name: Save config.log on failure
+        if: failure()
+        run: |
+          PHP_VERSION="${{ needs.check.outputs.php_version }}"
+          CONFIG_LOG=$(find /tmp -name "config.log" -path "*php-${PHP_VERSION}*" 2>/dev/null | head -1)
+          if [[ -n "$CONFIG_LOG" && -f "$CONFIG_LOG" ]]; then
+            mkdir -p dist/logs
+            cp "$CONFIG_LOG" dist/logs/
+            echo "Saved config.log from: $CONFIG_LOG"
+            echo ""
+            echo "=== Last 200 lines of config.log ==="
+            tail -200 "$CONFIG_LOG"
+          else
+            echo "config.log not found"
+            find /tmp -name "config.log" 2>/dev/null || echo "No config.log files found"
+          fi
 
       - name: Upload build logs
         if: always()
