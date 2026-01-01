@@ -143,7 +143,7 @@ jobs:
             ls -la "$d/lib" 2>/dev/null || true
           done
 
-          mkdir -p "${{ runner.temp }}/phm-deps/${{ inputs.platform }}"/{lib/pkgconfig,include}
+          mkdir -p "${{ runner.temp }}/phm-deps/${{ inputs.platform }}"/{lib/pkgconfig,include,bin,licenses}
 
           for part in ${{ runner.temp }}/phm-deps/${{ inputs.platform }}-parts/dep-*; do
             [[ -d "$part" ]] || continue
@@ -222,7 +222,7 @@ jobs:
       - name: Merge dependencies
         if: steps.cache.outputs.cache-hit != 'true' || inputs.force_rebuild == true
         run: |
-          mkdir -p "${{ runner.temp }}/phm-deps/${{ inputs.platform }}"/{lib/pkgconfig,include}
+          mkdir -p "${{ runner.temp }}/phm-deps/${{ inputs.platform }}"/{lib/pkgconfig,include,bin,licenses}
           for part in ${{ runner.temp }}/phm-deps/${{ inputs.platform }}-parts/dep-*; do
             [[ -d "$part" ]] || continue
             cp -r "$part"/lib/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/lib/" 2>/dev/null || true
@@ -298,7 +298,7 @@ jobs:
       - name: Merge dependencies
         if: steps.cache.outputs.cache-hit != 'true' || inputs.force_rebuild == true
         run: |
-          mkdir -p "${{ runner.temp }}/phm-deps/${{ inputs.platform }}"/{lib/pkgconfig,include}
+          mkdir -p "${{ runner.temp }}/phm-deps/${{ inputs.platform }}"/{lib/pkgconfig,include,bin,licenses}
           for part in ${{ runner.temp }}/phm-deps/${{ inputs.platform }}-parts/dep-*; do
             [[ -d "$part" ]] || continue
             cp -r "$part"/lib/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/lib/" 2>/dev/null || true
@@ -373,7 +373,7 @@ jobs:
       - name: Merge dependencies
         if: steps.cache.outputs.cache-hit != 'true' || inputs.force_rebuild == true
         run: |
-          mkdir -p "${{ runner.temp }}/phm-deps/${{ inputs.platform }}"/{lib/pkgconfig,include}
+          mkdir -p "${{ runner.temp }}/phm-deps/${{ inputs.platform }}"/{lib/pkgconfig,include,bin,licenses}
           for part in ${{ runner.temp }}/phm-deps/${{ inputs.platform }}-parts/dep-*; do
             [[ -d "$part" ]] || continue
             cp -r "$part"/lib/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/lib/" 2>/dev/null || true
@@ -457,7 +457,7 @@ jobs:
       - name: Merge dependencies
         if: steps.cache.outputs.cache-hit != 'true' || inputs.force_rebuild == true
         run: |
-          mkdir -p "${{ runner.temp }}/phm-deps/${{ inputs.platform }}"/{lib/pkgconfig,include}
+          mkdir -p "${{ runner.temp }}/phm-deps/${{ inputs.platform }}"/{lib/pkgconfig,include,bin,licenses}
           for part in ${{ runner.temp }}/phm-deps/${{ inputs.platform }}-parts/dep-*; do
             [[ -d "$part" ]] || continue
             cp -r "$part"/lib/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/lib/" 2>/dev/null || true
@@ -533,7 +533,7 @@ jobs:
       - name: Merge dependencies
         if: steps.cache.outputs.cache-hit != 'true' || inputs.force_rebuild == true
         run: |
-          mkdir -p "${{ runner.temp }}/phm-deps/${{ inputs.platform }}"/{lib/pkgconfig,include}
+          mkdir -p "${{ runner.temp }}/phm-deps/${{ inputs.platform }}"/{lib/pkgconfig,include,bin,licenses}
           for part in ${{ runner.temp }}/phm-deps/${{ inputs.platform }}-parts/dep-*; do
             [[ -d "$part" ]] || continue
             cp -r "$part"/lib/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/lib/" 2>/dev/null || true
@@ -608,7 +608,7 @@ jobs:
       - name: Merge dependencies
         if: steps.cache.outputs.cache-hit != 'true' || inputs.force_rebuild == true
         run: |
-          mkdir -p "${{ runner.temp }}/phm-deps/${{ inputs.platform }}"/{lib/pkgconfig,include}
+          mkdir -p "${{ runner.temp }}/phm-deps/${{ inputs.platform }}"/{lib/pkgconfig,include,bin,licenses}
           for part in ${{ runner.temp }}/phm-deps/${{ inputs.platform }}-parts/dep-*; do
             [[ -d "$part" ]] || continue
             cp -r "$part"/lib/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/lib/" 2>/dev/null || true
