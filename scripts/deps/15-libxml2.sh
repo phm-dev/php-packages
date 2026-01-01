@@ -7,6 +7,7 @@
 # Depends on: zlib, libiconv
 # Pkgconfig: libxml-2.0.pc
 #
+# Cache ref: v2 - ensure pkgconfig is included in artifact
 
 set -euo pipefail
 

@@ -6,6 +6,7 @@
 #
 # Depends on: openssl, zlib
 #
+# Cache ref: v2 - ensure pkgconfig is included in artifact
 
 set -euo pipefail
 
