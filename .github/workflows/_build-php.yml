@@ -133,11 +133,16 @@ jobs:
           echo "Updating pkgconfig prefixes to: ${DEPS_PREFIX}"
           for pc in "${DEPS_PREFIX}/lib/pkgconfig"/*.pc; do
             if [[ -f "$pc" ]]; then
-              # Replace any prefix= line with correct path
-              sed -i '' "s|^prefix=.*|prefix=${DEPS_PREFIX}|" "$pc"
+              # Replace prefix= or prefix = (with optional spaces) with correct path
+              # ICU uses "prefix = value" format, others use "prefix=value"
+              sed -i '' "s|^prefix *=.*|prefix=${DEPS_PREFIX}|" "$pc"
             fi
           done
           echo "Updated $(ls "${DEPS_PREFIX}/lib/pkgconfig"/*.pc 2>/dev/null | wc -l) .pc files"
+
+          # Verify the fix worked
+          echo "Checking ICU prefix:"
+          grep "^prefix" "${DEPS_PREFIX}/lib/pkgconfig/icu-uc.pc" || echo "icu-uc.pc not found"
 
       - name: Verify dependencies
         run: |
