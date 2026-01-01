@@ -32,7 +32,7 @@ Each patch version has its own release (old versions are preserved):
 Install specific version or use minor version alias:
 ```bash
 phm install php8.5.1-cli    # specific patch
-phm install php8.5-cli      # latest 8.5.x (currently 8.5.1)
+phm install php8.5-cli      # latest 8.5.x
 ```
 
 ## Extensions
@@ -105,10 +105,10 @@ These extensions require additional work:
 
 ## Platforms
 
-| Platform | Architecture | Runner |
+| Platform | Architecture | Status |
 |----------|--------------|--------|
-| macOS 13+ | arm64 (Apple Silicon) | macos-26 |
-| macOS 13+ | amd64 (Intel) | macos-15-intel |
+| macOS 13+ | arm64 (Apple Silicon) | ✅ Available |
+| macOS 13+ | amd64 (Intel) | 🚧 Coming Soon |
 
 ## Usage
 
@@ -119,23 +119,6 @@ curl -fsSL https://raw.githubusercontent.com/phm-dev/phm/main/scripts/install-ph
 # Install PHP
 phm update
 phm install php8.5-cli php8.5-fpm php8.5-redis
-```
-
-## Build System
-
-### Automated (GitHub Actions)
-
-Single workflow (`build.yml`) runs daily at 2:00 UTC:
-
-1. Checks for new PHP versions via php.net releases API
-2. Builds only changed PHP versions with all extensions
-3. Publishes to GitHub Releases
-
-### Manual Trigger
-
-```bash
-gh workflow run build.yml -f php_version=8.5.0
-gh workflow run build.yml -f force_build=true
 ```
 
 ## Links

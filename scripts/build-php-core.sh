@@ -376,21 +376,61 @@ sed -i '' 's/error_reporting = E_ALL & ~E_DEPRECATED & ~E_STRICT/error_reporting
 sed -i '' 's/log_errors = On/log_errors = Off/' "${CLI_DIR}/php.ini"
 sed -i '' 's/html_errors = On/html_errors = Off/' "${CLI_DIR}/php.ini"
 sed -i '' 's/implicit_flush = Off/implicit_flush = On/' "${CLI_DIR}/php.ini"
-# Add scan directory for CLI
-echo "" >> "${CLI_DIR}/php.ini"
-echo "; Scan for additional .ini files" >> "${CLI_DIR}/php.ini"
-echo "scan_dir = ${INSTALL_PREFIX}/etc/cli/conf.d" >> "${CLI_DIR}/php.ini"
+# Add PHM-specific settings for CLI
+cat >> "${CLI_DIR}/php.ini" << 'EOFCLI'
 
-# Create FPM php.ini (optimized for web)
+; === PHM CLI Settings ===
+
+; Scan for additional .ini files
+EOFCLI
+echo "scan_dir = ${INSTALL_PREFIX}/etc/cli/conf.d" >> "${CLI_DIR}/php.ini"
+cat >> "${CLI_DIR}/php.ini" << 'EOFCLI'
+
+; Realpath cache - helps Composer and other tools
+realpath_cache_size = 4096K
+realpath_cache_ttl = 600
+EOFCLI
+
+# Create FPM php.ini (optimized for development on modern MacBooks)
 cp "$PHP_INI_TEMPLATE" "${FPM_DIR}/php.ini"
-sed -i '' 's/memory_limit = 128M/memory_limit = 256M/' "${FPM_DIR}/php.ini"
-sed -i '' 's/upload_max_filesize = 2M/upload_max_filesize = 64M/' "${FPM_DIR}/php.ini"
-sed -i '' 's/post_max_size = 8M/post_max_size = 64M/' "${FPM_DIR}/php.ini"
-sed -i '' 's/max_execution_time = 30/max_execution_time = 30/' "${FPM_DIR}/php.ini"
-# Add scan directory for FPM
-echo "" >> "${FPM_DIR}/php.ini"
-echo "; Scan for additional .ini files" >> "${FPM_DIR}/php.ini"
+
+# Resource limits - generous for development
+sed -i '' 's/memory_limit = 128M/memory_limit = 512M/' "${FPM_DIR}/php.ini"
+sed -i '' 's/max_execution_time = 30/max_execution_time = 300/' "${FPM_DIR}/php.ini"
+sed -i '' 's/max_input_time = 60/max_input_time = 300/' "${FPM_DIR}/php.ini"
+
+# Upload limits - comfortable for development
+sed -i '' 's/upload_max_filesize = 2M/upload_max_filesize = 128M/' "${FPM_DIR}/php.ini"
+sed -i '' 's/post_max_size = 8M/post_max_size = 128M/' "${FPM_DIR}/php.ini"
+
+# Error display - helpful for development
+sed -i '' 's/display_errors = Off/display_errors = On/' "${FPM_DIR}/php.ini"
+sed -i '' 's/display_startup_errors = Off/display_startup_errors = On/' "${FPM_DIR}/php.ini"
+sed -i '' 's/error_reporting = E_ALL & ~E_DEPRECATED & ~E_STRICT/error_reporting = E_ALL/' "${FPM_DIR}/php.ini"
+
+# Session - longer lifetime for development
+sed -i '' 's/session.gc_maxlifetime = 1440/session.gc_maxlifetime = 7200/' "${FPM_DIR}/php.ini"
+
+# Add PHM-specific settings for development
+cat >> "${FPM_DIR}/php.ini" << 'EOFPHM'
+
+; === PHM Development Settings ===
+
+; Scan for additional .ini files
+EOFPHM
 echo "scan_dir = ${INSTALL_PREFIX}/etc/fpm/conf.d" >> "${FPM_DIR}/php.ini"
+cat >> "${FPM_DIR}/php.ini" << 'EOFPHM'
+
+; Realpath cache - critical for framework performance
+realpath_cache_size = 4096K
+realpath_cache_ttl = 600
+
+; Input variables - needed for complex forms
+max_input_vars = 5000
+
+; Security (less important for dev, but good practice)
+expose_php = Off
+EOFPHM
 
 # Remove template (we now have separate cli/fpm versions)
 rm -f "$PHP_INI_TEMPLATE"
@@ -399,7 +439,7 @@ rm -f "$PHP_INI_TEMPLATE"
 # PHP 8.5+: OPcache is built-in, no need for zend_extension line
 if [[ "$PHP_MAJOR" -lt 8 ]] || [[ "$PHP_MAJOR" -eq 8 && "$PHP_MINOR" -lt 5 ]]; then
     cat > "${MODS_DIR}/opcache.ini" << EOF
-; OPcache configuration
+; OPcache configuration (optimized for development)
 ; Priority: 10
 zend_extension=opcache.so
 opcache.enable=1
@@ -407,12 +447,15 @@ opcache.memory_consumption=256
 opcache.interned_strings_buffer=16
 opcache.max_accelerated_files=20000
 opcache.validate_timestamps=1
-opcache.revalidate_freq=2
+; revalidate_freq=0 means check for file changes on every request (best for dev)
+opcache.revalidate_freq=0
 opcache.save_comments=1
+; JIT disabled by default (can cause issues with debuggers)
+opcache.jit=off
 EOF
 else
     cat > "${MODS_DIR}/opcache.ini" << EOF
-; OPcache configuration
+; OPcache configuration (optimized for development)
 ; Priority: 10
 ; Note: In PHP 8.5+, OPcache is built into PHP core (no zend_extension needed)
 opcache.enable=1
@@ -420,8 +463,11 @@ opcache.memory_consumption=256
 opcache.interned_strings_buffer=16
 opcache.max_accelerated_files=20000
 opcache.validate_timestamps=1
-opcache.revalidate_freq=2
+; revalidate_freq=0 means check for file changes on every request (best for dev)
+opcache.revalidate_freq=0
 opcache.save_comments=1
+; JIT disabled by default (can cause issues with debuggers)
+opcache.jit=off
 EOF
 fi
 
