@@ -28,7 +28,7 @@ jobs:
   # Phase 1: Base libraries (no dependencies on each other)
   # ==========================================================================
   phase1:
-    name: "${{ matrix.dep }}"
+    name: "${{ matrix.dep.name }}"
     runs-on: ${{ inputs.runner }}
     strategy:
       fail-fast: false
@@ -106,7 +106,7 @@ jobs:
   # Phase 2: Image libraries (depend on zlib)
   # ==========================================================================
   phase2:
-    name: "${{ matrix.dep }}"
+    name: "${{ matrix.dep.name }}"
     needs: phase1
     runs-on: ${{ inputs.runner }}
     strategy:
@@ -243,7 +243,7 @@ jobs:
   # Phase 4: Core libraries
   # ==========================================================================
   phase4:
-    name: "${{ matrix.dep }}"
+    name: "${{ matrix.dep.name }}"
     needs: phase1
     runs-on: ${{ inputs.runner }}
     strategy:
@@ -316,7 +316,7 @@ jobs:
   # Phase 5: XML/Network (depends on libxml2, openssl)
   # ==========================================================================
   phase5:
-    name: "${{ matrix.dep }}"
+    name: "${{ matrix.dep.name }}"
     needs: phase4
     runs-on: ${{ inputs.runner }}
     strategy:
@@ -386,7 +386,7 @@ jobs:
   # Phase 6: Extension dependencies (independent)
   # ==========================================================================
   phase6-independent:
-    name: "${{ matrix.dep }}"
+    name: "${{ matrix.dep.name }}"
     needs: phase1
     runs-on: ${{ inputs.runner }}
     strategy:
@@ -465,7 +465,7 @@ jobs:
   # Phase 7: Extension deps (depend on libevent)
   # ==========================================================================
   phase7:
-    name: "${{ matrix.dep }}"
+    name: "${{ matrix.dep.name }}"
     needs: phase6-independent
     runs-on: ${{ inputs.runner }}
     strategy:
@@ -536,7 +536,7 @@ jobs:
   # Phase 8: ImageMagick & GraphicsMagick (depend on freetype, libpng, jpeg)
   # ==========================================================================
   phase8:
-    name: "${{ matrix.dep }}"
+    name: "${{ matrix.dep.name }}"
     needs: phase3-freetype
     runs-on: ${{ inputs.runner }}
     strategy:

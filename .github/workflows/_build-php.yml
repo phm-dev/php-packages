@@ -89,20 +89,10 @@ jobs:
 
           echo "php_version=${LATEST}" >> $GITHUB_OUTPUT
 
-  debug:
-    name: Debug outputs
-    needs: check
-    runs-on: ubuntu-latest
-    steps:
-      - name: Show outputs
-        run: |
-          echo "needs_build: '${{ needs.check.outputs.needs_build }}'"
-          echo "php_version: '${{ needs.check.outputs.php_version }}'"
-          echo "Condition would be: ${{ needs.check.outputs.needs_build == 'true' }}"
-
   deps:
     name: Dependencies
-    needs: [check, debug]
+    needs: check
+    if: needs.check.outputs.needs_build == 'true'
     uses: ./.github/workflows/_build-deps.yml
     with:
       platform: ${{ inputs.platform }}
