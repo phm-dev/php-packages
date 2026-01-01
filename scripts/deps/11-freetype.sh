@@ -5,6 +5,7 @@
 # License: FreeType License (BSD-style) or GPL2
 #
 # Depends on: zlib, bzip2, libpng
+# Pkgconfig: freetype2.pc
 #
 
 set -euo pipefail
