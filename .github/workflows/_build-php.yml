@@ -119,12 +119,18 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: deps-${{ inputs.platform }}
-          path: /opt/phm-deps/${{ inputs.platform }}
+          path: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}
+
+      - name: Setup dependencies
+        run: |
+          # Copy from temp to /opt for PHP build scripts
+          sudo mkdir -p /opt/phm-deps
+          sudo cp -r "${{ runner.temp }}/phm-deps/${{ inputs.platform }}" /opt/phm-deps/
+          sudo chown -R $USER /opt/phm-deps
 
       - name: Verify dependencies
         run: |
           DEPS_PREFIX="/opt/phm-deps/${{ inputs.platform }}"
-          sudo chown -R $USER /opt/phm-deps
           echo "Verifying dependencies..."
           for lib in libz.a libssl.a libcrypto.a libxml2.a libcurl.a; do
             if [[ -f "${DEPS_PREFIX}/lib/${lib}" ]]; then
