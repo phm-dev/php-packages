@@ -5,6 +5,7 @@
 # License: BSD 3-clause
 #
 # Depends on: libpng, jpeg-turbo
+# Note: Also produces libsharpyuv.a, libwebpdemux.a, libwebpmux.a
 #
 
 set -euo pipefail

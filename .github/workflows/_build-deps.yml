@@ -214,7 +214,7 @@ jobs:
       matrix:
         dep:
           - { name: freetype, script: "11-freetype.sh", libs: "libfreetype.a" }
-          - { name: webp, script: "10-webp.sh", libs: "libwebp.a" }
+          - { name: webp, script: "10-webp.sh", libs: "libwebp.a libwebpdemux.a libwebpmux.a libsharpyuv.a" }
     steps:
       - uses: actions/checkout@v4
 
