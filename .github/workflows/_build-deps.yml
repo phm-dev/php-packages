@@ -177,6 +177,7 @@ jobs:
           chmod +x scripts/deps/*.sh
           export DEPS_PREFIX="${{ runner.temp }}/phm-deps/${{ inputs.platform }}"
           export PLATFORM="${{ inputs.platform }}"
+          export PATH="${DEPS_PREFIX}/bin:$PATH"
 
           ./scripts/deps/${{ matrix.dep.script }}
 
@@ -250,6 +251,7 @@ jobs:
           chmod +x scripts/deps/*.sh
           export DEPS_PREFIX="${{ runner.temp }}/phm-deps/${{ inputs.platform }}"
           export PLATFORM="${{ inputs.platform }}"
+          export PATH="${DEPS_PREFIX}/bin:$PATH"
           ./scripts/deps/11-freetype.sh
 
           mkdir -p "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/freetype/lib"
@@ -327,6 +329,7 @@ jobs:
           chmod +x scripts/deps/*.sh
           export DEPS_PREFIX="${{ runner.temp }}/phm-deps/${{ inputs.platform }}"
           export PLATFORM="${{ inputs.platform }}"
+          export PATH="${DEPS_PREFIX}/bin:$PATH"
           ./scripts/deps/${{ matrix.dep.script }}
 
           mkdir -p "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/lib"
@@ -404,6 +407,7 @@ jobs:
           chmod +x scripts/deps/*.sh
           export DEPS_PREFIX="${{ runner.temp }}/phm-deps/${{ inputs.platform }}"
           export PLATFORM="${{ inputs.platform }}"
+          export PATH="${DEPS_PREFIX}/bin:$PATH"
           ./scripts/deps/${{ matrix.dep.script }}
 
           mkdir -p "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/lib"
@@ -490,6 +494,7 @@ jobs:
           chmod +x scripts/deps/*.sh
           export DEPS_PREFIX="${{ runner.temp }}/phm-deps/${{ inputs.platform }}"
           export PLATFORM="${{ inputs.platform }}"
+          export PATH="${DEPS_PREFIX}/bin:$PATH"
           ./scripts/deps/${{ matrix.dep.script }}
 
           mkdir -p "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/lib"
@@ -568,6 +573,7 @@ jobs:
           chmod +x scripts/deps/*.sh
           export DEPS_PREFIX="${{ runner.temp }}/phm-deps/${{ inputs.platform }}"
           export PLATFORM="${{ inputs.platform }}"
+          export PATH="${DEPS_PREFIX}/bin:$PATH"
           ./scripts/deps/${{ matrix.dep.script }}
 
           mkdir -p "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/lib"
@@ -645,6 +651,7 @@ jobs:
           chmod +x scripts/deps/*.sh
           export DEPS_PREFIX="${{ runner.temp }}/phm-deps/${{ inputs.platform }}"
           export PLATFORM="${{ inputs.platform }}"
+          export PATH="${DEPS_PREFIX}/bin:$PATH"
           ./scripts/deps/${{ matrix.dep.script }}
 
           mkdir -p "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/lib"
