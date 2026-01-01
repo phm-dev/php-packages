@@ -117,7 +117,6 @@ jobs:
         dep:
           - { name: libpng, script: "08-libpng.sh", libs: "libpng.a libpng16.a" }
           - { name: jpeg-turbo, script: "09-jpeg-turbo.sh", libs: "libjpeg.a libturbojpeg.a" }
-          - { name: webp, script: "10-webp.sh", libs: "libwebp.a" }
     steps:
       - uses: actions/checkout@v4
 
@@ -204,21 +203,27 @@ jobs:
           retention-days: 1
 
   # ==========================================================================
-  # Phase 3: Freetype (depends on libpng)
+  # Phase 3: Freetype and Webp (depend on libpng/jpeg-turbo)
   # ==========================================================================
-  phase3-freetype:
-    name: freetype
+  phase3:
+    name: "${{ matrix.dep.name }}"
     needs: phase2
     runs-on: ${{ inputs.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        dep:
+          - { name: freetype, script: "11-freetype.sh", libs: "libfreetype.a" }
+          - { name: webp, script: "10-webp.sh", libs: "libwebp.a" }
     steps:
       - uses: actions/checkout@v4
 
-      - name: Cache freetype
+      - name: Cache ${{ matrix.dep.name }}
         id: cache
         uses: actions/cache@v4
         with:
-          path: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}/freetype
-          key: dep-freetype-${{ inputs.platform }}-${{ hashFiles('scripts/deps/11-freetype.sh') }}
+          path: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}
+          key: dep-${{ matrix.dep.name }}-${{ inputs.platform }}-${{ hashFiles(format('scripts/deps/{0}', matrix.dep.script)) }}
 
       - name: Download artifacts
         if: steps.cache.outputs.cache-hit != 'true' || inputs.force_rebuild == true
@@ -251,18 +256,20 @@ jobs:
         if: steps.cache.outputs.cache-hit != 'true' || inputs.force_rebuild == true
         run: brew install -q autoconf automake pkg-config libtool cmake
 
-      - name: Build freetype
+      - name: Build ${{ matrix.dep.name }}
         if: steps.cache.outputs.cache-hit != 'true' || inputs.force_rebuild == true
         run: |
           chmod +x scripts/deps/*.sh
           export DEPS_PREFIX="${{ runner.temp }}/phm-deps/${{ inputs.platform }}"
           export PLATFORM="${{ inputs.platform }}"
           export PATH="${DEPS_PREFIX}/bin:$PATH"
-          ./scripts/deps/11-freetype.sh
+          ./scripts/deps/${{ matrix.dep.script }}
 
-          mkdir -p "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/freetype/lib"
-          cp "${DEPS_PREFIX}/lib/libfreetype.a" "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/freetype/lib/"
-          cp -r "${DEPS_PREFIX}/include/freetype2" "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/freetype/include/" 2>/dev/null || true
+          mkdir -p "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/lib"
+          for lib in ${{ matrix.dep.libs }}; do
+            [[ -f "${DEPS_PREFIX}/lib/${lib}" ]] && cp "${DEPS_PREFIX}/lib/${lib}" "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/lib/"
+          done
+          cp -r "${DEPS_PREFIX}/include" "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/" 2>/dev/null || true
         env:
           CC: clang
           CXX: clang++
@@ -270,8 +277,8 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: dep-freetype-${{ inputs.platform }}
-          path: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}/freetype
+          name: dep-${{ matrix.dep.name }}-${{ inputs.platform }}
+          path: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}
           retention-days: 1
 
   # ==========================================================================
@@ -612,7 +619,7 @@ jobs:
   # ==========================================================================
   phase8:
     name: "${{ matrix.dep.name }}"
-    needs: phase3-freetype
+    needs: phase3
     runs-on: ${{ inputs.runner }}
     strategy:
       fail-fast: false
@@ -692,7 +699,7 @@ jobs:
   # ==========================================================================
   merge:
     name: Merge all deps
-    needs: [phase1, phase2, phase3-freetype, phase4, phase5, phase6-independent, phase7, phase8]
+    needs: [phase1, phase2, phase3, phase4, phase5, phase6-independent, phase7, phase8]
     runs-on: ${{ inputs.runner }}
     steps:
       - name: Download all artifacts
