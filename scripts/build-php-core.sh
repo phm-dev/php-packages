@@ -85,13 +85,18 @@ log_info "  Building PHP ${PHP_VERSION}"
 log_info "  Platform: ${PLATFORM}"
 log_info "=========================================="
 
-# Cleanup on exit
+# Cleanup on exit (only if successful)
 cleanup() {
-    if [[ -d "$BUILD_DIR" ]]; then
-        log_info "Cleaning up build directory..."
-        rm -rf "$BUILD_DIR"
+    local exit_code=$?
+    if [[ $exit_code -eq 0 ]]; then
+        if [[ -d "$BUILD_DIR" ]]; then
+            log_info "Cleaning up build directory..."
+            rm -rf "$BUILD_DIR"
+        fi
+        rm -f "$BUILD_LOG"
+    else
+        log_warn "Build failed (exit code: $exit_code), keeping build directory for debugging: $BUILD_DIR"
     fi
-    rm -f "$BUILD_LOG"
 }
 trap cleanup EXIT
 

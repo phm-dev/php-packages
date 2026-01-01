@@ -176,38 +176,52 @@ jobs:
           ls -la "${DEPS_PREFIX}/lib/libz.a" 2>&1 || echo "MISSING: libz.a"
 
           echo ""
-          echo "=== Testing fork() compilation ==="
+          echo "=== pkg-config check ==="
+          export PKG_CONFIG_PATH="${DEPS_PREFIX}/lib/pkgconfig"
+          export PKG_CONFIG_LIBDIR="${DEPS_PREFIX}/lib/pkgconfig"
+
+          echo "ICU libs: $(pkg-config --libs icu-uc 2>&1 || echo 'FAILED')"
+          echo "ICU static libs: $(pkg-config --libs --static icu-uc 2>&1 || echo 'FAILED')"
+          echo "libcurl libs: $(pkg-config --libs libcurl 2>&1 || echo 'FAILED')"
+
+          echo ""
+          echo "=== Testing fork() in configure-like scenarios ==="
           cd /tmp
           cat > conftest.c << 'EOF'
           char fork ();
           int main () { return fork (); }
           EOF
 
-          LDFLAGS="-L${DEPS_PREFIX}/lib -lsharpyuv -framework CoreFoundation -framework CoreServices -framework SystemConfiguration"
+          # Test 1: Simple (should always pass)
+          echo "Test 1 (simple): clang conftest.c"
+          clang -o conftest1 conftest.c 2>&1 && echo "✓ PASSED" || echo "✗ FAILED"
 
-          echo "Test with LDFLAGS: $LDFLAGS"
-          clang -o conftest conftest.c $LDFLAGS 2>&1 && echo "✓ fork() test PASSED" || echo "✗ fork() test FAILED"
-
+          # Test 2: With our LDFLAGS (source before flags - our diagnostic style)
           echo ""
-          echo "Test without LDFLAGS:"
-          clang -o conftest2 conftest.c 2>&1 && echo "✓ fork() test PASSED" || echo "✗ fork() test FAILED"
+          echo "Test 2 (source before LDFLAGS):"
+          clang -o conftest2 conftest.c -L${DEPS_PREFIX}/lib -lsharpyuv -framework CoreFoundation -framework CoreServices -framework SystemConfiguration 2>&1 && echo "✓ PASSED" || echo "✗ FAILED"
 
-          rm -f conftest conftest.c conftest2
-
+          # Test 3: Configure style (LDFLAGS before source)
           echo ""
-          echo "=== pkg-config check ==="
-          export PKG_CONFIG_PATH="${DEPS_PREFIX}/lib/pkgconfig"
-          export PKG_CONFIG_LIBDIR="${DEPS_PREFIX}/lib/pkgconfig"
-          pkg-config --variable=pc_path pkg-config || echo "pkg-config path: default"
+          echo "Test 3 (LDFLAGS before source - configure style):"
+          clang -L${DEPS_PREFIX}/lib -lsharpyuv -framework CoreFoundation -framework CoreServices -framework SystemConfiguration conftest.c -o conftest3 2>&1 && echo "✓ PASSED" || echo "✗ FAILED"
 
+          # Test 4: With ICU libs (simulating after intl check)
           echo ""
-          echo "=== ICU pkg-config output ==="
-          pkg-config --libs icu-uc 2>&1 || echo "Failed to get icu-uc flags"
+          echo "Test 4 (with ICU LIBS):"
+          ICU_LIBS=$(pkg-config --libs --static icu-uc 2>/dev/null || echo "-licuuc -licudata")
+          echo "  ICU_LIBS=$ICU_LIBS"
+          clang -L${DEPS_PREFIX}/lib -lsharpyuv -framework CoreFoundation -framework CoreServices -framework SystemConfiguration conftest.c $ICU_LIBS -lstdc++ -o conftest4 2>&1 && echo "✓ PASSED" || echo "✗ FAILED"
 
+          # Test 5: With many static libs (simulating heavy linking)
           echo ""
-          echo "=== Verifying pkgconfig prefix fix ==="
-          head -3 "${DEPS_PREFIX}/lib/pkgconfig/icu-uc.pc" 2>/dev/null || echo "icu-uc.pc not found"
-          head -3 "${DEPS_PREFIX}/lib/pkgconfig/libcurl.pc" 2>/dev/null || echo "libcurl.pc not found"
+          echo "Test 5 (heavy static linking):"
+          clang -L${DEPS_PREFIX}/lib conftest.c -lz -lssl -lcrypto -lxml2 -lsqlite3 \
+            -licuuc -licudata -lstdc++ \
+            -framework CoreFoundation -framework CoreServices -framework SystemConfiguration -framework Security \
+            -o conftest5 2>&1 && echo "✓ PASSED" || echo "✗ FAILED"
+
+          rm -f conftest*
         env:
           CC: clang
           CXX: clang++
@@ -277,17 +291,52 @@ jobs:
         if: failure()
         run: |
           PHP_VERSION="${{ needs.check.outputs.php_version }}"
-          CONFIG_LOG=$(find /tmp -name "config.log" -path "*php-${PHP_VERSION}*" 2>/dev/null | head -1)
-          if [[ -n "$CONFIG_LOG" && -f "$CONFIG_LOG" ]]; then
-            mkdir -p dist/logs
-            cp "$CONFIG_LOG" dist/logs/
-            echo "Saved config.log from: $CONFIG_LOG"
-            echo ""
-            echo "=== Last 200 lines of config.log ==="
-            tail -200 "$CONFIG_LOG"
+
+          # Find all config.log files
+          echo "=== Searching for config.log files ==="
+          find /tmp -name "config.log" 2>/dev/null | head -5
+
+          # Find PHP build directory
+          PHP_BUILD=$(find /tmp -maxdepth 1 -name "php-build-*" -type d 2>/dev/null | head -1)
+          if [[ -n "$PHP_BUILD" ]]; then
+            echo "Found build dir: $PHP_BUILD"
+            ls -la "$PHP_BUILD"
+
+            CONFIG_LOG="${PHP_BUILD}/php-${PHP_VERSION}/config.log"
+            if [[ -f "$CONFIG_LOG" ]]; then
+              mkdir -p dist/logs
+              cp "$CONFIG_LOG" dist/logs/
+              echo "Saved config.log from: $CONFIG_LOG"
+
+              echo ""
+              echo "=== CRITICAL: Fork check details ==="
+              # Get 50 lines around the fork check to see the actual compile command and error
+              grep -n -B 5 -A 50 "checking for fork" "$CONFIG_LOG" || echo "fork check section not found"
+
+              echo ""
+              echo "=== CRITICAL: mprotect check details ==="
+              grep -n -B 5 -A 20 "checking for mprotect" "$CONFIG_LOG" || echo "mprotect check not found"
+
+              echo ""
+              echo "=== LDFLAGS and LIBS values ==="
+              grep -E "^(LDFLAGS|LIBS)=" "$CONFIG_LOG" | tail -20
+
+              echo ""
+              echo "=== Last configure command that failed ==="
+              grep -B 2 "configure: error" "$CONFIG_LOG" | head -20
+
+              echo ""
+              echo "=== Last 150 lines of config.log ==="
+              tail -150 "$CONFIG_LOG"
+            else
+              echo "config.log not found at: $CONFIG_LOG"
+              echo "Contents of build dir:"
+              ls -laR "${PHP_BUILD}/" 2>/dev/null | head -50
+            fi
           else
-            echo "config.log not found"
-            find /tmp -name "config.log" 2>/dev/null || echo "No config.log files found"
+            echo "PHP build directory not found"
+            echo "Looking for any php directories in /tmp:"
+            ls -la /tmp | grep php || echo "None found"
           fi
 
       - name: Upload build logs
