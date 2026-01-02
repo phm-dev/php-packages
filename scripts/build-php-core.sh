@@ -144,10 +144,13 @@ if [[ "$(uname -s)" == "Darwin" ]]; then
     # CRITICAL: LDFLAGS should only contain -L paths and framework flags, NOT libraries (-l flags)
     # Libraries in LDFLAGS appear before object files and get discarded by the linker
     # This breaks autoconf's AC_CHECK_FUNC tests (e.g., fork() check fails)
-    # Libraries like sharpyuv are handled via pkg-config when webp is detected
     export LDFLAGS="-L${DEPS_PREFIX}/lib -framework CoreFoundation -framework CoreServices -framework SystemConfiguration -framework Security"
     export CPPFLAGS="-I${DEPS_PREFIX}/include -I${DEPS_PREFIX}/include/libxml2"
     export CFLAGS="-O2 -I${DEPS_PREFIX}/include -I${DEPS_PREFIX}/include/libxml2"
+
+    # LIBS contains libraries that should be linked AFTER object files
+    # libsharpyuv is required by libwebp but PHP's webp detection doesn't use --static for pkg-config
+    export LIBS="-lsharpyuv"
 
     # All dependency paths point to our static build
     DEPS_DIR="$DEPS_PREFIX"
