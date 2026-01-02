@@ -5,6 +5,7 @@
 # License: BSD 3-clause
 #
 # Depends on: zlib, bzip2, openssl
+# Cache ref: v2 - ensure pkgconfig is included in artifact
 #
 
 set -euo pipefail
