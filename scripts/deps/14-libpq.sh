@@ -11,7 +11,7 @@
 # because libpq depends on these internal libraries, and macOS doesn't have
 # explicit_bzero function.
 #
-# Cache ref: v2 - ensure pkgconfig is included in artifact
+# Cache ref: v3 - ensure bin/pg_config and pkgconfig are included in artifact
 
 set -euo pipefail
 

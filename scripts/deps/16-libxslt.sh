@@ -5,6 +5,7 @@
 # License: MIT
 #
 # Depends on: libxml2
+# Cache ref: v2 - ensure pkgconfig is included in artifact
 #
 
 set -euo pipefail
