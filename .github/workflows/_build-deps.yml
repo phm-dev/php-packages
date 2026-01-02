@@ -38,7 +38,7 @@ jobs:
           - { name: libedit, script: "03-libedit.sh", libs: "libedit.a" }
           - { name: openssl, script: "04-openssl.sh", libs: "libssl.a libcrypto.a" }
           - { name: libiconv, script: "05-libiconv.sh", libs: "libiconv.a" }
-          - { name: icu4c, script: "06-icu4c.sh", libs: "libicuuc.a libicui18n.a" }
+          - { name: icu4c, script: "06-icu4c.sh", libs: "libicuuc.a libicui18n.a libicudata.a libicuio.a" }
           - { name: oniguruma, script: "07-oniguruma.sh", libs: "libonig.a" }
     steps:
       - uses: actions/checkout@v4

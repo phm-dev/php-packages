@@ -4,6 +4,8 @@
 # https://icu.unicode.org/
 # License: ICU License (permissive, similar to MIT)
 #
+# Cache ref: v2 - ensure all static libraries (libicudata 30MB+) are included
+#
 
 set -euo pipefail
 
