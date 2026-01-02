@@ -128,8 +128,18 @@ jobs:
           sudo cp -r "${{ runner.temp }}/phm-deps/${{ inputs.platform }}" /opt/phm-deps/
           sudo chown -R $USER /opt/phm-deps
 
-          # Fix pkgconfig prefix paths - they have hardcoded paths from build time
           DEPS_PREFIX="/opt/phm-deps/${{ inputs.platform }}"
+
+          # Make bin files executable (permissions lost during artifact transfer)
+          if [[ -d "${DEPS_PREFIX}/bin" ]]; then
+            chmod +x "${DEPS_PREFIX}/bin/"* 2>/dev/null || true
+            echo "Bin files:"
+            ls -la "${DEPS_PREFIX}/bin/" | head -10
+          else
+            echo "WARNING: No bin directory found in deps"
+          fi
+
+          # Fix pkgconfig prefix paths - they have hardcoded paths from build time
           echo "Updating pkgconfig prefixes to: ${DEPS_PREFIX}"
           for pc in "${DEPS_PREFIX}/lib/pkgconfig"/*.pc; do
             if [[ -f "$pc" ]]; then
@@ -140,7 +150,15 @@ jobs:
           done
           echo "Updated $(ls "${DEPS_PREFIX}/lib/pkgconfig"/*.pc 2>/dev/null | wc -l) .pc files"
 
-          # Verify the fix worked
+          # Verify pg_config is available
+          if [[ -x "${DEPS_PREFIX}/bin/pg_config" ]]; then
+            echo "pg_config found: ${DEPS_PREFIX}/bin/pg_config"
+            "${DEPS_PREFIX}/bin/pg_config" --version
+          else
+            echo "WARNING: pg_config not found or not executable"
+          fi
+
+          # Verify ICU prefix fix worked
           echo "Checking ICU prefix:"
           grep "^prefix" "${DEPS_PREFIX}/lib/pkgconfig/icu-uc.pc" || echo "icu-uc.pc not found"
 
