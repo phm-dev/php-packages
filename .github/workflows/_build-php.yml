@@ -396,13 +396,13 @@ jobs:
           echo "Packages for PHP ${{ needs.check.outputs.php_version }} (${{ inputs.platform }}):"
           ls -la artifacts/
 
-          MINOR="${{ inputs.php_minor }}"
-          # Check required packages exist
+          VERSION="${{ needs.check.outputs.php_version }}"
+          # Check required packages exist (core packages use full version: php8.5.1-cli, not php8.5-cli)
           for pkg in cli fpm common; do
-            if ls artifacts/php${MINOR}-${pkg}_*.tar.zst 1>/dev/null 2>&1; then
-              echo "  ✓ php${MINOR}-${pkg}"
+            if ls artifacts/php${VERSION}-${pkg}_*.tar.zst 1>/dev/null 2>&1; then
+              echo "  ✓ php${VERSION}-${pkg}"
             else
-              echo "  ✗ php${MINOR}-${pkg} MISSING" && exit 1
+              echo "  ✗ php${VERSION}-${pkg} MISSING" && exit 1
             fi
           done
 
