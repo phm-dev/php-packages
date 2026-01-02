@@ -5,6 +5,9 @@
 # License: zlib (permissive)
 #
 
+# Cache ref: v2 - ensure pkgconfig is included in artifact
+#
+
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

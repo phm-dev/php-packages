@@ -1,0 +1,777 @@
+name: Build Dependencies (Reusable)
+
+on:
+  workflow_call:
+    inputs:
+      platform:
+        description: 'Target platform (darwin-arm64 or darwin-amd64)'
+        required: true
+        type: string
+      runner:
+        description: 'GitHub Actions runner'
+        required: true
+        type: string
+      force_rebuild:
+        description: 'Force rebuild even if cached'
+        required: false
+        type: boolean
+        default: false
+
+env:
+  HOMEBREW_NO_AUTO_UPDATE: 1
+  HOMEBREW_NO_INSTALL_CLEANUP: 1
+  HOMEBREW_NO_ENV_HINTS: 1
+
+jobs:
+  # ==========================================================================
+  # Phase 1: Base libraries (no dependencies on each other)
+  # ==========================================================================
+  phase1:
+    name: "${{ matrix.dep.name }}"
+    runs-on: ${{ inputs.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        dep:
+          - { name: zlib, script: "01-zlib.sh", libs: "libz.a" }
+          - { name: bzip2, script: "02-bzip2.sh", libs: "libbz2.a" }
+          - { name: libedit, script: "03-libedit.sh", libs: "libedit.a" }
+          - { name: openssl, script: "04-openssl.sh", libs: "libssl.a libcrypto.a" }
+          - { name: libiconv, script: "05-libiconv.sh", libs: "libiconv.a" }
+          - { name: icu4c, script: "06-icu4c.sh", libs: "libicuuc.a libicui18n.a libicudata.a libicuio.a" }
+          - { name: oniguruma, script: "07-oniguruma.sh", libs: "libonig.a" }
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache ${{ matrix.dep.name }}
+        id: cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}
+          key: dep-${{ matrix.dep.name }}-${{ inputs.platform }}-${{ hashFiles(format('scripts/deps/{0}', matrix.dep.script)) }}
+
+      - name: Skip (cached)
+        if: steps.cache.outputs.cache-hit == 'true' && inputs.force_rebuild != true
+        run: echo "✓ ${{ matrix.dep.name }} restored from cache"
+
+      - name: Install build tools
+        if: steps.cache.outputs.cache-hit != 'true' || inputs.force_rebuild == true
+        run: brew install -q autoconf automake pkg-config libtool cmake
+
+      - name: Build ${{ matrix.dep.name }}
+        if: steps.cache.outputs.cache-hit != 'true' || inputs.force_rebuild == true
+        run: |
+          chmod +x scripts/deps/*.sh
+          mkdir -p "${{ runner.temp }}/phm-deps/${{ inputs.platform }}"
+
+          # Build to temp location, then copy to per-dep cache
+          export DEPS_PREFIX="${{ runner.temp }}/phm-deps/${{ inputs.platform }}"
+          export PLATFORM="${{ inputs.platform }}"
+
+          ./scripts/deps/${{ matrix.dep.script }}
+
+          # Copy built files to per-dep directory for caching
+          mkdir -p "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}"
+
+          # Copy libs
+          for lib in ${{ matrix.dep.libs }}; do
+            if [[ -f "${DEPS_PREFIX}/lib/${lib}" ]]; then
+              mkdir -p "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/lib"
+              cp "${DEPS_PREFIX}/lib/${lib}" "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/lib/"
+            fi
+          done
+
+          # Copy includes and pkgconfig
+          if [[ -d "${DEPS_PREFIX}/include" ]]; then
+            cp -r "${DEPS_PREFIX}/include" "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/" 2>/dev/null || true
+          fi
+          if [[ -d "${DEPS_PREFIX}/lib/pkgconfig" ]]; then
+            mkdir -p "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/lib"
+            cp -r "${DEPS_PREFIX}/lib/pkgconfig" "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/lib/" 2>/dev/null || true
+          fi
+          # Copy bin (for things like xml2-config)
+          if [[ -d "${DEPS_PREFIX}/bin" ]]; then
+            cp -r "${DEPS_PREFIX}/bin" "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/" 2>/dev/null || true
+          fi
+        env:
+          CC: clang
+          CXX: clang++
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dep-${{ matrix.dep.name }}-${{ inputs.platform }}
+          path: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}
+          retention-days: 1
+
+  # ==========================================================================
+  # Phase 2: Image libraries (depend on zlib)
+  # ==========================================================================
+  phase2:
+    name: "${{ matrix.dep.name }}"
+    needs: phase1
+    runs-on: ${{ inputs.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        dep:
+          - { name: libpng, script: "08-libpng.sh", libs: "libpng.a libpng16.a" }
+          - { name: jpeg-turbo, script: "09-jpeg-turbo.sh", libs: "libjpeg.a libturbojpeg.a" }
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache ${{ matrix.dep.name }}
+        id: cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}
+          key: dep-${{ matrix.dep.name }}-${{ inputs.platform }}-${{ hashFiles(format('scripts/deps/{0}', matrix.dep.script)) }}
+
+      - name: Download phase1 artifacts
+        if: steps.cache.outputs.cache-hit != 'true' || inputs.force_rebuild == true
+        uses: actions/download-artifact@v4
+        with:
+          pattern: dep-*-${{ inputs.platform }}
+          path: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}-parts
+          merge-multiple: false
+
+      - name: Merge dependencies
+        if: steps.cache.outputs.cache-hit != 'true' || inputs.force_rebuild == true
+        run: |
+          echo "=== Downloaded artifacts structure ==="
+          ls -la "${{ runner.temp }}/phm-deps/${{ inputs.platform }}-parts/" || echo "Parts dir doesn't exist"
+          for d in "${{ runner.temp }}/phm-deps/${{ inputs.platform }}-parts"/*; do
+            echo "--- $d ---"
+            ls -la "$d" 2>/dev/null || true
+            ls -la "$d/lib" 2>/dev/null || true
+          done
+
+          mkdir -p "${{ runner.temp }}/phm-deps/${{ inputs.platform }}"/{lib/pkgconfig,include,bin,licenses}
+
+          for part in ${{ runner.temp }}/phm-deps/${{ inputs.platform }}-parts/dep-*; do
+            [[ -d "$part" ]] || continue
+            echo "Copying from: $part"
+            cp -a "$part"/lib/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/lib/" 2>&1 || echo "  No lib/ to copy"
+            cp -a "$part"/include/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/include/" 2>&1 || echo "  No include/ to copy"
+            cp -a "$part"/bin/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/bin/" 2>&1 || echo "  No bin/ to copy"
+          done
+
+          # Make bin files executable (artifacts don't preserve permissions)
+          chmod +x "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/bin/"* 2>/dev/null || true
+
+          echo "=== Final merged lib/ ==="
+          ls -la "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/lib/" || echo "lib/ empty"
+
+          # Create marker files for downloaded deps (needed by is_built() checks)
+          for part in ${{ runner.temp }}/phm-deps/${{ inputs.platform }}-parts/dep-*; do
+            [[ -d "$part" ]] || continue
+            name=$(basename "$part" | sed 's/dep-//;s/-${{ inputs.platform }}//')
+            echo "1.0" > "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/.built-${name}"
+            echo "  Created marker: .built-${name}"
+          done
+
+      - name: Install build tools
+        if: steps.cache.outputs.cache-hit != 'true' || inputs.force_rebuild == true
+        run: brew install -q autoconf automake pkg-config libtool cmake
+
+      - name: Build ${{ matrix.dep.name }}
+        if: steps.cache.outputs.cache-hit != 'true' || inputs.force_rebuild == true
+        run: |
+          chmod +x scripts/deps/*.sh
+          export DEPS_PREFIX="${{ runner.temp }}/phm-deps/${{ inputs.platform }}"
+          export PLATFORM="${{ inputs.platform }}"
+          export PATH="${DEPS_PREFIX}/bin:$PATH"
+
+          ./scripts/deps/${{ matrix.dep.script }}
+
+          mkdir -p "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/lib"
+          for lib in ${{ matrix.dep.libs }}; do
+            [[ -f "${DEPS_PREFIX}/lib/${lib}" ]] && cp "${DEPS_PREFIX}/lib/${lib}" "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/lib/"
+          done
+          cp -r "${DEPS_PREFIX}/include" "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/" 2>/dev/null || true
+          cp -r "${DEPS_PREFIX}/bin" "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/" 2>/dev/null || true
+          if [[ -d "${DEPS_PREFIX}/lib/pkgconfig" ]]; then
+            mkdir -p "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/lib/pkgconfig"
+            cp -r "${DEPS_PREFIX}/lib/pkgconfig"/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/lib/pkgconfig/" 2>/dev/null || true
+          fi
+        env:
+          CC: clang
+          CXX: clang++
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dep-${{ matrix.dep.name }}-${{ inputs.platform }}
+          path: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}
+          retention-days: 1
+
+  # ==========================================================================
+  # Phase 3: Freetype and Webp (depend on libpng/jpeg-turbo)
+  # ==========================================================================
+  phase3:
+    name: "${{ matrix.dep.name }}"
+    needs: phase2
+    runs-on: ${{ inputs.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        dep:
+          - { name: freetype, script: "11-freetype.sh", libs: "libfreetype.a" }
+          - { name: webp, script: "10-webp.sh", libs: "libwebp.a libwebpdemux.a libwebpmux.a libsharpyuv.a" }
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache ${{ matrix.dep.name }}
+        id: cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}
+          key: dep-${{ matrix.dep.name }}-${{ inputs.platform }}-${{ hashFiles(format('scripts/deps/{0}', matrix.dep.script)) }}
+
+      - name: Download artifacts
+        if: steps.cache.outputs.cache-hit != 'true' || inputs.force_rebuild == true
+        uses: actions/download-artifact@v4
+        with:
+          pattern: dep-*-${{ inputs.platform }}
+          path: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}-parts
+          merge-multiple: false
+
+      - name: Merge dependencies
+        if: steps.cache.outputs.cache-hit != 'true' || inputs.force_rebuild == true
+        run: |
+          mkdir -p "${{ runner.temp }}/phm-deps/${{ inputs.platform }}"/{lib/pkgconfig,include,bin,licenses}
+          for part in ${{ runner.temp }}/phm-deps/${{ inputs.platform }}-parts/dep-*; do
+            [[ -d "$part" ]] || continue
+            cp -a "$part"/lib/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/lib/" 2>/dev/null || true
+            cp -a "$part"/include/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/include/" 2>/dev/null || true
+            cp -a "$part"/bin/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/bin/" 2>/dev/null || true
+          done
+          # Make bin files executable (artifacts don't preserve permissions)
+          chmod +x "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/bin/"* 2>/dev/null || true
+          # Create marker files for downloaded deps
+          for part in ${{ runner.temp }}/phm-deps/${{ inputs.platform }}-parts/dep-*; do
+            [[ -d "$part" ]] || continue
+            name=$(basename "$part" | sed 's/dep-//;s/-${{ inputs.platform }}//')
+            echo "1.0" > "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/.built-${name}"
+          done
+
+      - name: Install build tools
+        if: steps.cache.outputs.cache-hit != 'true' || inputs.force_rebuild == true
+        run: brew install -q autoconf automake pkg-config libtool cmake
+
+      - name: Build ${{ matrix.dep.name }}
+        if: steps.cache.outputs.cache-hit != 'true' || inputs.force_rebuild == true
+        run: |
+          chmod +x scripts/deps/*.sh
+          export DEPS_PREFIX="${{ runner.temp }}/phm-deps/${{ inputs.platform }}"
+          export PLATFORM="${{ inputs.platform }}"
+          export PATH="${DEPS_PREFIX}/bin:$PATH"
+          ./scripts/deps/${{ matrix.dep.script }}
+
+          mkdir -p "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/lib"
+          for lib in ${{ matrix.dep.libs }}; do
+            [[ -f "${DEPS_PREFIX}/lib/${lib}" ]] && cp "${DEPS_PREFIX}/lib/${lib}" "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/lib/"
+          done
+          cp -r "${DEPS_PREFIX}/include" "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/" 2>/dev/null || true
+          cp -r "${DEPS_PREFIX}/bin" "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/" 2>/dev/null || true
+          if [[ -d "${DEPS_PREFIX}/lib/pkgconfig" ]]; then
+            mkdir -p "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/lib/pkgconfig"
+            cp -r "${DEPS_PREFIX}/lib/pkgconfig"/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/lib/pkgconfig/" 2>/dev/null || true
+          fi
+        env:
+          CC: clang
+          CXX: clang++
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dep-${{ matrix.dep.name }}-${{ inputs.platform }}
+          path: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}
+          retention-days: 1
+
+  # ==========================================================================
+  # Phase 4: Core libraries
+  # ==========================================================================
+  phase4:
+    name: "${{ matrix.dep.name }}"
+    needs: phase1
+    runs-on: ${{ inputs.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        dep:
+          - { name: libsodium, script: "12-libsodium.sh", libs: "libsodium.a" }
+          - { name: libzip, script: "13-libzip.sh", libs: "libzip.a" }
+          - { name: libpq, script: "14-libpq.sh", libs: "libpq.a" }
+          - { name: libxml2, script: "15-libxml2.sh", libs: "libxml2.a" }
+          - { name: sqlite, script: "18-sqlite.sh", libs: "libsqlite3.a" }
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache ${{ matrix.dep.name }}
+        id: cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}
+          key: dep-${{ matrix.dep.name }}-${{ inputs.platform }}-${{ hashFiles(format('scripts/deps/{0}', matrix.dep.script)) }}
+
+      - name: Download phase1 artifacts
+        if: steps.cache.outputs.cache-hit != 'true' || inputs.force_rebuild == true
+        uses: actions/download-artifact@v4
+        with:
+          pattern: dep-*-${{ inputs.platform }}
+          path: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}-parts
+          merge-multiple: false
+
+      - name: Merge dependencies
+        if: steps.cache.outputs.cache-hit != 'true' || inputs.force_rebuild == true
+        run: |
+          mkdir -p "${{ runner.temp }}/phm-deps/${{ inputs.platform }}"/{lib/pkgconfig,include,bin,licenses}
+          for part in ${{ runner.temp }}/phm-deps/${{ inputs.platform }}-parts/dep-*; do
+            [[ -d "$part" ]] || continue
+            cp -a "$part"/lib/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/lib/" 2>/dev/null || true
+            cp -a "$part"/include/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/include/" 2>/dev/null || true
+            cp -a "$part"/bin/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/bin/" 2>/dev/null || true
+          done
+          # Make bin files executable (artifacts don't preserve permissions)
+          chmod +x "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/bin/"* 2>/dev/null || true
+          # Create marker files for downloaded deps
+          for part in ${{ runner.temp }}/phm-deps/${{ inputs.platform }}-parts/dep-*; do
+            [[ -d "$part" ]] || continue
+            name=$(basename "$part" | sed 's/dep-//;s/-${{ inputs.platform }}//')
+            echo "1.0" > "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/.built-${name}"
+          done
+
+      - name: Install build tools
+        if: steps.cache.outputs.cache-hit != 'true' || inputs.force_rebuild == true
+        run: brew install -q autoconf automake pkg-config libtool cmake
+
+      - name: Build ${{ matrix.dep.name }}
+        if: steps.cache.outputs.cache-hit != 'true' || inputs.force_rebuild == true
+        run: |
+          chmod +x scripts/deps/*.sh
+          export DEPS_PREFIX="${{ runner.temp }}/phm-deps/${{ inputs.platform }}"
+          export PLATFORM="${{ inputs.platform }}"
+          export PATH="${DEPS_PREFIX}/bin:$PATH"
+          ./scripts/deps/${{ matrix.dep.script }}
+
+          mkdir -p "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/lib"
+          for lib in ${{ matrix.dep.libs }}; do
+            [[ -f "${DEPS_PREFIX}/lib/${lib}" ]] && cp "${DEPS_PREFIX}/lib/${lib}" "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/lib/"
+          done
+          cp -r "${DEPS_PREFIX}/include" "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/" 2>/dev/null || true
+          cp -r "${DEPS_PREFIX}/bin" "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/" 2>/dev/null || true
+          if [[ -d "${DEPS_PREFIX}/lib/pkgconfig" ]]; then
+            mkdir -p "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/lib/pkgconfig"
+            cp -r "${DEPS_PREFIX}/lib/pkgconfig"/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/lib/pkgconfig/" 2>/dev/null || true
+          fi
+        env:
+          CC: clang
+          CXX: clang++
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dep-${{ matrix.dep.name }}-${{ inputs.platform }}
+          path: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}
+          retention-days: 1
+
+  # ==========================================================================
+  # Phase 5: XML/Network (depends on libxml2, openssl)
+  # ==========================================================================
+  phase5:
+    name: "${{ matrix.dep.name }}"
+    needs: phase4
+    runs-on: ${{ inputs.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        dep:
+          - { name: libxslt, script: "16-libxslt.sh", libs: "libxslt.a libexslt.a" }
+          - { name: curl, script: "17-curl.sh", libs: "libcurl.a" }
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache ${{ matrix.dep.name }}
+        id: cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}
+          key: dep-${{ matrix.dep.name }}-${{ inputs.platform }}-${{ hashFiles(format('scripts/deps/{0}', matrix.dep.script)) }}
+
+      - name: Download artifacts
+        if: steps.cache.outputs.cache-hit != 'true' || inputs.force_rebuild == true
+        uses: actions/download-artifact@v4
+        with:
+          pattern: dep-*-${{ inputs.platform }}
+          path: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}-parts
+          merge-multiple: false
+
+      - name: Merge dependencies
+        if: steps.cache.outputs.cache-hit != 'true' || inputs.force_rebuild == true
+        run: |
+          mkdir -p "${{ runner.temp }}/phm-deps/${{ inputs.platform }}"/{lib/pkgconfig,include,bin,licenses}
+          for part in ${{ runner.temp }}/phm-deps/${{ inputs.platform }}-parts/dep-*; do
+            [[ -d "$part" ]] || continue
+            cp -a "$part"/lib/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/lib/" 2>/dev/null || true
+            cp -a "$part"/include/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/include/" 2>/dev/null || true
+            cp -a "$part"/bin/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/bin/" 2>/dev/null || true
+          done
+          # Make bin files executable (artifacts don't preserve permissions)
+          chmod +x "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/bin/"* 2>/dev/null || true
+          # Create marker files for downloaded deps
+          for part in ${{ runner.temp }}/phm-deps/${{ inputs.platform }}-parts/dep-*; do
+            [[ -d "$part" ]] || continue
+            name=$(basename "$part" | sed 's/dep-//;s/-${{ inputs.platform }}//')
+            echo "1.0" > "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/.built-${name}"
+          done
+
+      - name: Install build tools
+        if: steps.cache.outputs.cache-hit != 'true' || inputs.force_rebuild == true
+        run: brew install -q autoconf automake pkg-config libtool cmake
+
+      - name: Build ${{ matrix.dep.name }}
+        if: steps.cache.outputs.cache-hit != 'true' || inputs.force_rebuild == true
+        run: |
+          chmod +x scripts/deps/*.sh
+          export DEPS_PREFIX="${{ runner.temp }}/phm-deps/${{ inputs.platform }}"
+          export PLATFORM="${{ inputs.platform }}"
+          export PATH="${DEPS_PREFIX}/bin:$PATH"
+          ./scripts/deps/${{ matrix.dep.script }}
+
+          mkdir -p "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/lib"
+          for lib in ${{ matrix.dep.libs }}; do
+            [[ -f "${DEPS_PREFIX}/lib/${lib}" ]] && cp "${DEPS_PREFIX}/lib/${lib}" "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/lib/"
+          done
+          cp -r "${DEPS_PREFIX}/include" "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/" 2>/dev/null || true
+          cp -r "${DEPS_PREFIX}/bin" "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/" 2>/dev/null || true
+          if [[ -d "${DEPS_PREFIX}/lib/pkgconfig" ]]; then
+            mkdir -p "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/lib/pkgconfig"
+            cp -r "${DEPS_PREFIX}/lib/pkgconfig"/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/lib/pkgconfig/" 2>/dev/null || true
+          fi
+        env:
+          CC: clang
+          CXX: clang++
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dep-${{ matrix.dep.name }}-${{ inputs.platform }}
+          path: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}
+          retention-days: 1
+
+  # ==========================================================================
+  # Phase 6: Extension dependencies (independent)
+  # ==========================================================================
+  phase6-independent:
+    name: "${{ matrix.dep.name }}"
+    needs: phase1
+    runs-on: ${{ inputs.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        dep:
+          - { name: rabbitmq-c, script: "19-rabbitmq-c.sh", libs: "librabbitmq.a" }
+          - { name: libevent, script: "20-libevent.sh", libs: "libevent.a libevent_core.a libevent_pthreads.a libevent_extra.a libevent_openssl.a" }
+          - { name: zstd, script: "23-zstd.sh", libs: "libzstd.a" }
+          - { name: ossp-uuid, script: "24-ossp-uuid.sh", libs: "libuuid.a" }
+          - { name: libyaml, script: "25-libyaml.sh", libs: "libyaml.a" }
+          - { name: lz4, script: "26-lz4.sh", libs: "liblz4.a" }
+          - { name: libmaxminddb, script: "28-libmaxminddb.sh", libs: "libmaxminddb.a" }
+          - { name: lua, script: "30-lua.sh", libs: "liblua.a" }
+          - { name: libev, script: "32-libev.sh", libs: "libev.a" }
+          - { name: libssh2, script: "33-libssh2.sh", libs: "libssh2.a" }
+          - { name: libmcrypt, script: "34-libmcrypt.sh", libs: "libmcrypt.a" }
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache ${{ matrix.dep.name }}
+        id: cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}
+          key: dep-${{ matrix.dep.name }}-${{ inputs.platform }}-${{ hashFiles(format('scripts/deps/{0}', matrix.dep.script)) }}
+
+      - name: Download phase1 artifacts
+        if: steps.cache.outputs.cache-hit != 'true' || inputs.force_rebuild == true
+        uses: actions/download-artifact@v4
+        with:
+          pattern: dep-*-${{ inputs.platform }}
+          path: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}-parts
+          merge-multiple: false
+
+      - name: Merge dependencies
+        if: steps.cache.outputs.cache-hit != 'true' || inputs.force_rebuild == true
+        run: |
+          mkdir -p "${{ runner.temp }}/phm-deps/${{ inputs.platform }}"/{lib/pkgconfig,include,bin,licenses}
+          for part in ${{ runner.temp }}/phm-deps/${{ inputs.platform }}-parts/dep-*; do
+            [[ -d "$part" ]] || continue
+            cp -a "$part"/lib/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/lib/" 2>/dev/null || true
+            cp -a "$part"/include/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/include/" 2>/dev/null || true
+            cp -a "$part"/bin/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/bin/" 2>/dev/null || true
+          done
+          # Make bin files executable (artifacts don't preserve permissions)
+          chmod +x "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/bin/"* 2>/dev/null || true
+          # Create marker files for downloaded deps
+          for part in ${{ runner.temp }}/phm-deps/${{ inputs.platform }}-parts/dep-*; do
+            [[ -d "$part" ]] || continue
+            name=$(basename "$part" | sed 's/dep-//;s/-${{ inputs.platform }}//')
+            echo "1.0" > "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/.built-${name}"
+          done
+
+      - name: Install build tools
+        if: steps.cache.outputs.cache-hit != 'true' || inputs.force_rebuild == true
+        run: brew install -q autoconf automake pkg-config libtool cmake
+
+      - name: Build ${{ matrix.dep.name }}
+        if: steps.cache.outputs.cache-hit != 'true' || inputs.force_rebuild == true
+        run: |
+          chmod +x scripts/deps/*.sh
+          export DEPS_PREFIX="${{ runner.temp }}/phm-deps/${{ inputs.platform }}"
+          export PLATFORM="${{ inputs.platform }}"
+          export PATH="${DEPS_PREFIX}/bin:$PATH"
+          ./scripts/deps/${{ matrix.dep.script }}
+
+          mkdir -p "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/lib"
+          for lib in ${{ matrix.dep.libs }}; do
+            [[ -f "${DEPS_PREFIX}/lib/${lib}" ]] && cp "${DEPS_PREFIX}/lib/${lib}" "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/lib/"
+          done
+          cp -r "${DEPS_PREFIX}/include" "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/" 2>/dev/null || true
+          cp -r "${DEPS_PREFIX}/bin" "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/" 2>/dev/null || true
+          if [[ -d "${DEPS_PREFIX}/lib/pkgconfig" ]]; then
+            mkdir -p "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/lib/pkgconfig"
+            cp -r "${DEPS_PREFIX}/lib/pkgconfig"/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/lib/pkgconfig/" 2>/dev/null || true
+          fi
+        env:
+          CC: clang
+          CXX: clang++
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dep-${{ matrix.dep.name }}-${{ inputs.platform }}
+          path: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}
+          retention-days: 1
+
+  # ==========================================================================
+  # Phase 7: Extension deps (depend on libevent)
+  # ==========================================================================
+  phase7:
+    name: "${{ matrix.dep.name }}"
+    needs: phase6-independent
+    runs-on: ${{ inputs.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        dep:
+          - { name: libmemcached, script: "21-libmemcached.sh", libs: "libmemcached.a" }
+          - { name: librdkafka, script: "27-librdkafka.sh", libs: "librdkafka.a" }
+          - { name: libgearman, script: "31-libgearman.sh", libs: "libgearman.a" }
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache ${{ matrix.dep.name }}
+        id: cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}
+          key: dep-${{ matrix.dep.name }}-${{ inputs.platform }}-${{ hashFiles(format('scripts/deps/{0}', matrix.dep.script)) }}
+
+      - name: Download artifacts
+        if: steps.cache.outputs.cache-hit != 'true' || inputs.force_rebuild == true
+        uses: actions/download-artifact@v4
+        with:
+          pattern: dep-*-${{ inputs.platform }}
+          path: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}-parts
+          merge-multiple: false
+
+      - name: Merge dependencies
+        if: steps.cache.outputs.cache-hit != 'true' || inputs.force_rebuild == true
+        run: |
+          mkdir -p "${{ runner.temp }}/phm-deps/${{ inputs.platform }}"/{lib/pkgconfig,include,bin,licenses}
+          for part in ${{ runner.temp }}/phm-deps/${{ inputs.platform }}-parts/dep-*; do
+            [[ -d "$part" ]] || continue
+            cp -a "$part"/lib/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/lib/" 2>/dev/null || true
+            cp -a "$part"/include/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/include/" 2>/dev/null || true
+            cp -a "$part"/bin/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/bin/" 2>/dev/null || true
+          done
+          # Make bin files executable (artifacts don't preserve permissions)
+          chmod +x "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/bin/"* 2>/dev/null || true
+          # Create marker files for downloaded deps
+          for part in ${{ runner.temp }}/phm-deps/${{ inputs.platform }}-parts/dep-*; do
+            [[ -d "$part" ]] || continue
+            name=$(basename "$part" | sed 's/dep-//;s/-${{ inputs.platform }}//')
+            echo "1.0" > "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/.built-${name}"
+          done
+
+      - name: Install build tools
+        if: steps.cache.outputs.cache-hit != 'true' || inputs.force_rebuild == true
+        run: brew install -q autoconf automake pkg-config libtool cmake
+
+      - name: Build ${{ matrix.dep.name }}
+        if: steps.cache.outputs.cache-hit != 'true' || inputs.force_rebuild == true
+        run: |
+          chmod +x scripts/deps/*.sh
+          export DEPS_PREFIX="${{ runner.temp }}/phm-deps/${{ inputs.platform }}"
+          export PLATFORM="${{ inputs.platform }}"
+          export PATH="${DEPS_PREFIX}/bin:$PATH"
+          ./scripts/deps/${{ matrix.dep.script }}
+
+          mkdir -p "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/lib"
+          for lib in ${{ matrix.dep.libs }}; do
+            [[ -f "${DEPS_PREFIX}/lib/${lib}" ]] && cp "${DEPS_PREFIX}/lib/${lib}" "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/lib/"
+          done
+          cp -r "${DEPS_PREFIX}/include" "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/" 2>/dev/null || true
+          cp -r "${DEPS_PREFIX}/bin" "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/" 2>/dev/null || true
+          if [[ -d "${DEPS_PREFIX}/lib/pkgconfig" ]]; then
+            mkdir -p "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/lib/pkgconfig"
+            cp -r "${DEPS_PREFIX}/lib/pkgconfig"/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/lib/pkgconfig/" 2>/dev/null || true
+          fi
+        env:
+          CC: clang
+          CXX: clang++
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dep-${{ matrix.dep.name }}-${{ inputs.platform }}
+          path: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}
+          retention-days: 1
+
+  # ==========================================================================
+  # Phase 8: ImageMagick & GraphicsMagick (depend on freetype, libpng, jpeg)
+  # ==========================================================================
+  phase8:
+    name: "${{ matrix.dep.name }}"
+    needs: phase3
+    runs-on: ${{ inputs.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        dep:
+          - { name: imagemagick, script: "22-imagemagick.sh", libs: "libMagickCore-7.Q16HDRI.a libMagickWand-7.Q16HDRI.a" }
+          - { name: graphicsmagick, script: "29-graphicsmagick.sh", libs: "libGraphicsMagick.a" }
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache ${{ matrix.dep.name }}
+        id: cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}
+          key: dep-${{ matrix.dep.name }}-${{ inputs.platform }}-${{ hashFiles(format('scripts/deps/{0}', matrix.dep.script)) }}
+
+      - name: Download artifacts
+        if: steps.cache.outputs.cache-hit != 'true' || inputs.force_rebuild == true
+        uses: actions/download-artifact@v4
+        with:
+          pattern: dep-*-${{ inputs.platform }}
+          path: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}-parts
+          merge-multiple: false
+
+      - name: Merge dependencies
+        if: steps.cache.outputs.cache-hit != 'true' || inputs.force_rebuild == true
+        run: |
+          mkdir -p "${{ runner.temp }}/phm-deps/${{ inputs.platform }}"/{lib/pkgconfig,include,bin,licenses}
+          for part in ${{ runner.temp }}/phm-deps/${{ inputs.platform }}-parts/dep-*; do
+            [[ -d "$part" ]] || continue
+            cp -a "$part"/lib/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/lib/" 2>/dev/null || true
+            cp -a "$part"/include/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/include/" 2>/dev/null || true
+            cp -a "$part"/bin/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/bin/" 2>/dev/null || true
+          done
+          # Make bin files executable (artifacts don't preserve permissions)
+          chmod +x "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/bin/"* 2>/dev/null || true
+          # Create marker files for downloaded deps
+          for part in ${{ runner.temp }}/phm-deps/${{ inputs.platform }}-parts/dep-*; do
+            [[ -d "$part" ]] || continue
+            name=$(basename "$part" | sed 's/dep-//;s/-${{ inputs.platform }}//')
+            echo "1.0" > "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/.built-${name}"
+          done
+
+      - name: Install build tools
+        if: steps.cache.outputs.cache-hit != 'true' || inputs.force_rebuild == true
+        run: brew install -q autoconf automake pkg-config libtool cmake
+
+      - name: Build ${{ matrix.dep.name }}
+        if: steps.cache.outputs.cache-hit != 'true' || inputs.force_rebuild == true
+        run: |
+          chmod +x scripts/deps/*.sh
+          export DEPS_PREFIX="${{ runner.temp }}/phm-deps/${{ inputs.platform }}"
+          export PLATFORM="${{ inputs.platform }}"
+          export PATH="${DEPS_PREFIX}/bin:$PATH"
+          ./scripts/deps/${{ matrix.dep.script }}
+
+          mkdir -p "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/lib"
+          for lib in ${{ matrix.dep.libs }}; do
+            [[ -f "${DEPS_PREFIX}/lib/${lib}" ]] && cp "${DEPS_PREFIX}/lib/${lib}" "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/lib/"
+          done
+          cp -r "${DEPS_PREFIX}/include" "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/" 2>/dev/null || true
+          cp -r "${DEPS_PREFIX}/bin" "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/" 2>/dev/null || true
+          if [[ -d "${DEPS_PREFIX}/lib/pkgconfig" ]]; then
+            mkdir -p "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/lib/pkgconfig"
+            cp -r "${DEPS_PREFIX}/lib/pkgconfig"/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/lib/pkgconfig/" 2>/dev/null || true
+          fi
+        env:
+          CC: clang
+          CXX: clang++
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dep-${{ matrix.dep.name }}-${{ inputs.platform }}
+          path: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}
+          retention-days: 1
+
+  # ==========================================================================
+  # Final: Merge all dependencies
+  # ==========================================================================
+  merge:
+    name: Merge all deps
+    needs: [phase1, phase2, phase3, phase4, phase5, phase6-independent, phase7, phase8]
+    runs-on: ${{ inputs.runner }}
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: dep-*-${{ inputs.platform }}
+          path: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}-parts
+          merge-multiple: false
+
+      - name: Merge into final directory
+        run: |
+          mkdir -p "${{ runner.temp }}/phm-deps/${{ inputs.platform }}"/{lib/pkgconfig,include,bin,licenses}
+
+          echo "Merging dependencies..."
+          for part in ${{ runner.temp }}/phm-deps/${{ inputs.platform }}-parts/dep-*; do
+            name=$(basename "$part" | sed 's/dep-//;s/-${{ inputs.platform }}//')
+            echo "  ← $name"
+            cp -a "$part"/lib/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/lib/" 2>/dev/null || true
+            cp -a "$part"/include/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/include/" 2>/dev/null || true
+            cp -a "$part"/bin/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/bin/" 2>/dev/null || true
+          done
+
+          # Make bin files executable (artifacts don't preserve permissions)
+          chmod +x "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/bin/"* 2>/dev/null || true
+
+          echo ""
+          echo "Libraries:"
+          ls "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/lib/"*.a | wc -l | xargs echo "  Total:"
+
+      - name: Upload merged deps
+        uses: actions/upload-artifact@v4
+        with:
+          name: deps-${{ inputs.platform }}
+          path: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}
+          retention-days: 7
+
+      - name: Verify core libraries
+        run: |
+          PREFIX="${{ runner.temp }}/phm-deps/${{ inputs.platform }}"
+          echo "Verifying core libraries..."
+          for lib in libz.a libssl.a libcrypto.a libedit.a libxml2.a libcurl.a libsqlite3.a libpq.a; do
+            if [[ -f "${PREFIX}/lib/${lib}" ]]; then
+              echo "  ✓ ${lib}"
+            else
+              echo "  ✗ ${lib} MISSING" && exit 1
+            fi
+          done

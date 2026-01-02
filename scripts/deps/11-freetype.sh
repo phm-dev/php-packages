@@ -5,7 +5,9 @@
 # License: FreeType License (BSD-style) or GPL2
 #
 # Depends on: zlib, bzip2, libpng
+# Pkgconfig: freetype2.pc
 #
+# Cache ref: v2 - ensure pkgconfig is included in artifact
 
 set -euo pipefail
 

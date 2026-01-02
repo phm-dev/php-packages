@@ -1,0 +1,454 @@
+name: Build PHP (Reusable)
+
+on:
+  workflow_call:
+    inputs:
+      php_minor:
+        description: 'PHP minor version (e.g., 8.5)'
+        required: true
+        type: string
+      platform:
+        description: 'Target platform (darwin-arm64 or darwin-amd64)'
+        required: true
+        type: string
+      runner:
+        description: 'GitHub Actions runner'
+        required: true
+        type: string
+      force_build:
+        description: 'Force build even if version unchanged'
+        required: false
+        type: boolean
+        default: false
+      force_rebuild_deps:
+        description: 'Force rebuild dependencies'
+        required: false
+        type: boolean
+        default: false
+    outputs:
+      built:
+        description: 'Whether PHP was built'
+        value: ${{ jobs.build.outputs.built }}
+      version:
+        description: 'PHP version that was built'
+        value: ${{ jobs.check.outputs.php_version }}
+
+env:
+  HOMEBREW_NO_AUTO_UPDATE: 1
+  HOMEBREW_NO_INSTALL_CLEANUP: 1
+  HOMEBREW_NO_ENV_HINTS: 1
+
+jobs:
+  check:
+    name: Check PHP ${{ inputs.php_minor }}
+    runs-on: ubuntu-latest
+    outputs:
+      needs_build: ${{ steps.check.outputs.needs_build }}
+      php_version: ${{ steps.check.outputs.php_version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check for updates
+        id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PHP_MINOR: ${{ inputs.php_minor }}
+          FORCE_BUILD: ${{ inputs.force_build }}
+        run: |
+          echo "Checking PHP ${PHP_MINOR}..."
+
+          # Get latest patch version from php.net
+          LATEST=$(curl -fsSL "https://www.php.net/releases/index.php?json&version=${PHP_MINOR}" 2>/dev/null | jq -r '.version // empty')
+
+          if [[ -z "$LATEST" ]]; then
+            echo "::error::Could not fetch latest PHP ${PHP_MINOR} version"
+            echo "needs_build=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          echo "Latest PHP ${PHP_MINOR}: ${LATEST}"
+
+          # Check current release
+          CURRENT=$(jq -r --arg m "$PHP_MINOR" '.php[$m] // "0.0.0"' versions.json)
+          echo "Current: ${CURRENT}"
+
+          # Compare versions
+          if [[ "$FORCE_BUILD" == "true" ]]; then
+            echo "Force build requested"
+            echo "needs_build=true" >> $GITHUB_OUTPUT
+          elif [[ "$CURRENT" == "0.0.0" ]]; then
+            echo "New version detected"
+            echo "needs_build=true" >> $GITHUB_OUTPUT
+          elif [[ $(printf '%s\n%s' "$LATEST" "$CURRENT" | sort -V | tail -1) == "$LATEST" && "$LATEST" != "$CURRENT" ]]; then
+            echo "Upgrade available: $CURRENT -> $LATEST"
+            echo "needs_build=true" >> $GITHUB_OUTPUT
+          else
+            echo "Already up to date"
+            echo "needs_build=false" >> $GITHUB_OUTPUT
+          fi
+
+          echo "php_version=${LATEST}" >> $GITHUB_OUTPUT
+
+  deps:
+    name: Dependencies
+    needs: check
+    if: needs.check.outputs.needs_build == 'true'
+    uses: ./.github/workflows/_build-deps.yml
+    with:
+      platform: ${{ inputs.platform }}
+      runner: ${{ inputs.runner }}
+      force_rebuild: ${{ inputs.force_rebuild_deps }}
+
+  build:
+    name: Build PHP ${{ needs.check.outputs.php_version }}
+    needs: [check, deps]
+    if: needs.check.outputs.needs_build == 'true'
+    runs-on: ${{ inputs.runner }}
+    outputs:
+      built: ${{ steps.result.outputs.built }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install build tools
+        run: brew install -q autoconf automake bison re2c pkg-config libtool cmake zstd
+
+      - name: Make scripts executable
+        run: chmod +x scripts/*.sh scripts/deps/*.sh
+
+      - name: Download dependencies artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: deps-${{ inputs.platform }}
+          path: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}
+
+      - name: Setup dependencies
+        run: |
+          # Copy from temp to /opt for PHP build scripts
+          sudo mkdir -p /opt/phm-deps
+          sudo cp -r "${{ runner.temp }}/phm-deps/${{ inputs.platform }}" /opt/phm-deps/
+          sudo chown -R $USER /opt/phm-deps
+
+          DEPS_PREFIX="/opt/phm-deps/${{ inputs.platform }}"
+
+          # Make bin files executable (permissions lost during artifact transfer)
+          if [[ -d "${DEPS_PREFIX}/bin" ]]; then
+            chmod +x "${DEPS_PREFIX}/bin/"* 2>/dev/null || true
+            echo "Bin files:"
+            ls -la "${DEPS_PREFIX}/bin/" | head -10
+          else
+            echo "WARNING: No bin directory found in deps"
+          fi
+
+          # Fix pkgconfig prefix paths - they have hardcoded paths from build time
+          echo "Updating pkgconfig prefixes to: ${DEPS_PREFIX}"
+          for pc in "${DEPS_PREFIX}/lib/pkgconfig"/*.pc; do
+            if [[ -f "$pc" ]]; then
+              # Replace prefix= or prefix = (with optional spaces) with correct path
+              # ICU uses "prefix = value" format, others use "prefix=value"
+              sed -i '' "s|^prefix *=.*|prefix=${DEPS_PREFIX}|" "$pc"
+            fi
+          done
+          echo "Updated $(ls "${DEPS_PREFIX}/lib/pkgconfig"/*.pc 2>/dev/null | wc -l) .pc files"
+
+          # Verify pg_config is available
+          if [[ -x "${DEPS_PREFIX}/bin/pg_config" ]]; then
+            echo "pg_config found: ${DEPS_PREFIX}/bin/pg_config"
+            "${DEPS_PREFIX}/bin/pg_config" --version
+          else
+            echo "WARNING: pg_config not found or not executable"
+          fi
+
+          # Verify ICU prefix fix worked
+          echo "Checking ICU prefix:"
+          grep "^prefix" "${DEPS_PREFIX}/lib/pkgconfig/icu-uc.pc" || echo "icu-uc.pc not found"
+
+      - name: Verify dependencies
+        run: |
+          DEPS_PREFIX="/opt/phm-deps/${{ inputs.platform }}"
+          echo "Verifying dependencies..."
+          for lib in libz.a libssl.a libcrypto.a libxml2.a libcurl.a; do
+            if [[ -f "${DEPS_PREFIX}/lib/${lib}" ]]; then
+              echo "  ✓ ${lib}"
+            else
+              echo "  ✗ ${lib} MISSING" && exit 1
+            fi
+          done
+          echo ""
+          echo "Total libraries: $(ls ${DEPS_PREFIX}/lib/*.a | wc -l)"
+
+      - name: Diagnose build environment
+        run: |
+          DEPS_PREFIX="/opt/phm-deps/${{ inputs.platform }}"
+
+          echo "=== Environment Variables ==="
+          echo "PATH: $PATH"
+          echo "PKG_CONFIG_PATH: ${PKG_CONFIG_PATH:-<not set>}"
+          echo "PKG_CONFIG_LIBDIR: ${PKG_CONFIG_LIBDIR:-<not set>}"
+          echo "LDFLAGS: ${LDFLAGS:-<not set>}"
+          echo "CFLAGS: ${CFLAGS:-<not set>}"
+          echo "SDKROOT: ${SDKROOT:-<not set>}"
+
+          echo ""
+          echo "=== SDK Info ==="
+          xcrun --show-sdk-path
+          xcrun --show-sdk-version
+
+          echo ""
+          echo "=== Checking critical libraries ==="
+          ls -la "${DEPS_PREFIX}/lib/libsharpyuv.a" 2>&1 || echo "MISSING: libsharpyuv.a"
+          ls -la "${DEPS_PREFIX}/lib/libz.a" 2>&1 || echo "MISSING: libz.a"
+
+          echo ""
+          echo "=== pkg-config check ==="
+          export PKG_CONFIG_PATH="${DEPS_PREFIX}/lib/pkgconfig"
+          export PKG_CONFIG_LIBDIR="${DEPS_PREFIX}/lib/pkgconfig"
+
+          echo "ICU libs: $(pkg-config --libs icu-uc 2>&1 || echo 'FAILED')"
+          echo "ICU static libs: $(pkg-config --libs --static icu-uc 2>&1 || echo 'FAILED')"
+          echo "libcurl libs: $(pkg-config --libs libcurl 2>&1 || echo 'FAILED')"
+
+          echo ""
+          echo "=== Testing fork() in configure-like scenarios ==="
+          cd /tmp
+          cat > conftest.c << 'EOF'
+          char fork ();
+          int main () { return fork (); }
+          EOF
+
+          # Test 1: Simple (should always pass)
+          echo "Test 1 (simple): clang conftest.c"
+          clang -o conftest1 conftest.c 2>&1 && echo "✓ PASSED" || echo "✗ FAILED"
+
+          # Test 2: With LDFLAGS only (no -l flags - correct approach)
+          echo ""
+          echo "Test 2 (LDFLAGS without libraries):"
+          clang -L${DEPS_PREFIX}/lib -framework CoreFoundation -framework CoreServices -framework SystemConfiguration -framework Security conftest.c -o conftest2 2>&1 && echo "✓ PASSED" || echo "✗ FAILED"
+
+          # Test 3: Configure style (LDFLAGS before source, libs after)
+          echo ""
+          echo "Test 3 (configure style - LDFLAGS before, libs after source):"
+          clang -L${DEPS_PREFIX}/lib -framework CoreFoundation -framework CoreServices -framework SystemConfiguration -framework Security conftest.c -lz -o conftest3 2>&1 && echo "✓ PASSED" || echo "✗ FAILED"
+
+          # Test 4: With ICU libs (simulating after intl check)
+          echo ""
+          echo "Test 4 (with ICU LIBS after source):"
+          ICU_LIBS=$(pkg-config --libs --static icu-uc 2>/dev/null || echo "-licuuc -licudata")
+          echo "  ICU_LIBS=$ICU_LIBS"
+          clang -L${DEPS_PREFIX}/lib -framework CoreFoundation -framework CoreServices -framework SystemConfiguration conftest.c $ICU_LIBS -lstdc++ -o conftest4 2>&1 && echo "✓ PASSED" || echo "✗ FAILED"
+
+          # Test 5: With many static libs (simulating heavy linking - libs AFTER source)
+          echo ""
+          echo "Test 5 (heavy static linking - libs after source):"
+          clang -L${DEPS_PREFIX}/lib conftest.c \
+            -lz -lssl -lcrypto -lxml2 -lsqlite3 -licuuc -licudata -lstdc++ \
+            -framework CoreFoundation -framework CoreServices -framework SystemConfiguration -framework Security \
+            -o conftest5 2>&1 && echo "✓ PASSED" || echo "✗ FAILED"
+
+          rm -f conftest*
+        env:
+          CC: clang
+          CXX: clang++
+
+      - name: Build PHP core packages
+        run: ./scripts/build-php-core.sh ${{ needs.check.outputs.php_version }}
+        env:
+          CC: clang
+          CXX: clang++
+          PLATFORM: ${{ inputs.platform }}
+
+      - name: Build all extensions
+        run: ./scripts/build-all-extensions.sh ${{ needs.check.outputs.php_version }} --continue-on-error
+        env:
+          CC: clang
+          CXX: clang++
+          PLATFORM: ${{ inputs.platform }}
+
+      - name: Verify PHP binary
+        run: |
+          PHP_MINOR="${{ inputs.php_minor }}"
+          PHP_BIN="/opt/php/${PHP_MINOR}/bin/php"
+
+          if [[ -f "$PHP_BIN" ]]; then
+            echo "PHP binary: $PHP_BIN"
+            "$PHP_BIN" -v
+            echo ""
+            echo "Dependencies:"
+            otool -L "$PHP_BIN"
+
+            if otool -L "$PHP_BIN" | grep -q "/opt/homebrew\|/usr/local/opt"; then
+              echo "::warning::PHP binary has Homebrew dependencies!"
+            else
+              echo "✓ PHP binary has no Homebrew dependencies"
+            fi
+          fi
+
+      - name: Show build report
+        if: always()
+        run: |
+          if [[ -f dist/build-report.json ]]; then
+            echo "=== Build Summary ==="
+            jq -r '.summary | "Total: \(.total) | Success: \(.success) | Failed: \(.failed)"' dist/build-report.json
+            echo ""
+            echo "=== Successful ==="
+            jq -r '.extensions[] | select(.status == "success") | "  ✓ \(.name) \(.version)"' dist/build-report.json || true
+            echo ""
+            echo "=== Failed ==="
+            jq -r '.extensions[] | select(.status == "failed") | "  ✗ \(.name): \(.error)"' dist/build-report.json || true
+          fi
+
+      - name: List packages
+        run: |
+          echo "Built packages:"
+          ls -la dist/*.tar.zst 2>/dev/null || echo "No packages found"
+          echo ""
+          echo "Total: $(ls dist/*.tar.zst 2>/dev/null | wc -l) packages"
+
+      - name: Upload packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: php-${{ needs.check.outputs.php_version }}-${{ inputs.platform }}
+          path: dist/*.tar.zst
+          retention-days: 7
+
+      - name: Save config.log on failure
+        if: failure()
+        run: |
+          PHP_VERSION="${{ needs.check.outputs.php_version }}"
+
+          # Find all config.log files
+          echo "=== Searching for config.log files ==="
+          find /tmp -name "config.log" 2>/dev/null | head -5
+
+          # Find PHP build directory
+          PHP_BUILD=$(find /tmp -maxdepth 1 -name "php-build-*" -type d 2>/dev/null | head -1)
+          if [[ -n "$PHP_BUILD" ]]; then
+            echo "Found build dir: $PHP_BUILD"
+            ls -la "$PHP_BUILD"
+
+            CONFIG_LOG="${PHP_BUILD}/php-${PHP_VERSION}/config.log"
+            if [[ -f "$CONFIG_LOG" ]]; then
+              mkdir -p dist/logs
+              cp "$CONFIG_LOG" dist/logs/
+              echo "Saved config.log from: $CONFIG_LOG"
+
+              echo ""
+              echo "=== CRITICAL: Fork check details ==="
+              # Get 50 lines around the fork check to see the actual compile command and error
+              grep -n -B 5 -A 50 "checking for fork" "$CONFIG_LOG" || echo "fork check section not found"
+
+              echo ""
+              echo "=== CRITICAL: mprotect check details ==="
+              grep -n -B 5 -A 20 "checking for mprotect" "$CONFIG_LOG" || echo "mprotect check not found"
+
+              echo ""
+              echo "=== LDFLAGS and LIBS values ==="
+              grep -E "^(LDFLAGS|LIBS)=" "$CONFIG_LOG" | tail -20
+
+              echo ""
+              echo "=== Last configure command that failed ==="
+              grep -B 2 "configure: error" "$CONFIG_LOG" | head -20
+
+              echo ""
+              echo "=== Last 150 lines of config.log ==="
+              tail -150 "$CONFIG_LOG"
+            else
+              echo "config.log not found at: $CONFIG_LOG"
+              echo "Contents of build dir:"
+              ls -laR "${PHP_BUILD}/" 2>/dev/null | head -50
+            fi
+          else
+            echo "PHP build directory not found"
+            echo "Looking for any php directories in /tmp:"
+            ls -la /tmp | grep php || echo "None found"
+          fi
+
+      - name: Upload build logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: logs-${{ needs.check.outputs.php_version }}-${{ inputs.platform }}
+          path: dist/logs/
+          retention-days: 14
+          if-no-files-found: ignore
+
+      - name: Set result
+        id: result
+        run: echo "built=true" >> $GITHUB_OUTPUT
+
+  publish:
+    name: Publish PHP ${{ needs.check.outputs.php_version }}
+    needs: [check, build]
+    if: needs.build.outputs.built == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: php-${{ needs.check.outputs.php_version }}-${{ inputs.platform }}
+          path: artifacts/
+
+      - name: Validate packages
+        run: |
+          echo "Packages for PHP ${{ needs.check.outputs.php_version }} (${{ inputs.platform }}):"
+          ls -la artifacts/
+
+          VERSION="${{ needs.check.outputs.php_version }}"
+          # Check required packages exist (core packages use full version: php8.5.1-cli, not php8.5-cli)
+          for pkg in cli fpm common; do
+            if ls artifacts/php${VERSION}-${pkg}_*.tar.zst 1>/dev/null 2>&1; then
+              echo "  ✓ php${VERSION}-${pkg}"
+            else
+              echo "  ✗ php${VERSION}-${pkg} MISSING" && exit 1
+            fi
+          done
+
+      - name: Create/Update release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PHP_VERSION: ${{ needs.check.outputs.php_version }}
+          PLATFORM: ${{ inputs.platform }}
+        run: |
+          TAG="php-${PHP_VERSION}"
+
+          # Check if release exists
+          if gh release view "$TAG" &>/dev/null; then
+            echo "Release $TAG exists, uploading packages..."
+          else
+            echo "Creating release $TAG..."
+            gh release create "$TAG" \
+              --title "PHP ${PHP_VERSION}" \
+              --notes "Pre-built PHP ${PHP_VERSION} packages for macOS"
+          fi
+
+          # Upload packages
+          cd artifacts
+          for pkg in *.tar.zst; do
+            echo "Uploading: $pkg"
+            gh release upload "$TAG" "$pkg" --clobber
+          done
+
+      - name: Update versions.json
+        env:
+          PHP_VERSION: ${{ needs.check.outputs.php_version }}
+          PHP_MINOR: ${{ inputs.php_minor }}
+        run: |
+          # Update PHP version
+          CURRENT=$(cat versions.json)
+          CURRENT=$(echo "$CURRENT" | jq --arg m "$PHP_MINOR" --arg v "$PHP_VERSION" '.php[$m] = $v')
+          CURRENT=$(echo "$CURRENT" | jq --arg t "$(date -u +%Y-%m-%dT%H:%M:%SZ)" '.last_check = $t')
+          echo "$CURRENT" | jq '.' > versions.json
+
+          echo "Updated versions.json:"
+          cat versions.json
+
+      - name: Commit versions.json
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add versions.json
+          git diff --staged --quiet || git commit -m "Update PHP ${{ inputs.php_minor }} to ${{ needs.check.outputs.php_version }}"
+          git push

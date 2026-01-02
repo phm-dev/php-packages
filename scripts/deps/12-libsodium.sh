@@ -4,6 +4,8 @@
 # https://libsodium.org/
 # License: ISC (permissive)
 #
+# Cache ref: v2 - ensure pkgconfig is included in artifact
+#
 
 set -euo pipefail
 

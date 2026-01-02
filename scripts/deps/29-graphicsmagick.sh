@@ -79,8 +79,28 @@ cd "$BUILD_DIR"
     LDFLAGS="${LDFLAGS} -L${DEPS_PREFIX}/lib" \
     PKG_CONFIG_PATH="${DEPS_PREFIX}/lib/pkgconfig"
 
-make -j"$NPROC"
-make install
+# Build all targets - the gm utility may fail on linking but libraries will be built
+make -j"$NPROC" || true
+
+# Install only if libraries were built successfully
+if [[ -f magick/.libs/libGraphicsMagick.a ]]; then
+    # Install libraries
+    make install-libLTLIBRARIES || true
+    make install-pkgconfigDATA || true
+
+    # Install headers manually
+    make install-includeHEADERS install-nodist_includeHEADERS || true
+    mkdir -p "${DEPS_PREFIX}/include/magick"
+    mkdir -p "${DEPS_PREFIX}/include/wand"
+    mkdir -p "${DEPS_PREFIX}/include/Magick++"
+    cp -f magick/*.h "${DEPS_PREFIX}/include/magick/" 2>/dev/null || true
+    cp -f wand/*.h "${DEPS_PREFIX}/include/wand/" 2>/dev/null || true
+    cp -f Magick++/lib/Magick++.h "${DEPS_PREFIX}/include/" 2>/dev/null || true
+    cp -f Magick++/lib/Magick++/*.h "${DEPS_PREFIX}/include/Magick++/" 2>/dev/null || true
+else
+    log_error "GraphicsMagick library build failed"
+    exit 1
+fi
 
 # Remove any shared libs
 rm -f "${DEPS_PREFIX}/lib"/libGraphicsMagick*.so* "${DEPS_PREFIX}/lib"/libGraphicsMagick*.dylib* 2>/dev/null || true

@@ -85,13 +85,18 @@ log_info "  Building PHP ${PHP_VERSION}"
 log_info "  Platform: ${PLATFORM}"
 log_info "=========================================="
 
-# Cleanup on exit
+# Cleanup on exit (only if successful)
 cleanup() {
-    if [[ -d "$BUILD_DIR" ]]; then
-        log_info "Cleaning up build directory..."
-        rm -rf "$BUILD_DIR"
+    local exit_code=$?
+    if [[ $exit_code -eq 0 ]]; then
+        if [[ -d "$BUILD_DIR" ]]; then
+            log_info "Cleaning up build directory..."
+            rm -rf "$BUILD_DIR"
+        fi
+        rm -f "$BUILD_LOG"
+    else
+        log_warn "Build failed (exit code: $exit_code), keeping build directory for debugging: $BUILD_DIR"
     fi
-    rm -f "$BUILD_LOG"
 }
 trap cleanup EXIT
 
@@ -136,12 +141,16 @@ if [[ "$(uname -s)" == "Darwin" ]]; then
     export PKG_CONFIG_LIBDIR="${DEPS_PREFIX}/lib/pkgconfig"
 
     # Compiler flags for static linking
-    # Include macOS frameworks required by static libcurl
-    # Include libsharpyuv required by static libwebp
-    # Note: libpq is now a combined library with pgcommon/pgport/explicit_bzero baked in
-    export LDFLAGS="-L${DEPS_PREFIX}/lib -lsharpyuv -framework CoreFoundation -framework CoreServices -framework SystemConfiguration"
+    # CRITICAL: LDFLAGS should only contain -L paths and framework flags, NOT libraries (-l flags)
+    # Libraries in LDFLAGS appear before object files and get discarded by the linker
+    # This breaks autoconf's AC_CHECK_FUNC tests (e.g., fork() check fails)
+    export LDFLAGS="-L${DEPS_PREFIX}/lib -framework CoreFoundation -framework CoreServices -framework SystemConfiguration -framework Security"
     export CPPFLAGS="-I${DEPS_PREFIX}/include -I${DEPS_PREFIX}/include/libxml2"
     export CFLAGS="-O2 -I${DEPS_PREFIX}/include -I${DEPS_PREFIX}/include/libxml2"
+
+    # LIBS contains libraries that should be linked AFTER object files
+    # libsharpyuv is required by libwebp but PHP's webp detection doesn't use --static for pkg-config
+    export LIBS="-lsharpyuv"
 
     # All dependency paths point to our static build
     DEPS_DIR="$DEPS_PREFIX"
@@ -263,7 +272,28 @@ CONFIGURE_OPTS=(
     --with-webp="${WEBP_DIR}"
 )
 
-run_build ./configure "${CONFIGURE_OPTS[@]}"
+# PHP 8.5+ on Intel Macs: Disable TAILCALL VM due to clang musttail bug
+# PHP 8.5 introduced TAILCALL VM using musttail/preserve_none attributes.
+# macOS Intel clang fails with:
+# "error in backend: failed to perform tail call elimination on a call site marked musttail"
+# Fix: Disable musttail and preserve_none by setting configure cache variables.
+# See: https://github.com/php/php-src/issues/20546
+MUSTTAIL_FIX_VARS=()
+if [[ "$PLATFORM" == "darwin-amd64" ]]; then
+    # Parse version for comparison (PHP_MAJOR_MINOR is "8.5")
+    _MAJOR="${PHP_MAJOR_MINOR%%.*}"
+    _MINOR="${PHP_MAJOR_MINOR#*.}"
+    if [[ "$_MAJOR" -ge 8 && "$_MINOR" -ge 5 ]] || [[ "$_MAJOR" -gt 8 ]]; then
+        log_warn "Intel Mac detected: Disabling TAILCALL VM (clang musttail bug)"
+        log_warn "This will use the CALL VM instead (slightly slower but compatible)"
+        # PHP's configure uses php_cv_preserve_none cache variable (see Zend/Zend.m4)
+        # Setting this to 'no' disables TAILCALL VM and falls back to CALL VM
+        MUSTTAIL_FIX_VARS=(php_cv_preserve_none=no)
+    fi
+fi
+
+# Use ${arr[@]+"${arr[@]}"} syntax to handle empty array with set -u
+run_build ./configure ${MUSTTAIL_FIX_VARS[@]+"${MUSTTAIL_FIX_VARS[@]}"} "${CONFIGURE_OPTS[@]}"
 
 # Build PHP
 log_info "Building PHP (this will take a while)..."
