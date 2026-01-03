@@ -272,19 +272,19 @@ CONFIGURE_OPTS=(
     --with-webp="${WEBP_DIR}"
 )
 
-# PHP 8.5+ on Intel Macs: Disable TAILCALL VM due to clang musttail bug
+# PHP 8.5+ on macOS: Disable TAILCALL VM due to clang musttail bug
 # PHP 8.5 introduced TAILCALL VM using musttail/preserve_none attributes.
-# macOS Intel clang fails with:
+# Apple clang (Xcode 16.4+, clang 17.0.0) fails on BOTH Intel and ARM with:
 # "error in backend: failed to perform tail call elimination on a call site marked musttail"
 # Fix: Disable musttail and preserve_none by setting configure cache variables.
 # See: https://github.com/php/php-src/issues/20546
 MUSTTAIL_FIX_VARS=()
-if [[ "$PLATFORM" == "darwin-amd64" ]]; then
+if [[ "$(uname -s)" == "Darwin" ]]; then
     # Parse version for comparison (PHP_MAJOR_MINOR is "8.5")
     _MAJOR="${PHP_MAJOR_MINOR%%.*}"
     _MINOR="${PHP_MAJOR_MINOR#*.}"
     if [[ "$_MAJOR" -ge 8 && "$_MINOR" -ge 5 ]] || [[ "$_MAJOR" -gt 8 ]]; then
-        log_warn "Intel Mac detected: Disabling TAILCALL VM (clang musttail bug)"
+        log_warn "macOS detected: Disabling TAILCALL VM (Apple clang 17.0.0 musttail bug)"
         log_warn "This will use the CALL VM instead (slightly slower but compatible)"
         # PHP's configure uses php_cv_preserve_none cache variable (see Zend/Zend.m4)
         # Setting this to 'no' disables TAILCALL VM and falls back to CALL VM
