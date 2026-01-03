@@ -179,9 +179,9 @@ main() {
     local failed_extensions=()
     local success_count=0
 
-    # Get list of extensions from config
+    # Get list of extensions from config, sorted by build_priority (lower first), then alphabetically
     local extensions
-    extensions=$(jq -r '.extensions | keys[]' "$CONFIG_FILE")
+    extensions=$(jq -r '.extensions | to_entries | sort_by(.value.build_priority // 50, .key) | .[].key' "$CONFIG_FILE")
 
     for ext in $extensions; do
         # Skip opcache for PHP 8.5+ (built-in)
@@ -200,18 +200,35 @@ main() {
         local ext_config
         ext_config=$(jq ".extensions.${ext}" "$CONFIG_FILE")
 
-        # Get packagist package name
-        local packagist
-        packagist=$(echo "$ext_config" | jq -r '.packagist // empty')
+        # Check php_max_version constraint
+        local php_max_version
+        php_max_version=$(echo "$ext_config" | jq -r '.php_max_version // empty')
+        if [[ -n "$php_max_version" && "$php_max_version" != "null" ]]; then
+            # Compare versions (e.g., 8.4.99 means max PHP 8.4.x)
+            if [[ "$(printf '%s\n%s' "$PHP_VERSION" "$php_max_version" | sort -V | tail -1)" != "$php_max_version" ]]; then
+                log_info "Skipping $ext (requires PHP <= $php_max_version, current: $PHP_VERSION)"
+                continue
+            fi
+        fi
 
-        if [[ -z "$packagist" || "$packagist" == "null" ]]; then
-            log_warn "Skipping $ext (no packagist defined)"
+        # Get packagist or pecl package name
+        local packagist pecl_name version_source
+        packagist=$(echo "$ext_config" | jq -r '.packagist // empty')
+        pecl_name=$(echo "$ext_config" | jq -r '.pecl // empty')
+
+        # Determine version source (prefer packagist, fallback to pecl)
+        if [[ -n "$packagist" && "$packagist" != "null" ]]; then
+            version_source="$packagist"
+        elif [[ -n "$pecl_name" && "$pecl_name" != "null" ]]; then
+            version_source="$pecl_name"
+        else
+            log_warn "Skipping $ext (no packagist or pecl defined)"
             continue
         fi
 
         # Get extension version
         local ext_version
-        if ! ext_version=$(get_ext_version "$ext" "$packagist"); then
+        if ! ext_version=$(get_ext_version "$ext" "$version_source"); then
             log_error "Could not determine version for $ext"
             if [[ "$CONTINUE_ON_ERROR" == "true" ]]; then
                 failed_extensions+=("$ext")

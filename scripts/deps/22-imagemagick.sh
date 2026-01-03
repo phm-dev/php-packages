@@ -62,7 +62,6 @@ cd "$BUILD_DIR"
     --without-modules \
     --without-perl \
     --without-magick-plus-plus \
-    --without-utilities \
     --without-bzlib \
     --without-x \
     --without-xml \

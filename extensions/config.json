@@ -2,13 +2,22 @@
   "extensions": {
     "redis": {
       "packagist": "phpredis/phpredis",
-      "pie_options": [],
-      "description": "Redis extension for PHP"
+      "pie_options": [
+        "--enable-redis-igbinary",
+        "--enable-redis-msgpack",
+        "--enable-redis-lzf",
+        "--enable-redis-zstd",
+        "--with-libzstd=/opt/phm-deps/darwin-arm64",
+        "--enable-redis-lz4",
+        "--with-liblz4=/opt/phm-deps/darwin-arm64"
+      ],
+      "description": "Redis extension (with igbinary, msgpack, lzf, zstd, lz4 compression)"
     },
     "igbinary": {
       "pecl": "igbinary",
       "pecl_options": [],
-      "description": "Binary serialization for PHP"
+      "build_priority": 10,
+      "description": "Binary serialization for PHP (required by redis, memcached)"
     },
     "mongodb": {
       "packagist": "mongodb/mongodb-extension",
@@ -36,9 +45,11 @@
         "--enable-http2",
         "--enable-swoole-curl",
         "--enable-swoole-pgsql",
-        "--with-swoole-pgsql-dir=/opt/phm-deps/darwin-arm64"
+        "--with-swoole-pgsql-dir=/opt/phm-deps/darwin-arm64",
+        "--enable-mysqlnd",
+        "--enable-sockets"
       ],
-      "description": "Coroutine-based concurrency library for PHP"
+      "description": "Coroutine-based concurrency (with SSL, HTTP/2, cURL, PostgreSQL, MySQL, sockets)"
     },
     "pcov": {
       "pecl": "pcov",
@@ -47,8 +58,10 @@
     },
     "apcu": {
       "packagist": "apcu/apcu",
-      "pie_options": [],
-      "description": "APCu - APC User Cache"
+      "pie_options": [
+        "--enable-apcu-spinlocks"
+      ],
+      "description": "APCu - APC User Cache (with spinlocks for better performance)"
     },
     "imagick": {
       "packagist": "imagick/imagick",
@@ -72,11 +85,14 @@
     "memcached": {
       "packagist": "php-memcached/php-memcached",
       "pie_options": [
+        "--enable-memcached-igbinary",
+        "--enable-memcached-msgpack",
+        "--enable-memcached-session",
         "--enable-memcached-json",
         "--with-zlib-dir=/opt/phm-deps/darwin-arm64",
         "--with-libmemcached-dir=/opt/phm-deps/darwin-arm64"
       ],
-      "description": "Memcached client library"
+      "description": "Memcached client (with igbinary, msgpack, session, json)"
     },
     "rdkafka": {
       "pecl": "rdkafka",
@@ -134,7 +150,8 @@
     "msgpack": {
       "pecl": "msgpack",
       "pecl_options": [],
-      "description": "MessagePack serialization"
+      "build_priority": 10,
+      "description": "MessagePack serialization (required by redis, memcached)"
     },
     "ast": {
       "packagist": "nikic/php-ast",
@@ -175,11 +192,6 @@
       "pecl": "stomp",
       "pecl_options": [],
       "description": "STOMP messaging protocol"
-    },
-    "inotify": {
-      "pecl": "inotify",
-      "pecl_options": [],
-      "description": "Inotify file system events"
     },
     "dio": {
       "packagist": "pecl/dio",
@@ -236,7 +248,8 @@
     "solr": {
       "packagist": "pecl/solr",
       "pie_options": [],
-      "description": "Apache Solr client"
+      "php_max_version": "8.4.99",
+      "description": "Apache Solr client (not yet compatible with PHP 8.5)"
     },
     "pq": {
       "pecl": "pq",

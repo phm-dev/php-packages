@@ -188,7 +188,6 @@ load_config() {
 
 # Set up environment
 setup_env() {
-    export PATH="${PHP_PATH}/bin:$PATH"
     export CC=clang
     export CXX=clang++
 
@@ -198,6 +197,8 @@ setup_env() {
     DEPS_PREFIX="/opt/phm-deps/${platform}"
 
     if [[ -d "$DEPS_PREFIX" ]]; then
+        # Add deps/bin to PATH BEFORE system paths (for MagickWand-config, pg_config, etc.)
+        export PATH="${DEPS_PREFIX}/bin:${PHP_PATH}/bin:$PATH"
         export PKG_CONFIG_PATH="${DEPS_PREFIX}/lib/pkgconfig"
         export PKG_CONFIG_LIBDIR="${DEPS_PREFIX}/lib/pkgconfig"
         export LDFLAGS="-L${DEPS_PREFIX}/lib"
@@ -205,6 +206,7 @@ setup_env() {
         export CFLAGS="-I${DEPS_PREFIX}/include"
         log_info "Using static deps from: ${DEPS_PREFIX}"
     else
+        export PATH="${PHP_PATH}/bin:$PATH"
         log_warn "Static deps not found at ${DEPS_PREFIX}, falling back to system"
     fi
 }
