@@ -3,7 +3,16 @@ name: Update Index
 on:
   workflow_run:
     workflows:
-      - "Build"
+      - "PHP 8.1 (arm64)"
+      - "PHP 8.1 (amd64)"
+      - "PHP 8.2 (arm64)"
+      - "PHP 8.2 (amd64)"
+      - "PHP 8.3 (arm64)"
+      - "PHP 8.3 (amd64)"
+      - "PHP 8.4 (arm64)"
+      - "PHP 8.4 (amd64)"
+      - "PHP 8.5 (arm64)"
+      - "PHP 8.5 (amd64)"
     types: [completed]
   workflow_dispatch:
 
