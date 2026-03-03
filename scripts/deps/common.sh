@@ -296,6 +296,7 @@ verify_all_deps() {
         "libxslt.a"
         "libcurl.a"
         "libsqlite3.a"
+        "libgmp.a"
     )
 
     local missing=0

@@ -142,6 +142,13 @@
       "priority": 10,
       "description": "OPcache - built into PHP 8.5+, separate for older versions"
     },
+    "gmp": {
+      "source": "php-src",
+      "configure_options": [
+        "--with-gmp=/opt/phm-deps/darwin-arm64"
+      ],
+      "description": "GMP arbitrary precision arithmetic"
+    },
     "mailparse": {
       "packagist": "pecl/mailparse",
       "pie_options": [],

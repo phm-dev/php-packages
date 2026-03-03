@@ -482,6 +482,7 @@ jobs:
           - { name: libev, script: "32-libev.sh", libs: "libev.a" }
           - { name: libssh2, script: "33-libssh2.sh", libs: "libssh2.a" }
           - { name: libmcrypt, script: "34-libmcrypt.sh", libs: "libmcrypt.a" }
+          - { name: gmp, script: "35-gmp.sh", libs: "libgmp.a" }
     steps:
       - uses: actions/checkout@v4
 
