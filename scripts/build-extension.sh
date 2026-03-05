@@ -147,24 +147,13 @@ load_config() {
     # Load config values
     PACKAGIST=$(echo "$ext_config" | jq -r '.packagist // empty')
     PECL_NAME=$(echo "$ext_config" | jq -r '.pecl // empty')
-    SOURCE=$(echo "$ext_config" | jq -r '.source // empty')
     IS_ZEND=$(echo "$ext_config" | jq -r '.zend_extension // false')
     PRIORITY=$(echo "$ext_config" | jq -r '.priority // 20')
     DESCRIPTION=$(echo "$ext_config" | jq -r '.description // empty')
     SPECIAL_BUILD=$(echo "$ext_config" | jq -r '.special_build // false')
 
     # Determine build method based on config
-    if [[ "$SOURCE" == "php-src" ]]; then
-        BUILD_METHOD="php-src"
-        # Load configure_options from config (unless CLI options provided)
-        if [[ ${#CLI_OPTIONS[@]} -gt 0 ]]; then
-            BUILD_OPTIONS=("${CLI_OPTIONS[@]}")
-        else
-            while IFS= read -r opt; do
-                [[ -n "$opt" ]] && BUILD_OPTIONS+=("$opt")
-            done < <(echo "$ext_config" | jq -r '.configure_options[]? // empty' 2>/dev/null)
-        fi
-    elif [[ -n "$PACKAGIST" ]]; then
+    if [[ -n "$PACKAGIST" ]]; then
         BUILD_METHOD="pie"
         # Load PIE options from config (unless CLI options provided)
         if [[ ${#CLI_OPTIONS[@]} -gt 0 ]]; then
@@ -399,68 +388,6 @@ build_manual() {
     return 0
 }
 
-# Build extension from PHP source tree (ext/)
-build_from_php_src() {
-    log_info "Building from PHP source tree (ext/${EXTENSION})..."
-
-    local php_tarball_url="https://www.php.net/distributions/php-${PHP_VERSION}.tar.gz"
-    local php_tarball="${BUILD_DIR}/php-${PHP_VERSION}.tar.gz"
-    local php_src_dir="${BUILD_DIR}/php-${PHP_VERSION}"
-
-    mkdir -p "$BUILD_DIR"
-    cd "$BUILD_DIR"
-    : > "$BUILD_LOG"
-
-    # Download PHP source
-    log_info "Downloading PHP ${PHP_VERSION} source..."
-    if ! curl -fsSL --retry 3 "$php_tarball_url" -o "$php_tarball"; then
-        log_warn "Failed to download PHP source"
-        return 1
-    fi
-
-    # Extract
-    log_info "Extracting PHP source..."
-    mkdir -p "$php_src_dir"
-    tar -xzf "$php_tarball" -C "$php_src_dir" --strip-components=1
-
-    # Enter extension directory
-    local ext_dir="${php_src_dir}/ext/${EXTENSION}"
-    if [[ ! -d "$ext_dir" ]]; then
-        log_warn "Extension directory not found: ext/${EXTENSION}"
-        return 1
-    fi
-    cd "$ext_dir"
-
-    # Build configure options
-    local configure_opts=("--with-php-config=${PHP_CONFIG}")
-    if [[ ${#BUILD_OPTIONS[@]} -gt 0 ]]; then
-        for opt in "${BUILD_OPTIONS[@]}"; do
-            [[ -n "$opt" ]] && configure_opts+=("$opt")
-        done
-    fi
-
-    log_info "Building with options: ${configure_opts[*]}"
-
-    # phpize + configure + make
-    if ! run_build "$PHPIZE"; then
-        log_warn "phpize failed"
-        return 1
-    fi
-
-    if ! run_build ./configure "${configure_opts[@]}"; then
-        log_warn "configure failed"
-        return 1
-    fi
-
-    if ! run_build make -j"$(sysctl -n hw.ncpu 2>/dev/null || nproc 2>/dev/null || echo 4)"; then
-        log_warn "make failed"
-        return 1
-    fi
-
-    log_success "PHP source build successful"
-    return 0
-}
-
 # Special build for relay (pre-built binaries)
 build_relay() {
     log_info "Downloading pre-built Relay extension..."
@@ -588,11 +515,6 @@ main() {
     if [[ "$SPECIAL_BUILD" == "true" && "$EXTENSION" == "relay" ]]; then
         # Special handling for relay
         if build_relay; then
-            build_success=true
-        fi
-    elif [[ "$BUILD_METHOD" == "php-src" ]]; then
-        # Build from PHP source tree (ext/)
-        if build_from_php_src; then
             build_success=true
         fi
     elif [[ "$BUILD_METHOD" == "pie" ]]; then
