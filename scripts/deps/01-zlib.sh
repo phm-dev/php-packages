@@ -14,7 +14,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/common.sh"
 
 NAME="zlib"
-VERSION="1.3.1"
+VERSION="1.3.2"
 URL="https://zlib.net/zlib-${VERSION}.tar.gz"
 
 if is_built "$NAME"; then
