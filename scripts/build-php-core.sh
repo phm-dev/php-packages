@@ -126,7 +126,7 @@ if [[ "$(uname -s)" == "Darwin" ]]; then
     fi
 
     # Verify critical dependencies exist
-    for lib in libz.a libssl.a libcrypto.a libedit.a libxml2.a libcurl.a libsqlite3.a; do
+    for lib in libz.a libssl.a libcrypto.a libedit.a libxml2.a libcurl.a libsqlite3.a libgmp.a; do
         if [[ ! -f "${DEPS_PREFIX}/lib/${lib}" ]]; then
             log_error "Missing required library: ${lib}"
             log_error "Run php-packages/scripts/deps/build-all-deps.sh first"
@@ -172,6 +172,7 @@ if [[ "$(uname -s)" == "Darwin" ]]; then
     ICONV_DIR="$DEPS_PREFIX"
     SODIUM_DIR="$DEPS_PREFIX"
     SQLITE_DIR="$DEPS_PREFIX"
+    GMP_DIR="$DEPS_PREFIX"
 
     # Add our deps bin to PATH (for pg_config, etc.)
     export PATH="${DEPS_PREFIX}/bin:$PATH"
@@ -244,6 +245,7 @@ CONFIGURE_OPTS=(
     --with-curl="${CURL_DIR}"
     --with-iconv="${ICONV_DIR}"
     --with-sodium="${SODIUM_DIR}"
+    --with-gmp="${GMP_DIR}"
     --with-zip
     --with-pear
 
