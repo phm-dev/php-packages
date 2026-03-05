@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "generated": "2026-03-05T04:51:43Z",
+  "generated": "2026-03-05T11:45:44Z",
   "latest": {
     "8.5": "8.5.3",
     "8.4": "8.4.18",
@@ -3950,6 +3950,16 @@
     "darwin-arm64": {
       "packages": [
         {
+          "name": "php8.5-zstd",
+          "version": "0.15.2",
+          "php_version": "8.5.3",
+          "description": "zstd extension for PHP 8.5",
+          "depends": [
+            "php8.5-common (>= 8.5.3)"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.5.3/php8.5.3-zstd0.15.2_darwin-arm64.tar.zst"
+        },
+        {
           "name": "php8.5-zip",
           "version": "8.5.3",
           "php_version": "8.5.3",
@@ -4238,6 +4248,16 @@
             "php8.5-common (>= 8.5.1)"
           ],
           "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.5.1/php8.5.1-redis6.3.0_darwin-arm64.tar.zst"
+        },
+        {
+          "name": "php8.5-protobuf",
+          "version": "5.34.0",
+          "php_version": "8.5.3",
+          "description": "protobuf extension for PHP 8.5",
+          "depends": [
+            "php8.5-common (>= 8.5.3)"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.5.3/php8.5.3-protobuf5.34.0_darwin-arm64.tar.zst"
         },
         {
           "name": "php8.5-protobuf",
