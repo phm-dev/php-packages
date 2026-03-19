@@ -1,114 +1,75 @@
 # PHP Packages for PHM
 
-Pre-built PHP binary packages for macOS.
+Precompiled PHP binary packages for macOS, built automatically on GitHub Actions.
 
 **Designed for use with [PHM (PHP Manager)](https://github.com/phm-dev/phm).**
 
-## Package Naming
+## How It Works
 
-**PHP Core:**
-```
-php{VERSION}-{type}_{platform}.tar.zst
-```
-- `php8.5.0-cli_darwin-arm64.tar.zst`
-- `php8.4.7-fpm_darwin-amd64.tar.zst`
+1. GitHub Actions workflows check [php.net](https://www.php.net/) and [Packagist](https://packagist.org/) daily for new releases
+2. PHP and extensions are compiled on macOS runners (Apple Silicon and Intel)
+3. Packages are uploaded as GitHub Release assets
+4. `index.json` is regenerated and committed to this repository
+5. PHM CLI downloads packages directly from GitHub Releases
 
-**Extensions:**
-```
-php{VERSION}-{ext}{extver}_{platform}.tar.zst
-```
-- `php8.5.0-redis6.3.0_darwin-arm64.tar.zst`
-- `php8.4.7-xdebug3.4.0_darwin-amd64.tar.zst`
+No separate package server — everything is hosted on GitHub.
 
-## GitHub Releases
+## Supported PHP Versions
 
-Each patch version has its own release (old versions are preserved):
-
-- `php-8.5.1` → latest 8.5.x
-- `php-8.5.0` → preserved
-- `php-8.4.8` → latest 8.4.x
-- `php-8.4.7`, `php-8.4.6`, ... → preserved
-
-Install specific version or use minor version alias:
-```bash
-phm install php8.5.1-cli    # specific patch
-phm install php8.5-cli      # latest 8.5.x
-```
-
-## Extensions
-
-### Implemented
-
-| Extension | Packagist | Static Deps |
-|-----------|-----------|-------------|
-| redis | phpredis/phpredis | - |
-| igbinary | igbinary/igbinary | - |
-| mongodb | mongodb/mongodb-extension | zstd |
-| amqp | pdezwart/php-amqp | rabbitmq-c |
-| xdebug | xdebug/xdebug | - |
-| swoole | swoole/swoole | openssl, libpq |
-| pcov | krakjoe/pcov | - |
-| apcu | apcu/apcu | - |
-| imagick | imagick/imagick | imagemagick |
-| ev | osmanov/pecl-ev | libev |
-| opentelemetry | open-telemetry/ext-opentelemetry | - |
-| memcached | php-memcached/php-memcached | libmemcached, zlib |
-| rdkafka | kwn/php-rdkafka | librdkafka |
-| ssh2 | ext-ssh2/ext-ssh2 | libssh2, openssl |
-| mcrypt | pecl/mcrypt | libmcrypt |
-| uuid | pecl/uuid | ossp-uuid |
-| zstd | kjdev/php-ext-zstd | zstd |
-| yaml | pecl/yaml | libyaml |
-| lz4 | kjdev/php-ext-lz4 | lz4 |
-| maxminddb | maxmind-db/reader | libmaxminddb |
-| gmagick | pecl/gmagick | graphicsmagick |
-| gearman | pecl/gearman | libgearman, libevent |
-| lua | pecl/lua | lua |
-| mailparse | pecl/mailparse | - |
-| msgpack | msgpack/msgpack | - |
-| ast | nikic/php-ast | - |
-| ds | php-ds/php-ds | - |
-| excimer | wikimedia/excimer | - |
-| uopz | krakjoe/uopz | - |
-| uploadprogress | pecl/uploadprogress | - |
-| protobuf | google/protobuf | - |
-| oauth | pecl/oauth | - |
-| stomp | pecl/stomp | - |
-| inotify | pecl/inotify | - |
-| dio | pecl/dio | - |
-| decimal | php-decimal/php-decimal | - |
-| solr | pecl/solr | - |
-| pq | pecl/pq | libpq |
-| relay | cachewerk/ext-relay | special build |
-| opcache | php-src | built-in for PHP 8.5+ |
-
-### TODO (Not Yet Implemented)
-
-These extensions require additional work:
-
-| Extension | Blocker | Notes |
-|-----------|---------|-------|
-| grpc | libgrpc build | Google's gRPC library is complex, requires protobuf, abseil, etc. |
-| vips | libvips build | Image processing, requires ~20 dependencies (libjpeg, libpng, etc.) |
-| smbclient | libsmbclient build | Requires Samba libraries |
-| rrd | librrd build | RRDtool for round-robin databases |
-| yaz | libyaz build | Z39.50 protocol, requires yaz toolkit |
-
-### Special Cases
-
-| Extension | Status | Notes |
-|-----------|--------|-------|
-| pdo_sqlsrv | Linux/Windows only | Microsoft SQL Server driver |
-| sqlsrv | Linux/Windows only | Microsoft SQL Server driver |
-| oci8 | Proprietary | Requires Oracle Instant Client |
-| pdo_oci | Proprietary | Requires Oracle Instant Client |
+| Version | Status |
+|---------|--------|
+| PHP 8.5 | Current |
+| PHP 8.4 | Supported |
+| PHP 8.3 | Supported |
+| PHP 8.2 | Supported |
+| PHP 8.1 | Supported |
 
 ## Platforms
 
-| Platform | Architecture | Status |
+| Platform | Architecture | Runner |
 |----------|--------------|--------|
-| macOS 13+ | arm64 (Apple Silicon) | ✅ Available |
-| macOS 13+ | amd64 (Intel) | 🚧 Coming Soon |
+| macOS 13+ | arm64 (Apple Silicon) | `macos-latest` |
+| macOS 13+ | amd64 (Intel) | `macos-15-intel` |
+
+## Extensions
+
+Over 40 extensions, precompiled with static dependencies:
+
+| Extension | Static Deps | Extension | Static Deps |
+|-----------|-------------|-----------|-------------|
+| redis | — | imagick | imagemagick |
+| xdebug | — | mongodb | zstd |
+| igbinary | — | amqp | rabbitmq-c |
+| pcov | — | memcached | libmemcached, zlib |
+| apcu | — | rdkafka | librdkafka |
+| msgpack | — | ssh2 | libssh2, openssl |
+| ast | — | ev | libev |
+| ds | — | mcrypt | libmcrypt |
+| excimer | — | yaml | libyaml |
+| protobuf | — | zstd | zstd |
+| oauth | — | lz4 | lz4 |
+| mailparse | — | maxminddb | libmaxminddb |
+| uploadprogress | — | gmagick | graphicsmagick |
+| opentelemetry | — | gearman | libgearman, libevent |
+| swoole | openssl, libpq | lua | lua |
+| stomp | — | relay | special build |
+| dio | — | pq | libpq |
+| uopz | — | uuid | ossp-uuid |
+| decimal | — | solr | — |
+| inotify | — | opcache | built-in (PHP 8.5+) |
+
+Full list with PHP version availability: **[phm-dev.github.io/packages](https://phm-dev.github.io/packages/)**
+
+## Package Format
+
+Packages are zstd-compressed tar archives:
+
+```
+php8.5.4-redis6.3.0_darwin-arm64.tar.zst
+├── pkginfo.json    # Metadata (name, version, depends)
+└── files/
+    └── opt/php/8.5/...
+```
 
 ## Usage
 
@@ -116,12 +77,21 @@ These extensions require additional work:
 # Install PHM
 curl -fsSL https://raw.githubusercontent.com/phm-dev/phm/main/scripts/install-phm.sh | bash
 
-# Install PHP
-phm update
-phm install php8.5-cli php8.5-fpm php8.5-redis
+# Install PHP with extensions
+phm install php8.5-cli php8.5-fpm php8.5-redis php8.5-xdebug
 ```
+
+## Missing an Extension?
+
+[Open an issue](https://github.com/phm-dev/php-packages/issues) to request a new extension.
+
+## Documentation
+
+- [How Packages Are Built](https://phm-dev.github.io/how-packages-are-built/) — build pipeline details
+- [Available Packages](https://phm-dev.github.io/packages/) — full package list with versions
+- [PHM CLI](https://github.com/phm-dev/phm) — the package manager
 
 ## Links
 
 - [PHM CLI](https://github.com/phm-dev/phm)
-- [PIE](https://github.com/php/pie)
+- [Documentation](https://phm-dev.github.io)
