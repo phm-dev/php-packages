@@ -123,6 +123,7 @@ main() {
     "${SCRIPT_DIR}/33-libssh2.sh"       # For ssh2 extension
     "${SCRIPT_DIR}/34-libmcrypt.sh"     # For mcrypt extension
     "${SCRIPT_DIR}/35-gmp.sh"           # For PHP gmp extension
+    "${SCRIPT_DIR}/36-libjudy.sh"       # For memprof extension
 
     # Calculate elapsed time
     local elapsed=$((SECONDS - start_time))

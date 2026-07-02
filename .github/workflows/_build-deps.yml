@@ -483,6 +483,7 @@ jobs:
           - { name: libssh2, script: "33-libssh2.sh", libs: "libssh2.a" }
           - { name: libmcrypt, script: "34-libmcrypt.sh", libs: "libmcrypt.a" }
           - { name: gmp, script: "35-gmp.sh", libs: "libgmp.a" }
+          - { name: libjudy, script: "36-libjudy.sh", libs: "libJudy.a" }
     steps:
       - uses: actions/checkout@v4
 

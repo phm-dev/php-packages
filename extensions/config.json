@@ -255,6 +255,13 @@
       "pecl": "pq",
       "pecl_options": [],
       "description": "PostgreSQL async client"
+    },
+    "memprof": {
+      "packagist": "arnaud-lb/memprof",
+      "pie_options": [
+        "--with-judy-dir=/opt/phm-deps/darwin-arm64"
+      ],
+      "description": "Memory profiler for PHP (find memory leaks)"
     }
   },
   "php_versions_api": "https://php.watch/api/v1/versions/secure",
