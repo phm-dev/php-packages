@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "generated": "2026-07-02T08:27:10Z",
+  "generated": "2026-07-02T08:33:13Z",
   "latest": {
     "8.5": "8.5.7",
     "8.4": "8.4.22",
@@ -7559,6 +7559,16 @@
         },
         {
           "name": "php8.4-xdebug",
+          "version": "3.5.3",
+          "php_version": "8.4.22",
+          "description": "xdebug extension for PHP 8.4",
+          "depends": [
+            "php8.4-common (>= 8.4.22)"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.4.22/php8.4.22-xdebug3.5.3_darwin-arm64.tar.zst"
+        },
+        {
+          "name": "php8.4-xdebug",
           "version": "3.5.1",
           "php_version": "8.4.18",
           "description": "xdebug extension for PHP 8.4",
@@ -8726,6 +8736,16 @@
             "php8.4-common (>= 8.4.17)"
           ],
           "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.4.17/php8.4.17-mongodb2.1.4_darwin-arm64.tar.zst"
+        },
+        {
+          "name": "php8.4-memprof",
+          "version": "3.1.0",
+          "php_version": "8.4.22",
+          "description": "memprof extension for PHP 8.4",
+          "depends": [
+            "php8.4-common (>= 8.4.22)"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.4.22/php8.4.22-memprof3.1.0_darwin-arm64.tar.zst"
         },
         {
           "name": "php8.4-mcrypt",
@@ -12541,6 +12561,16 @@
         },
         {
           "name": "php8.2-xdebug",
+          "version": "3.5.3",
+          "php_version": "8.2.31",
+          "description": "xdebug extension for PHP 8.2",
+          "depends": [
+            "php8.2-common (>= 8.2.31)"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.2.31/php8.2.31-xdebug3.5.3_darwin-arm64.tar.zst"
+        },
+        {
+          "name": "php8.2-xdebug",
           "version": "3.5.1",
           "php_version": "8.2.31",
           "description": "xdebug extension for PHP 8.2",
@@ -12868,6 +12898,16 @@
             "php8.2-common (>= 8.2.30)"
           ],
           "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.2.30/php8.2.30-mongodb2.1.4_darwin-arm64.tar.zst"
+        },
+        {
+          "name": "php8.2-memprof",
+          "version": "3.1.0",
+          "php_version": "8.2.31",
+          "description": "memprof extension for PHP 8.2",
+          "depends": [
+            "php8.2-common (>= 8.2.31)"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.2.31/php8.2.31-memprof3.1.0_darwin-arm64.tar.zst"
         },
         {
           "name": "php8.2-mcrypt",
