@@ -1,11 +1,11 @@
 {
   "version": 2,
-  "generated": "2026-07-03T06:37:28Z",
+  "generated": "2026-07-03T06:41:36Z",
   "latest": {
+    "8.4": "8.4.23",
+    "8.3": "8.3.32",
     "8.2": "8.2.32",
     "8.5": "8.5.7",
-    "8.4": "8.4.22",
-    "8.3": "8.3.31",
     "8.1": "8.1.34"
   },
   "platforms": {
@@ -10333,6 +10333,16 @@
         },
         {
           "name": "php8.4-calendar",
+          "version": "8.4.23",
+          "php_version": "8.4.23",
+          "description": "calendar extension for PHP 8.4",
+          "depends": [
+            "php8.4-common (>= 8.4.23)"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.4.23/php8.4-calendar_8.4.23-1_darwin-arm64.tar.zst"
+        },
+        {
+          "name": "php8.4-calendar",
           "version": "8.4.22",
           "php_version": "8.4.22",
           "description": "calendar extension for PHP 8.4",
@@ -10410,6 +10420,16 @@
             "php8.4-common (>= 8.4.7)"
           ],
           "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.4.7/php8.4-bcmath_8.4.7-1_darwin-arm64.tar.zst"
+        },
+        {
+          "name": "php8.4-bcmath",
+          "version": "8.4.23",
+          "php_version": "8.4.23",
+          "description": "bcmath extension for PHP 8.4",
+          "depends": [
+            "php8.4-common (>= 8.4.23)"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.4.23/php8.4-bcmath_8.4.23-1_darwin-arm64.tar.zst"
         },
         {
           "name": "php8.4-bcmath",
@@ -10777,6 +10797,16 @@
         },
         {
           "name": "php8.3-zstd",
+          "version": "0.17.0",
+          "php_version": "8.3.32",
+          "description": "zstd extension for PHP 8.3",
+          "depends": [
+            "php8.3-common (>= 8.3.32)"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.32/php8.3.32-zstd0.17.0_darwin-arm64.tar.zst"
+        },
+        {
+          "name": "php8.3-zstd",
           "version": "0.15.2",
           "php_version": "8.3.31",
           "description": "zstd extension for PHP 8.3",
@@ -10784,6 +10814,16 @@
             "php8.3-common (>= 8.3.31)"
           ],
           "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.31/php8.3.31-zstd0.15.2_darwin-arm64.tar.zst"
+        },
+        {
+          "name": "php8.3-zip",
+          "version": "8.3.32",
+          "php_version": "8.3.32",
+          "description": "zip extension for PHP 8.3",
+          "depends": [
+            "php8.3-common (>= 8.3.32)"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.32/php8.3-zip_8.3.32-1_darwin-arm64.tar.zst"
         },
         {
           "name": "php8.3-zip",
@@ -10866,6 +10906,26 @@
           "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.31/php8.3.31-yaml2.3.0_darwin-arm64.tar.zst"
         },
         {
+          "name": "php8.3-yaml",
+          "version": "2.3.0",
+          "php_version": "8.3.32",
+          "description": "yaml extension for PHP 8.3",
+          "depends": [
+            "php8.3-common (>= 8.3.32)"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.32/php8.3.32-yaml2.3.0_darwin-arm64.tar.zst"
+        },
+        {
+          "name": "php8.3-xml",
+          "version": "8.3.32",
+          "php_version": "8.3.32",
+          "description": "xml extension for PHP 8.3",
+          "depends": [
+            "php8.3-common (>= 8.3.32)"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.32/php8.3-xml_8.3.32-1_darwin-arm64.tar.zst"
+        },
+        {
           "name": "php8.3-xml",
           "version": "8.3.31",
           "php_version": "8.3.31",
@@ -10914,6 +10974,16 @@
             "php8.3-common (>= 8.3.31)"
           ],
           "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.31/php8.3.31-xdebug3.5.3_darwin-arm64.tar.zst"
+        },
+        {
+          "name": "php8.3-xdebug",
+          "version": "3.5.3",
+          "php_version": "8.3.32",
+          "description": "xdebug extension for PHP 8.3",
+          "depends": [
+            "php8.3-common (>= 8.3.32)"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.32/php8.3.32-xdebug3.5.3_darwin-arm64.tar.zst"
         },
         {
           "name": "php8.3-xdebug",
@@ -10986,6 +11056,16 @@
           "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.31/php8.3.31-uploadprogress2.0.2_darwin-arm64.tar.zst"
         },
         {
+          "name": "php8.3-uploadprogress",
+          "version": "2.0.2",
+          "php_version": "8.3.32",
+          "description": "uploadprogress extension for PHP 8.3",
+          "depends": [
+            "php8.3-common (>= 8.3.32)"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.32/php8.3.32-uploadprogress2.0.2_darwin-arm64.tar.zst"
+        },
+        {
           "name": "php8.3-uopz",
           "version": "7.1.1",
           "php_version": "8.3.29",
@@ -11016,6 +11096,16 @@
           "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.31/php8.3.31-uopz7.1.1_darwin-arm64.tar.zst"
         },
         {
+          "name": "php8.3-uopz",
+          "version": "7.1.1",
+          "php_version": "8.3.32",
+          "description": "uopz extension for PHP 8.3",
+          "depends": [
+            "php8.3-common (>= 8.3.32)"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.32/php8.3.32-uopz7.1.1_darwin-arm64.tar.zst"
+        },
+        {
           "name": "php8.3-stomp",
           "version": "2.0.3",
           "php_version": "8.3.29",
@@ -11044,6 +11134,26 @@
             "php8.3-common (>= 8.3.31)"
           ],
           "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.31/php8.3.31-stomp2.0.3_darwin-arm64.tar.zst"
+        },
+        {
+          "name": "php8.3-stomp",
+          "version": "2.0.3",
+          "php_version": "8.3.32",
+          "description": "stomp extension for PHP 8.3",
+          "depends": [
+            "php8.3-common (>= 8.3.32)"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.32/php8.3.32-stomp2.0.3_darwin-arm64.tar.zst"
+        },
+        {
+          "name": "php8.3-sockets",
+          "version": "8.3.32",
+          "php_version": "8.3.32",
+          "description": "sockets extension for PHP 8.3",
+          "depends": [
+            "php8.3-common (>= 8.3.32)"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.32/php8.3-sockets_8.3.32-1_darwin-arm64.tar.zst"
         },
         {
           "name": "php8.3-sockets",
@@ -11084,6 +11194,16 @@
             "php8.3-common (>= 8.3.15)"
           ],
           "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.15/php8.3-sockets_8.3.15-1_darwin-arm64.tar.zst"
+        },
+        {
+          "name": "php8.3-soap",
+          "version": "8.3.32",
+          "php_version": "8.3.32",
+          "description": "soap extension for PHP 8.3",
+          "depends": [
+            "php8.3-common (>= 8.3.32)"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.32/php8.3-soap_8.3.32-1_darwin-arm64.tar.zst"
         },
         {
           "name": "php8.3-soap",
@@ -11147,6 +11267,16 @@
         },
         {
           "name": "php8.3-protobuf",
+          "version": "5.35.1",
+          "php_version": "8.3.32",
+          "description": "protobuf extension for PHP 8.3",
+          "depends": [
+            "php8.3-common (>= 8.3.32)"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.32/php8.3.32-protobuf5.35.1_darwin-arm64.tar.zst"
+        },
+        {
+          "name": "php8.3-protobuf",
           "version": "5.34.1",
           "php_version": "8.3.31",
           "description": "protobuf extension for PHP 8.3",
@@ -11174,6 +11304,16 @@
             "php8.3-common (>= 8.3.29)"
           ],
           "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.29/php8.3.29-protobuf4.33.2_darwin-arm64.tar.zst"
+        },
+        {
+          "name": "php8.3-pgsql",
+          "version": "8.3.32",
+          "php_version": "8.3.32",
+          "description": "pgsql extension for PHP 8.3",
+          "depends": [
+            "php8.3-common (>= 8.3.32)"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.32/php8.3-pgsql_8.3.32-1_darwin-arm64.tar.zst"
         },
         {
           "name": "php8.3-pgsql",
@@ -11214,6 +11354,16 @@
             "php8.3-common (>= 8.3.15)"
           ],
           "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.15/php8.3-pgsql_8.3.15-1_darwin-arm64.tar.zst"
+        },
+        {
+          "name": "php8.3-pear",
+          "version": "8.3.32",
+          "php_version": "8.3.32",
+          "description": "PHP 8.3 PEAR/PECL tools",
+          "depends": [
+            "php8.3-cli (>= 8.3.32)"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.32/php8.3.32-pear_darwin-arm64.tar.zst"
         },
         {
           "name": "php8.3-pear",
@@ -11286,6 +11436,26 @@
           "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.31/php8.3.31-pcov1.0.12_darwin-arm64.tar.zst"
         },
         {
+          "name": "php8.3-pcov",
+          "version": "1.0.12",
+          "php_version": "8.3.32",
+          "description": "pcov extension for PHP 8.3",
+          "depends": [
+            "php8.3-common (>= 8.3.32)"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.32/php8.3.32-pcov1.0.12_darwin-arm64.tar.zst"
+        },
+        {
+          "name": "php8.3-pcntl",
+          "version": "8.3.32",
+          "php_version": "8.3.32",
+          "description": "pcntl extension for PHP 8.3",
+          "depends": [
+            "php8.3-common (>= 8.3.32)"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.32/php8.3-pcntl_8.3.32-1_darwin-arm64.tar.zst"
+        },
+        {
           "name": "php8.3-pcntl",
           "version": "8.3.31",
           "php_version": "8.3.31",
@@ -11334,6 +11504,16 @@
             "php8.3-common (>= 8.3.31)"
           ],
           "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.31/php8.3.31-opentelemetry1.3.1_darwin-arm64.tar.zst"
+        },
+        {
+          "name": "php8.3-opentelemetry",
+          "version": "1.3.1",
+          "php_version": "8.3.32",
+          "description": "opentelemetry extension for PHP 8.3",
+          "depends": [
+            "php8.3-common (>= 8.3.32)"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.32/php8.3.32-opentelemetry1.3.1_darwin-arm64.tar.zst"
         },
         {
           "name": "php8.3-opentelemetry",
@@ -11396,6 +11576,26 @@
           "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.31/php8.3.31-oauth2.0.10_darwin-arm64.tar.zst"
         },
         {
+          "name": "php8.3-oauth",
+          "version": "2.0.10",
+          "php_version": "8.3.32",
+          "description": "oauth extension for PHP 8.3",
+          "depends": [
+            "php8.3-common (>= 8.3.32)"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.32/php8.3.32-oauth2.0.10_darwin-arm64.tar.zst"
+        },
+        {
+          "name": "php8.3-mysql",
+          "version": "8.3.32",
+          "php_version": "8.3.32",
+          "description": "mysql extension for PHP 8.3",
+          "depends": [
+            "php8.3-common (>= 8.3.32)"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.32/php8.3-mysql_8.3.32-1_darwin-arm64.tar.zst"
+        },
+        {
           "name": "php8.3-mysql",
           "version": "8.3.31",
           "php_version": "8.3.31",
@@ -11447,6 +11647,16 @@
         },
         {
           "name": "php8.3-msgpack",
+          "version": "3.0.1",
+          "php_version": "8.3.32",
+          "description": "msgpack extension for PHP 8.3",
+          "depends": [
+            "php8.3-common (>= 8.3.32)"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.32/php8.3.32-msgpack3.0.1_darwin-arm64.tar.zst"
+        },
+        {
+          "name": "php8.3-msgpack",
           "version": "3.0.0",
           "php_version": "8.3.29",
           "description": "msgpack extension for PHP 8.3",
@@ -11474,6 +11684,16 @@
             "php8.3-common (>= 8.3.31)"
           ],
           "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.31/php8.3.31-msgpack3.0.0_darwin-arm64.tar.zst"
+        },
+        {
+          "name": "php8.3-mongodb",
+          "version": "2.3.3",
+          "php_version": "8.3.32",
+          "description": "mongodb extension for PHP 8.3",
+          "depends": [
+            "php8.3-common (>= 8.3.32)"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.32/php8.3.32-mongodb2.3.3_darwin-arm64.tar.zst"
         },
         {
           "name": "php8.3-mongodb",
@@ -11526,6 +11746,16 @@
           "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.31/php8.3.31-memprof3.1.0_darwin-arm64.tar.zst"
         },
         {
+          "name": "php8.3-memprof",
+          "version": "3.1.0",
+          "php_version": "8.3.32",
+          "description": "memprof extension for PHP 8.3",
+          "depends": [
+            "php8.3-common (>= 8.3.32)"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.32/php8.3.32-memprof3.1.0_darwin-arm64.tar.zst"
+        },
+        {
           "name": "php8.3-mcrypt",
           "version": "1.0.9",
           "php_version": "8.3.15",
@@ -11564,6 +11794,26 @@
             "php8.3-common (>= 8.3.31)"
           ],
           "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.31/php8.3.31-mcrypt1.0.9_darwin-arm64.tar.zst"
+        },
+        {
+          "name": "php8.3-mcrypt",
+          "version": "1.0.9",
+          "php_version": "8.3.32",
+          "description": "mcrypt extension for PHP 8.3",
+          "depends": [
+            "php8.3-common (>= 8.3.32)"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.32/php8.3.32-mcrypt1.0.9_darwin-arm64.tar.zst"
+        },
+        {
+          "name": "php8.3-mbstring",
+          "version": "8.3.32",
+          "php_version": "8.3.32",
+          "description": "mbstring extension for PHP 8.3",
+          "depends": [
+            "php8.3-common (>= 8.3.32)"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.32/php8.3-mbstring_8.3.32-1_darwin-arm64.tar.zst"
         },
         {
           "name": "php8.3-mbstring",
@@ -11617,6 +11867,16 @@
         },
         {
           "name": "php8.3-mailparse",
+          "version": "3.2.0",
+          "php_version": "8.3.32",
+          "description": "mailparse extension for PHP 8.3",
+          "depends": [
+            "php8.3-common (>= 8.3.32)"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.32/php8.3.32-mailparse3.2.0_darwin-arm64.tar.zst"
+        },
+        {
+          "name": "php8.3-mailparse",
           "version": "3.1.9",
           "php_version": "8.3.15",
           "description": "mailparse extension for PHP 8.3",
@@ -11644,6 +11904,16 @@
             "php8.3-common (>= 8.3.30)"
           ],
           "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.30/php8.3.30-mailparse3.1.9_darwin-arm64.tar.zst"
+        },
+        {
+          "name": "php8.3-libedit",
+          "version": "8.3.32",
+          "php_version": "8.3.32",
+          "description": "libedit extension for PHP 8.3",
+          "depends": [
+            "php8.3-common (>= 8.3.32)"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.32/php8.3-libedit_8.3.32-1_darwin-arm64.tar.zst"
         },
         {
           "name": "php8.3-libedit",
@@ -11684,6 +11954,16 @@
             "php8.3-common (>= 8.3.15)"
           ],
           "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.15/php8.3-libedit_8.3.15-1_darwin-arm64.tar.zst"
+        },
+        {
+          "name": "php8.3-intl",
+          "version": "8.3.32",
+          "php_version": "8.3.32",
+          "description": "intl extension for PHP 8.3",
+          "depends": [
+            "php8.3-common (>= 8.3.32)"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.32/php8.3-intl_8.3.32-1_darwin-arm64.tar.zst"
         },
         {
           "name": "php8.3-intl",
@@ -11766,6 +12046,16 @@
           "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.31/php8.3.31-imagick3.8.1_darwin-arm64.tar.zst"
         },
         {
+          "name": "php8.3-imagick",
+          "version": "3.8.1",
+          "php_version": "8.3.32",
+          "description": "imagick extension for PHP 8.3",
+          "depends": [
+            "php8.3-common (>= 8.3.32)"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.32/php8.3.32-imagick3.8.1_darwin-arm64.tar.zst"
+        },
+        {
           "name": "php8.3-igbinary",
           "version": "3.2.16",
           "php_version": "8.3.29",
@@ -11794,6 +12084,26 @@
             "php8.3-common (>= 8.3.31)"
           ],
           "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.31/php8.3.31-igbinary3.2.16_darwin-arm64.tar.zst"
+        },
+        {
+          "name": "php8.3-igbinary",
+          "version": "3.2.16",
+          "php_version": "8.3.32",
+          "description": "igbinary extension for PHP 8.3",
+          "depends": [
+            "php8.3-common (>= 8.3.32)"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.32/php8.3.32-igbinary3.2.16_darwin-arm64.tar.zst"
+        },
+        {
+          "name": "php8.3-gd",
+          "version": "8.3.32",
+          "php_version": "8.3.32",
+          "description": "gd extension for PHP 8.3",
+          "depends": [
+            "php8.3-common (>= 8.3.32)"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.32/php8.3-gd_8.3.32-1_darwin-arm64.tar.zst"
         },
         {
           "name": "php8.3-gd",
@@ -11837,6 +12147,16 @@
         },
         {
           "name": "php8.3-ftp",
+          "version": "8.3.32",
+          "php_version": "8.3.32",
+          "description": "ftp extension for PHP 8.3",
+          "depends": [
+            "php8.3-common (>= 8.3.32)"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.32/php8.3-ftp_8.3.32-1_darwin-arm64.tar.zst"
+        },
+        {
+          "name": "php8.3-ftp",
           "version": "8.3.31",
           "php_version": "8.3.31",
           "description": "ftp extension for PHP 8.3",
@@ -11877,6 +12197,16 @@
         },
         {
           "name": "php8.3-fpm",
+          "version": "8.3.32",
+          "php_version": "8.3.32",
+          "description": "PHP 8.3 FastCGI Process Manager",
+          "depends": [
+            "php8.3-common (>= 8.3.32)"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.32/php8.3.32-fpm_darwin-arm64.tar.zst"
+        },
+        {
+          "name": "php8.3-fpm",
           "version": "8.3.31",
           "php_version": "8.3.31",
           "description": "PHP 8.3 FastCGI Process Manager",
@@ -11914,6 +12244,16 @@
             "php8.3-common (>= 8.3.15)"
           ],
           "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.15/php8.3.15-fpm_darwin-arm64.tar.zst"
+        },
+        {
+          "name": "php8.3-exif",
+          "version": "8.3.32",
+          "php_version": "8.3.32",
+          "description": "exif extension for PHP 8.3",
+          "depends": [
+            "php8.3-common (>= 8.3.32)"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.32/php8.3-exif_8.3.32-1_darwin-arm64.tar.zst"
         },
         {
           "name": "php8.3-exif",
@@ -11967,6 +12307,16 @@
         },
         {
           "name": "php8.3-excimer",
+          "version": "1.2.6",
+          "php_version": "8.3.32",
+          "description": "excimer extension for PHP 8.3",
+          "depends": [
+            "php8.3-common (>= 8.3.32)"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.32/php8.3.32-excimer1.2.6_darwin-arm64.tar.zst"
+        },
+        {
+          "name": "php8.3-excimer",
           "version": "1.2.5",
           "php_version": "8.3.29",
           "description": "excimer extension for PHP 8.3",
@@ -11994,6 +12344,16 @@
             "php8.3-common (>= 8.3.31)"
           ],
           "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.31/php8.3.31-ev1.2.3_darwin-arm64.tar.zst"
+        },
+        {
+          "name": "php8.3-ev",
+          "version": "1.2.3",
+          "php_version": "8.3.32",
+          "description": "ev extension for PHP 8.3",
+          "depends": [
+            "php8.3-common (>= 8.3.32)"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.32/php8.3.32-ev1.2.3_darwin-arm64.tar.zst"
         },
         {
           "name": "php8.3-ev",
@@ -12034,6 +12394,16 @@
             "php8.3-common (>= 8.3.31)"
           ],
           "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.31/php8.3.31-ds2.0.0_darwin-arm64.tar.zst"
+        },
+        {
+          "name": "php8.3-ds",
+          "version": "2.0.0",
+          "php_version": "8.3.32",
+          "description": "ds extension for PHP 8.3",
+          "depends": [
+            "php8.3-common (>= 8.3.32)"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.32/php8.3.32-ds2.0.0_darwin-arm64.tar.zst"
         },
         {
           "name": "php8.3-ds",
@@ -12096,6 +12466,26 @@
           "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.31/php8.3.31-dio0.3.0+pie_darwin-arm64.tar.zst"
         },
         {
+          "name": "php8.3-dio",
+          "version": "0.3.0+pie",
+          "php_version": "8.3.32",
+          "description": "dio extension for PHP 8.3",
+          "depends": [
+            "php8.3-common (>= 8.3.32)"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.32/php8.3.32-dio0.3.0+pie_darwin-arm64.tar.zst"
+        },
+        {
+          "name": "php8.3-dev",
+          "version": "8.3.32",
+          "php_version": "8.3.32",
+          "description": "PHP 8.3 development files",
+          "depends": [
+            "php8.3-common (>= 8.3.32)"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.32/php8.3.32-dev_darwin-arm64.tar.zst"
+        },
+        {
           "name": "php8.3-dev",
           "version": "8.3.31",
           "php_version": "8.3.31",
@@ -12134,6 +12524,16 @@
             "php8.3-common (>= 8.3.15)"
           ],
           "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.15/php8.3.15-dev_darwin-arm64.tar.zst"
+        },
+        {
+          "name": "php8.3-curl",
+          "version": "8.3.32",
+          "php_version": "8.3.32",
+          "description": "curl extension for PHP 8.3",
+          "depends": [
+            "php8.3-common (>= 8.3.32)"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.32/php8.3-curl_8.3.32-1_darwin-arm64.tar.zst"
         },
         {
           "name": "php8.3-curl",
@@ -12177,6 +12577,14 @@
         },
         {
           "name": "php8.3-common",
+          "version": "8.3.32",
+          "php_version": "8.3.32",
+          "description": "PHP 8.3 common files",
+          "depends": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.32/php8.3.32-common_darwin-arm64.tar.zst"
+        },
+        {
+          "name": "php8.3-common",
           "version": "8.3.31",
           "php_version": "8.3.31",
           "description": "PHP 8.3 common files",
@@ -12206,6 +12614,16 @@
           "description": "PHP 8.3 common files",
           "depends": [],
           "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.15/php8.3.15-common_darwin-arm64.tar.zst"
+        },
+        {
+          "name": "php8.3-cli",
+          "version": "8.3.32",
+          "php_version": "8.3.32",
+          "description": "PHP 8.3 CLI interpreter",
+          "depends": [
+            "php8.3-common (>= 8.3.32)"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.32/php8.3.32-cli_darwin-arm64.tar.zst"
         },
         {
           "name": "php8.3-cli",
@@ -12249,6 +12667,16 @@
         },
         {
           "name": "php8.3-cgi",
+          "version": "8.3.32",
+          "php_version": "8.3.32",
+          "description": "PHP 8.3 CGI binary",
+          "depends": [
+            "php8.3-common (>= 8.3.32)"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.32/php8.3.32-cgi_darwin-arm64.tar.zst"
+        },
+        {
+          "name": "php8.3-cgi",
           "version": "8.3.31",
           "php_version": "8.3.31",
           "description": "PHP 8.3 CGI binary",
@@ -12289,6 +12717,16 @@
         },
         {
           "name": "php8.3-calendar",
+          "version": "8.3.32",
+          "php_version": "8.3.32",
+          "description": "calendar extension for PHP 8.3",
+          "depends": [
+            "php8.3-common (>= 8.3.32)"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.32/php8.3-calendar_8.3.32-1_darwin-arm64.tar.zst"
+        },
+        {
+          "name": "php8.3-calendar",
           "version": "8.3.31",
           "php_version": "8.3.31",
           "description": "calendar extension for PHP 8.3",
@@ -12326,6 +12764,16 @@
             "php8.3-common (>= 8.3.15)"
           ],
           "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.15/php8.3-calendar_8.3.15-1_darwin-arm64.tar.zst"
+        },
+        {
+          "name": "php8.3-bcmath",
+          "version": "8.3.32",
+          "php_version": "8.3.32",
+          "description": "bcmath extension for PHP 8.3",
+          "depends": [
+            "php8.3-common (>= 8.3.32)"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.32/php8.3-bcmath_8.3.32-1_darwin-arm64.tar.zst"
         },
         {
           "name": "php8.3-bcmath",
@@ -12408,6 +12856,16 @@
           "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.31/php8.3.31-ast1.1.3_darwin-arm64.tar.zst"
         },
         {
+          "name": "php8.3-ast",
+          "version": "1.1.3",
+          "php_version": "8.3.32",
+          "description": "ast extension for PHP 8.3",
+          "depends": [
+            "php8.3-common (>= 8.3.32)"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.32/php8.3.32-ast1.1.3_darwin-arm64.tar.zst"
+        },
+        {
           "name": "php8.3-apcu",
           "version": "5.1.28",
           "php_version": "8.3.15",
@@ -12448,6 +12906,16 @@
           "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.31/php8.3.31-apcu5.1.28_darwin-arm64.tar.zst"
         },
         {
+          "name": "php8.3-apcu",
+          "version": "5.1.28",
+          "php_version": "8.3.32",
+          "description": "apcu extension for PHP 8.3",
+          "depends": [
+            "php8.3-common (>= 8.3.32)"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.32/php8.3.32-apcu5.1.28_darwin-arm64.tar.zst"
+        },
+        {
           "name": "php8.3-amqp",
           "version": "2.2.0",
           "php_version": "8.3.29",
@@ -12476,6 +12944,24 @@
             "php8.3-common (>= 8.3.31)"
           ],
           "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.31/php8.3.31-amqp2.2.0_darwin-arm64.tar.zst"
+        },
+        {
+          "name": "php8.3-amqp",
+          "version": "2.2.0",
+          "php_version": "8.3.32",
+          "description": "amqp extension for PHP 8.3",
+          "depends": [
+            "php8.3-common (>= 8.3.32)"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.32/php8.3.32-amqp2.2.0_darwin-arm64.tar.zst"
+        },
+        {
+          "name": "php8.3",
+          "version": "8.3.32",
+          "php_version": "8.3.32",
+          "description": "PHP 8.3 meta package",
+          "depends": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.3.32/php8.3_8.3.32-1_darwin-arm64.tar.zst"
         },
         {
           "name": "php8.3",
@@ -12511,6 +12997,16 @@
         },
         {
           "name": "php8.2-zstd",
+          "version": "0.17.0",
+          "php_version": "8.2.32",
+          "description": "zstd extension for PHP 8.2",
+          "depends": [
+            "php8.2-common (>= 8.2.32)"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.2.32/php8.2.32-zstd0.17.0_darwin-arm64.tar.zst"
+        },
+        {
+          "name": "php8.2-zstd",
           "version": "0.15.2",
           "php_version": "8.2.31",
           "description": "zstd extension for PHP 8.2",
@@ -12518,6 +13014,16 @@
             "php8.2-common (>= 8.2.31)"
           ],
           "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.2.31/php8.2.31-zstd0.15.2_darwin-arm64.tar.zst"
+        },
+        {
+          "name": "php8.2-zip",
+          "version": "8.2.32",
+          "php_version": "8.2.32",
+          "description": "zip extension for PHP 8.2",
+          "depends": [
+            "php8.2-common (>= 8.2.32)"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.2.32/php8.2-zip_8.2.32-1_darwin-arm64.tar.zst"
         },
         {
           "name": "php8.2-zip",
@@ -12560,6 +13066,26 @@
           "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.2.31/php8.2.31-yaml2.3.0_darwin-arm64.tar.zst"
         },
         {
+          "name": "php8.2-yaml",
+          "version": "2.3.0",
+          "php_version": "8.2.32",
+          "description": "yaml extension for PHP 8.2",
+          "depends": [
+            "php8.2-common (>= 8.2.32)"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.2.32/php8.2.32-yaml2.3.0_darwin-arm64.tar.zst"
+        },
+        {
+          "name": "php8.2-xml",
+          "version": "8.2.32",
+          "php_version": "8.2.32",
+          "description": "xml extension for PHP 8.2",
+          "depends": [
+            "php8.2-common (>= 8.2.32)"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.2.32/php8.2-xml_8.2.32-1_darwin-arm64.tar.zst"
+        },
+        {
           "name": "php8.2-xml",
           "version": "8.2.31",
           "php_version": "8.2.31",
@@ -12588,6 +13114,16 @@
             "php8.2-common (>= 8.2.31)"
           ],
           "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.2.31/php8.2.31-xdebug3.5.3_darwin-arm64.tar.zst"
+        },
+        {
+          "name": "php8.2-xdebug",
+          "version": "3.5.3",
+          "php_version": "8.2.32",
+          "description": "xdebug extension for PHP 8.2",
+          "depends": [
+            "php8.2-common (>= 8.2.32)"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.2.32/php8.2.32-xdebug3.5.3_darwin-arm64.tar.zst"
         },
         {
           "name": "php8.2-xdebug",
@@ -12630,6 +13166,16 @@
           "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.2.31/php8.2.31-uploadprogress2.0.2_darwin-arm64.tar.zst"
         },
         {
+          "name": "php8.2-uploadprogress",
+          "version": "2.0.2",
+          "php_version": "8.2.32",
+          "description": "uploadprogress extension for PHP 8.2",
+          "depends": [
+            "php8.2-common (>= 8.2.32)"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.2.32/php8.2.32-uploadprogress2.0.2_darwin-arm64.tar.zst"
+        },
+        {
           "name": "php8.2-uopz",
           "version": "7.1.1",
           "php_version": "8.2.30",
@@ -12648,6 +13194,16 @@
             "php8.2-common (>= 8.2.31)"
           ],
           "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.2.31/php8.2.31-uopz7.1.1_darwin-arm64.tar.zst"
+        },
+        {
+          "name": "php8.2-uopz",
+          "version": "7.1.1",
+          "php_version": "8.2.32",
+          "description": "uopz extension for PHP 8.2",
+          "depends": [
+            "php8.2-common (>= 8.2.32)"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.2.32/php8.2.32-uopz7.1.1_darwin-arm64.tar.zst"
         },
         {
           "name": "php8.2-stomp",
@@ -12670,6 +13226,26 @@
           "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.2.31/php8.2.31-stomp2.0.3_darwin-arm64.tar.zst"
         },
         {
+          "name": "php8.2-stomp",
+          "version": "2.0.3",
+          "php_version": "8.2.32",
+          "description": "stomp extension for PHP 8.2",
+          "depends": [
+            "php8.2-common (>= 8.2.32)"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.2.32/php8.2.32-stomp2.0.3_darwin-arm64.tar.zst"
+        },
+        {
+          "name": "php8.2-sockets",
+          "version": "8.2.32",
+          "php_version": "8.2.32",
+          "description": "sockets extension for PHP 8.2",
+          "depends": [
+            "php8.2-common (>= 8.2.32)"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.2.32/php8.2-sockets_8.2.32-1_darwin-arm64.tar.zst"
+        },
+        {
           "name": "php8.2-sockets",
           "version": "8.2.31",
           "php_version": "8.2.31",
@@ -12688,6 +13264,16 @@
             "php8.2-common (>= 8.2.30)"
           ],
           "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.2.30/php8.2-sockets_8.2.30-1_darwin-arm64.tar.zst"
+        },
+        {
+          "name": "php8.2-soap",
+          "version": "8.2.32",
+          "php_version": "8.2.32",
+          "description": "soap extension for PHP 8.2",
+          "depends": [
+            "php8.2-common (>= 8.2.32)"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.2.32/php8.2-soap_8.2.32-1_darwin-arm64.tar.zst"
         },
         {
           "name": "php8.2-soap",
@@ -12718,6 +13304,16 @@
             "php8.2-common (>= 8.2.30)"
           ],
           "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.2.30/php8.2.30-redis6.3.0_darwin-arm64.tar.zst"
+        },
+        {
+          "name": "php8.2-protobuf",
+          "version": "5.35.1",
+          "php_version": "8.2.32",
+          "description": "protobuf extension for PHP 8.2",
+          "depends": [
+            "php8.2-common (>= 8.2.32)"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.2.32/php8.2.32-protobuf5.35.1_darwin-arm64.tar.zst"
         },
         {
           "name": "php8.2-protobuf",
@@ -12771,6 +13367,16 @@
         },
         {
           "name": "php8.2-pear",
+          "version": "8.2.32",
+          "php_version": "8.2.32",
+          "description": "PHP 8.2 PEAR/PECL tools",
+          "depends": [
+            "php8.2-cli (>= 8.2.32)"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.2.32/php8.2.32-pear_darwin-arm64.tar.zst"
+        },
+        {
+          "name": "php8.2-pear",
           "version": "8.2.31",
           "php_version": "8.2.31",
           "description": "PHP 8.2 PEAR/PECL tools",
@@ -12808,6 +13414,16 @@
             "php8.2-common (>= 8.2.31)"
           ],
           "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.2.31/php8.2.31-pcov1.0.12_darwin-arm64.tar.zst"
+        },
+        {
+          "name": "php8.2-pcov",
+          "version": "1.0.12",
+          "php_version": "8.2.32",
+          "description": "pcov extension for PHP 8.2",
+          "depends": [
+            "php8.2-common (>= 8.2.32)"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.2.32/php8.2.32-pcov1.0.12_darwin-arm64.tar.zst"
         },
         {
           "name": "php8.2-pcntl",
@@ -12851,6 +13467,16 @@
         },
         {
           "name": "php8.2-opentelemetry",
+          "version": "1.3.1",
+          "php_version": "8.2.32",
+          "description": "opentelemetry extension for PHP 8.2",
+          "depends": [
+            "php8.2-common (>= 8.2.32)"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.2.32/php8.2.32-opentelemetry1.3.1_darwin-arm64.tar.zst"
+        },
+        {
+          "name": "php8.2-opentelemetry",
           "version": "1.2.1",
           "php_version": "8.2.30",
           "description": "opentelemetry extension for PHP 8.2",
@@ -12878,6 +13504,16 @@
             "php8.2-common (>= 8.2.31)"
           ],
           "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.2.31/php8.2.31-oauth2.0.10_darwin-arm64.tar.zst"
+        },
+        {
+          "name": "php8.2-oauth",
+          "version": "2.0.10",
+          "php_version": "8.2.32",
+          "description": "oauth extension for PHP 8.2",
+          "depends": [
+            "php8.2-common (>= 8.2.32)"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.2.32/php8.2.32-oauth2.0.10_darwin-arm64.tar.zst"
         },
         {
           "name": "php8.2-mysql",
@@ -12911,6 +13547,16 @@
         },
         {
           "name": "php8.2-msgpack",
+          "version": "3.0.1",
+          "php_version": "8.2.32",
+          "description": "msgpack extension for PHP 8.2",
+          "depends": [
+            "php8.2-common (>= 8.2.32)"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.2.32/php8.2.32-msgpack3.0.1_darwin-arm64.tar.zst"
+        },
+        {
+          "name": "php8.2-msgpack",
           "version": "3.0.0",
           "php_version": "8.2.30",
           "description": "msgpack extension for PHP 8.2",
@@ -12928,6 +13574,16 @@
             "php8.2-common (>= 8.2.31)"
           ],
           "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.2.31/php8.2.31-msgpack3.0.0_darwin-arm64.tar.zst"
+        },
+        {
+          "name": "php8.2-mongodb",
+          "version": "2.3.3",
+          "php_version": "8.2.32",
+          "description": "mongodb extension for PHP 8.2",
+          "depends": [
+            "php8.2-common (>= 8.2.32)"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.2.32/php8.2.32-mongodb2.3.3_darwin-arm64.tar.zst"
         },
         {
           "name": "php8.2-mongodb",
@@ -12960,6 +13616,16 @@
           "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.2.31/php8.2.31-memprof3.1.0_darwin-arm64.tar.zst"
         },
         {
+          "name": "php8.2-memprof",
+          "version": "3.1.0",
+          "php_version": "8.2.32",
+          "description": "memprof extension for PHP 8.2",
+          "depends": [
+            "php8.2-common (>= 8.2.32)"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.2.32/php8.2.32-memprof3.1.0_darwin-arm64.tar.zst"
+        },
+        {
           "name": "php8.2-mcrypt",
           "version": "1.0.9",
           "php_version": "8.2.30",
@@ -12978,6 +13644,16 @@
             "php8.2-common (>= 8.2.31)"
           ],
           "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.2.31/php8.2.31-mcrypt1.0.9_darwin-arm64.tar.zst"
+        },
+        {
+          "name": "php8.2-mcrypt",
+          "version": "1.0.9",
+          "php_version": "8.2.32",
+          "description": "mcrypt extension for PHP 8.2",
+          "depends": [
+            "php8.2-common (>= 8.2.32)"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.2.32/php8.2.32-mcrypt1.0.9_darwin-arm64.tar.zst"
         },
         {
           "name": "php8.2-mbstring",
@@ -13018,6 +13694,16 @@
             "php8.2-common (>= 8.2.31)"
           ],
           "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.2.31/php8.2.31-mailparse3.2.0_darwin-arm64.tar.zst"
+        },
+        {
+          "name": "php8.2-mailparse",
+          "version": "3.2.0",
+          "php_version": "8.2.32",
+          "description": "mailparse extension for PHP 8.2",
+          "depends": [
+            "php8.2-common (>= 8.2.32)"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.2.32/php8.2.32-mailparse3.2.0_darwin-arm64.tar.zst"
         },
         {
           "name": "php8.2-mailparse",
@@ -13110,6 +13796,16 @@
           "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.2.31/php8.2.31-imagick3.8.1_darwin-arm64.tar.zst"
         },
         {
+          "name": "php8.2-imagick",
+          "version": "3.8.1",
+          "php_version": "8.2.32",
+          "description": "imagick extension for PHP 8.2",
+          "depends": [
+            "php8.2-common (>= 8.2.32)"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.2.32/php8.2.32-imagick3.8.1_darwin-arm64.tar.zst"
+        },
+        {
           "name": "php8.2-igbinary",
           "version": "3.2.16",
           "php_version": "8.2.30",
@@ -13128,6 +13824,16 @@
             "php8.2-common (>= 8.2.31)"
           ],
           "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.2.31/php8.2.31-igbinary3.2.16_darwin-arm64.tar.zst"
+        },
+        {
+          "name": "php8.2-igbinary",
+          "version": "3.2.16",
+          "php_version": "8.2.32",
+          "description": "igbinary extension for PHP 8.2",
+          "depends": [
+            "php8.2-common (>= 8.2.32)"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.2.32/php8.2.32-igbinary3.2.16_darwin-arm64.tar.zst"
         },
         {
           "name": "php8.2-gd",
@@ -13191,6 +13897,16 @@
         },
         {
           "name": "php8.2-fpm",
+          "version": "8.2.32",
+          "php_version": "8.2.32",
+          "description": "PHP 8.2 FastCGI Process Manager",
+          "depends": [
+            "php8.2-common (>= 8.2.32)"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.2.32/php8.2.32-fpm_darwin-arm64.tar.zst"
+        },
+        {
+          "name": "php8.2-fpm",
           "version": "8.2.31",
           "php_version": "8.2.31",
           "description": "PHP 8.2 FastCGI Process Manager",
@@ -13251,6 +13967,16 @@
         },
         {
           "name": "php8.2-excimer",
+          "version": "1.2.6",
+          "php_version": "8.2.32",
+          "description": "excimer extension for PHP 8.2",
+          "depends": [
+            "php8.2-common (>= 8.2.32)"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.2.32/php8.2.32-excimer1.2.6_darwin-arm64.tar.zst"
+        },
+        {
+          "name": "php8.2-excimer",
           "version": "1.2.5",
           "php_version": "8.2.30",
           "description": "excimer extension for PHP 8.2",
@@ -13271,6 +13997,16 @@
         },
         {
           "name": "php8.2-ev",
+          "version": "1.2.3",
+          "php_version": "8.2.32",
+          "description": "ev extension for PHP 8.2",
+          "depends": [
+            "php8.2-common (>= 8.2.32)"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.2.32/php8.2.32-ev1.2.3_darwin-arm64.tar.zst"
+        },
+        {
+          "name": "php8.2-ev",
           "version": "1.2.2",
           "php_version": "8.2.30",
           "description": "ev extension for PHP 8.2",
@@ -13288,6 +14024,16 @@
             "php8.2-common (>= 8.2.31)"
           ],
           "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.2.31/php8.2.31-ds2.0.0_darwin-arm64.tar.zst"
+        },
+        {
+          "name": "php8.2-ds",
+          "version": "2.0.0",
+          "php_version": "8.2.32",
+          "description": "ds extension for PHP 8.2",
+          "depends": [
+            "php8.2-common (>= 8.2.32)"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.2.32/php8.2.32-ds2.0.0_darwin-arm64.tar.zst"
         },
         {
           "name": "php8.2-ds",
@@ -13318,6 +14064,26 @@
             "php8.2-common (>= 8.2.31)"
           ],
           "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.2.31/php8.2.31-dio0.3.0+pie_darwin-arm64.tar.zst"
+        },
+        {
+          "name": "php8.2-dio",
+          "version": "0.3.0+pie",
+          "php_version": "8.2.32",
+          "description": "dio extension for PHP 8.2",
+          "depends": [
+            "php8.2-common (>= 8.2.32)"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.2.32/php8.2.32-dio0.3.0+pie_darwin-arm64.tar.zst"
+        },
+        {
+          "name": "php8.2-dev",
+          "version": "8.2.32",
+          "php_version": "8.2.32",
+          "description": "PHP 8.2 development files",
+          "depends": [
+            "php8.2-common (>= 8.2.32)"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.2.32/php8.2.32-dev_darwin-arm64.tar.zst"
         },
         {
           "name": "php8.2-dev",
@@ -13371,6 +14137,14 @@
         },
         {
           "name": "php8.2-common",
+          "version": "8.2.32",
+          "php_version": "8.2.32",
+          "description": "PHP 8.2 common files",
+          "depends": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.2.32/php8.2.32-common_darwin-arm64.tar.zst"
+        },
+        {
+          "name": "php8.2-common",
           "version": "8.2.31",
           "php_version": "8.2.31",
           "description": "PHP 8.2 common files",
@@ -13384,6 +14158,16 @@
           "description": "PHP 8.2 common files",
           "depends": [],
           "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.2.30/php8.2.30-common_darwin-arm64.tar.zst"
+        },
+        {
+          "name": "php8.2-cli",
+          "version": "8.2.32",
+          "php_version": "8.2.32",
+          "description": "PHP 8.2 CLI interpreter",
+          "depends": [
+            "php8.2-common (>= 8.2.32)"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.2.32/php8.2.32-cli_darwin-arm64.tar.zst"
         },
         {
           "name": "php8.2-cli",
@@ -13404,6 +14188,16 @@
             "php8.2-common (>= 8.2.30)"
           ],
           "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.2.30/php8.2.30-cli_darwin-arm64.tar.zst"
+        },
+        {
+          "name": "php8.2-cgi",
+          "version": "8.2.32",
+          "php_version": "8.2.32",
+          "description": "PHP 8.2 CGI binary",
+          "depends": [
+            "php8.2-common (>= 8.2.32)"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.2.32/php8.2.32-cgi_darwin-arm64.tar.zst"
         },
         {
           "name": "php8.2-cgi",
@@ -13506,6 +14300,16 @@
           "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.2.31/php8.2.31-ast1.1.3_darwin-arm64.tar.zst"
         },
         {
+          "name": "php8.2-ast",
+          "version": "1.1.3",
+          "php_version": "8.2.32",
+          "description": "ast extension for PHP 8.2",
+          "depends": [
+            "php8.2-common (>= 8.2.32)"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.2.32/php8.2.32-ast1.1.3_darwin-arm64.tar.zst"
+        },
+        {
           "name": "php8.2-apcu",
           "version": "5.1.28",
           "php_version": "8.2.30",
@@ -13526,6 +14330,16 @@
           "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.2.31/php8.2.31-apcu5.1.28_darwin-arm64.tar.zst"
         },
         {
+          "name": "php8.2-apcu",
+          "version": "5.1.28",
+          "php_version": "8.2.32",
+          "description": "apcu extension for PHP 8.2",
+          "depends": [
+            "php8.2-common (>= 8.2.32)"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.2.32/php8.2.32-apcu5.1.28_darwin-arm64.tar.zst"
+        },
+        {
           "name": "php8.2-amqp",
           "version": "2.2.0",
           "php_version": "8.2.30",
@@ -13544,6 +14358,24 @@
             "php8.2-common (>= 8.2.31)"
           ],
           "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.2.31/php8.2.31-amqp2.2.0_darwin-arm64.tar.zst"
+        },
+        {
+          "name": "php8.2-amqp",
+          "version": "2.2.0",
+          "php_version": "8.2.32",
+          "description": "amqp extension for PHP 8.2",
+          "depends": [
+            "php8.2-common (>= 8.2.32)"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.2.32/php8.2.32-amqp2.2.0_darwin-arm64.tar.zst"
+        },
+        {
+          "name": "php8.2",
+          "version": "8.2.32",
+          "php_version": "8.2.32",
+          "description": "PHP 8.2 meta package",
+          "depends": [],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.2.32/php8.2_8.2.32-1_darwin-arm64.tar.zst"
         },
         {
           "name": "php8.2",
