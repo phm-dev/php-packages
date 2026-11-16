@@ -45,8 +45,11 @@ cd "$BUILD_DIR"
 # libmcrypt is old (2007) and its config.sub doesn't recognize modern macOS
 # Update config.sub and config.guess with modern versions
 log_info "Updating config.sub and config.guess for modern macOS..."
-curl -fsSL -o config.sub 'https://git.savannah.gnu.org/cgit/config.git/plain/config.sub'
-curl -fsSL -o config.guess 'https://git.savannah.gnu.org/cgit/config.git/plain/config.guess'
+# Automake is a build prerequisite and ships these files locally. Avoid a
+# network request to Savannah, which can fail independently of the build.
+AUTOMAKE_LIBDIR="$(automake --print-libdir)"
+cp "${AUTOMAKE_LIBDIR}/config.sub" config.sub
+cp "${AUTOMAKE_LIBDIR}/config.guess" config.guess
 chmod +x config.sub config.guess
 
 # libmcrypt is old and may need some fixes for modern compilers

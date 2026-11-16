@@ -17,6 +17,9 @@ on:
         type: boolean
         default: false
 
+permissions:
+  contents: write
+
 env:
   HOMEBREW_NO_AUTO_UPDATE: 1
   HOMEBREW_NO_INSTALL_CLEANUP: 1
@@ -46,21 +49,36 @@ jobs:
 
       - name: Cache ${{ matrix.dep.name }}
         id: cache
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         with:
           path: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}
           key: dep-${{ matrix.dep.name }}-${{ inputs.platform }}-${{ hashFiles('scripts/deps/*.sh') }}
+          # One-time migration: identical dependency pins before the libmcrypt fetch fix.
+          restore-keys: ${{ hashFiles('scripts/deps/*.sh') == '97973ea3ab9931a069f937fe352f527f68deff22d313ba05334b1adafef1083e' && matrix.dep.name != 'libmcrypt' && format('dep-{0}-{1}-28200f8f217c05af28ebc23f477a9c2f3ff556bfa5f34c329b7f6984d98d9454', matrix.dep.name, inputs.platform) || '' }}
+
+      - name: Validate Actions cache or restore from release
+        id: dependency-cache
+        run: bash scripts/dependency-release-cache.sh restore
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CACHE_KEY: dep-${{ matrix.dep.name }}-${{ inputs.platform }}-${{ hashFiles('scripts/deps/*.sh') }}
+          CACHE_DIR: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}
+          DEP_NAME: ${{ matrix.dep.name }}
+          DEP_PLATFORM: ${{ inputs.platform }}
+          DEP_LIBS: ${{ matrix.dep.libs }}
+          MATCHED_KEY: ${{ steps.cache.outputs.cache-matched-key }}
+          FORCE_REBUILD: ${{ inputs.force_rebuild }}
 
       - name: Skip (cached)
-        if: steps.cache.outputs.cache-hit == 'true' && inputs.force_rebuild != true
+        if: steps.dependency-cache.outputs.hit == 'true' && inputs.force_rebuild != true
         run: echo "✓ ${{ matrix.dep.name }} restored from cache"
 
       - name: Install build tools
-        if: steps.cache.outputs.cache-hit != 'true' || inputs.force_rebuild == true
+        if: steps.dependency-cache.outputs.hit != 'true' || inputs.force_rebuild == true
         run: brew install -q autoconf automake pkg-config libtool cmake bison flex
 
       - name: Build ${{ matrix.dep.name }}
-        if: steps.cache.outputs.cache-hit != 'true' || inputs.force_rebuild == true
+        if: steps.dependency-cache.outputs.hit != 'true' || inputs.force_rebuild == true
         run: |
           chmod +x scripts/deps/*.sh
           mkdir -p "${{ runner.temp }}/phm-deps/${{ inputs.platform }}"
@@ -98,6 +116,24 @@ jobs:
           CC: clang
           CXX: clang++
 
+      - name: Publish dependency cache to release
+        run: bash scripts/dependency-release-cache.sh save
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CACHE_KEY: dep-${{ matrix.dep.name }}-${{ inputs.platform }}-${{ hashFiles('scripts/deps/*.sh') }}
+          CACHE_DIR: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}
+          DEP_NAME: ${{ matrix.dep.name }}
+          DEP_PLATFORM: ${{ inputs.platform }}
+          DEP_LIBS: ${{ matrix.dep.libs }}
+          FORCE_REBUILD: ${{ inputs.force_rebuild }}
+
+      - name: Save Actions cache
+        if: steps.cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}
+          key: dep-${{ matrix.dep.name }}-${{ inputs.platform }}-${{ hashFiles('scripts/deps/*.sh') }}
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
@@ -123,13 +159,28 @@ jobs:
 
       - name: Cache ${{ matrix.dep.name }}
         id: cache
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         with:
           path: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}
           key: dep-${{ matrix.dep.name }}-${{ inputs.platform }}-${{ hashFiles('scripts/deps/*.sh') }}
+          # One-time migration: identical dependency pins before the libmcrypt fetch fix.
+          restore-keys: ${{ hashFiles('scripts/deps/*.sh') == '97973ea3ab9931a069f937fe352f527f68deff22d313ba05334b1adafef1083e' && matrix.dep.name != 'libmcrypt' && format('dep-{0}-{1}-28200f8f217c05af28ebc23f477a9c2f3ff556bfa5f34c329b7f6984d98d9454', matrix.dep.name, inputs.platform) || '' }}
+
+      - name: Validate Actions cache or restore from release
+        id: dependency-cache
+        run: bash scripts/dependency-release-cache.sh restore
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CACHE_KEY: dep-${{ matrix.dep.name }}-${{ inputs.platform }}-${{ hashFiles('scripts/deps/*.sh') }}
+          CACHE_DIR: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}
+          DEP_NAME: ${{ matrix.dep.name }}
+          DEP_PLATFORM: ${{ inputs.platform }}
+          DEP_LIBS: ${{ matrix.dep.libs }}
+          MATCHED_KEY: ${{ steps.cache.outputs.cache-matched-key }}
+          FORCE_REBUILD: ${{ inputs.force_rebuild }}
 
       - name: Download phase1 artifacts
-        if: steps.cache.outputs.cache-hit != 'true' || inputs.force_rebuild == true
+        if: steps.dependency-cache.outputs.hit != 'true' || inputs.force_rebuild == true
         uses: actions/download-artifact@v4
         with:
           pattern: dep-*-${{ inputs.platform }}
@@ -137,7 +188,7 @@ jobs:
           merge-multiple: false
 
       - name: Merge dependencies
-        if: steps.cache.outputs.cache-hit != 'true' || inputs.force_rebuild == true
+        if: steps.dependency-cache.outputs.hit != 'true' || inputs.force_rebuild == true
         run: |
           echo "=== Downloaded artifacts structure ==="
           ls -la "${{ runner.temp }}/phm-deps/${{ inputs.platform }}-parts/" || echo "Parts dir doesn't exist"
@@ -172,11 +223,11 @@ jobs:
           done
 
       - name: Install build tools
-        if: steps.cache.outputs.cache-hit != 'true' || inputs.force_rebuild == true
+        if: steps.dependency-cache.outputs.hit != 'true' || inputs.force_rebuild == true
         run: brew install -q autoconf automake pkg-config libtool cmake bison flex
 
       - name: Build ${{ matrix.dep.name }}
-        if: steps.cache.outputs.cache-hit != 'true' || inputs.force_rebuild == true
+        if: steps.dependency-cache.outputs.hit != 'true' || inputs.force_rebuild == true
         run: |
           chmod +x scripts/deps/*.sh
           export DEPS_PREFIX="${{ runner.temp }}/phm-deps/${{ inputs.platform }}"
@@ -198,6 +249,24 @@ jobs:
         env:
           CC: clang
           CXX: clang++
+
+      - name: Publish dependency cache to release
+        run: bash scripts/dependency-release-cache.sh save
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CACHE_KEY: dep-${{ matrix.dep.name }}-${{ inputs.platform }}-${{ hashFiles('scripts/deps/*.sh') }}
+          CACHE_DIR: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}
+          DEP_NAME: ${{ matrix.dep.name }}
+          DEP_PLATFORM: ${{ inputs.platform }}
+          DEP_LIBS: ${{ matrix.dep.libs }}
+          FORCE_REBUILD: ${{ inputs.force_rebuild }}
+
+      - name: Save Actions cache
+        if: steps.cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}
+          key: dep-${{ matrix.dep.name }}-${{ inputs.platform }}-${{ hashFiles('scripts/deps/*.sh') }}
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -224,13 +293,28 @@ jobs:
 
       - name: Cache ${{ matrix.dep.name }}
         id: cache
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         with:
           path: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}
           key: dep-${{ matrix.dep.name }}-${{ inputs.platform }}-${{ hashFiles('scripts/deps/*.sh') }}
+          # One-time migration: identical dependency pins before the libmcrypt fetch fix.
+          restore-keys: ${{ hashFiles('scripts/deps/*.sh') == '97973ea3ab9931a069f937fe352f527f68deff22d313ba05334b1adafef1083e' && matrix.dep.name != 'libmcrypt' && format('dep-{0}-{1}-28200f8f217c05af28ebc23f477a9c2f3ff556bfa5f34c329b7f6984d98d9454', matrix.dep.name, inputs.platform) || '' }}
+
+      - name: Validate Actions cache or restore from release
+        id: dependency-cache
+        run: bash scripts/dependency-release-cache.sh restore
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CACHE_KEY: dep-${{ matrix.dep.name }}-${{ inputs.platform }}-${{ hashFiles('scripts/deps/*.sh') }}
+          CACHE_DIR: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}
+          DEP_NAME: ${{ matrix.dep.name }}
+          DEP_PLATFORM: ${{ inputs.platform }}
+          DEP_LIBS: ${{ matrix.dep.libs }}
+          MATCHED_KEY: ${{ steps.cache.outputs.cache-matched-key }}
+          FORCE_REBUILD: ${{ inputs.force_rebuild }}
 
       - name: Download artifacts
-        if: steps.cache.outputs.cache-hit != 'true' || inputs.force_rebuild == true
+        if: steps.dependency-cache.outputs.hit != 'true' || inputs.force_rebuild == true
         uses: actions/download-artifact@v4
         with:
           pattern: dep-*-${{ inputs.platform }}
@@ -238,7 +322,7 @@ jobs:
           merge-multiple: false
 
       - name: Merge dependencies
-        if: steps.cache.outputs.cache-hit != 'true' || inputs.force_rebuild == true
+        if: steps.dependency-cache.outputs.hit != 'true' || inputs.force_rebuild == true
         run: |
           mkdir -p "${{ runner.temp }}/phm-deps/${{ inputs.platform }}"/{lib/pkgconfig,include,bin,licenses}
           for part in ${{ runner.temp }}/phm-deps/${{ inputs.platform }}-parts/dep-*; do
@@ -257,11 +341,11 @@ jobs:
           done
 
       - name: Install build tools
-        if: steps.cache.outputs.cache-hit != 'true' || inputs.force_rebuild == true
+        if: steps.dependency-cache.outputs.hit != 'true' || inputs.force_rebuild == true
         run: brew install -q autoconf automake pkg-config libtool cmake bison flex
 
       - name: Build ${{ matrix.dep.name }}
-        if: steps.cache.outputs.cache-hit != 'true' || inputs.force_rebuild == true
+        if: steps.dependency-cache.outputs.hit != 'true' || inputs.force_rebuild == true
         run: |
           chmod +x scripts/deps/*.sh
           export DEPS_PREFIX="${{ runner.temp }}/phm-deps/${{ inputs.platform }}"
@@ -282,6 +366,24 @@ jobs:
         env:
           CC: clang
           CXX: clang++
+
+      - name: Publish dependency cache to release
+        run: bash scripts/dependency-release-cache.sh save
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CACHE_KEY: dep-${{ matrix.dep.name }}-${{ inputs.platform }}-${{ hashFiles('scripts/deps/*.sh') }}
+          CACHE_DIR: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}
+          DEP_NAME: ${{ matrix.dep.name }}
+          DEP_PLATFORM: ${{ inputs.platform }}
+          DEP_LIBS: ${{ matrix.dep.libs }}
+          FORCE_REBUILD: ${{ inputs.force_rebuild }}
+
+      - name: Save Actions cache
+        if: steps.cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}
+          key: dep-${{ matrix.dep.name }}-${{ inputs.platform }}-${{ hashFiles('scripts/deps/*.sh') }}
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -311,13 +413,28 @@ jobs:
 
       - name: Cache ${{ matrix.dep.name }}
         id: cache
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         with:
           path: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}
           key: dep-${{ matrix.dep.name }}-${{ inputs.platform }}-${{ hashFiles('scripts/deps/*.sh') }}
+          # One-time migration: identical dependency pins before the libmcrypt fetch fix.
+          restore-keys: ${{ hashFiles('scripts/deps/*.sh') == '97973ea3ab9931a069f937fe352f527f68deff22d313ba05334b1adafef1083e' && matrix.dep.name != 'libmcrypt' && format('dep-{0}-{1}-28200f8f217c05af28ebc23f477a9c2f3ff556bfa5f34c329b7f6984d98d9454', matrix.dep.name, inputs.platform) || '' }}
+
+      - name: Validate Actions cache or restore from release
+        id: dependency-cache
+        run: bash scripts/dependency-release-cache.sh restore
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CACHE_KEY: dep-${{ matrix.dep.name }}-${{ inputs.platform }}-${{ hashFiles('scripts/deps/*.sh') }}
+          CACHE_DIR: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}
+          DEP_NAME: ${{ matrix.dep.name }}
+          DEP_PLATFORM: ${{ inputs.platform }}
+          DEP_LIBS: ${{ matrix.dep.libs }}
+          MATCHED_KEY: ${{ steps.cache.outputs.cache-matched-key }}
+          FORCE_REBUILD: ${{ inputs.force_rebuild }}
 
       - name: Download phase1 artifacts
-        if: steps.cache.outputs.cache-hit != 'true' || inputs.force_rebuild == true
+        if: steps.dependency-cache.outputs.hit != 'true' || inputs.force_rebuild == true
         uses: actions/download-artifact@v4
         with:
           pattern: dep-*-${{ inputs.platform }}
@@ -325,7 +442,7 @@ jobs:
           merge-multiple: false
 
       - name: Merge dependencies
-        if: steps.cache.outputs.cache-hit != 'true' || inputs.force_rebuild == true
+        if: steps.dependency-cache.outputs.hit != 'true' || inputs.force_rebuild == true
         run: |
           mkdir -p "${{ runner.temp }}/phm-deps/${{ inputs.platform }}"/{lib/pkgconfig,include,bin,licenses}
           for part in ${{ runner.temp }}/phm-deps/${{ inputs.platform }}-parts/dep-*; do
@@ -344,11 +461,11 @@ jobs:
           done
 
       - name: Install build tools
-        if: steps.cache.outputs.cache-hit != 'true' || inputs.force_rebuild == true
+        if: steps.dependency-cache.outputs.hit != 'true' || inputs.force_rebuild == true
         run: brew install -q autoconf automake pkg-config libtool cmake bison flex
 
       - name: Build ${{ matrix.dep.name }}
-        if: steps.cache.outputs.cache-hit != 'true' || inputs.force_rebuild == true
+        if: steps.dependency-cache.outputs.hit != 'true' || inputs.force_rebuild == true
         run: |
           chmod +x scripts/deps/*.sh
           export DEPS_PREFIX="${{ runner.temp }}/phm-deps/${{ inputs.platform }}"
@@ -369,6 +486,24 @@ jobs:
         env:
           CC: clang
           CXX: clang++
+
+      - name: Publish dependency cache to release
+        run: bash scripts/dependency-release-cache.sh save
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CACHE_KEY: dep-${{ matrix.dep.name }}-${{ inputs.platform }}-${{ hashFiles('scripts/deps/*.sh') }}
+          CACHE_DIR: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}
+          DEP_NAME: ${{ matrix.dep.name }}
+          DEP_PLATFORM: ${{ inputs.platform }}
+          DEP_LIBS: ${{ matrix.dep.libs }}
+          FORCE_REBUILD: ${{ inputs.force_rebuild }}
+
+      - name: Save Actions cache
+        if: steps.cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}
+          key: dep-${{ matrix.dep.name }}-${{ inputs.platform }}-${{ hashFiles('scripts/deps/*.sh') }}
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -395,13 +530,28 @@ jobs:
 
       - name: Cache ${{ matrix.dep.name }}
         id: cache
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         with:
           path: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}
           key: dep-${{ matrix.dep.name }}-${{ inputs.platform }}-${{ hashFiles('scripts/deps/*.sh') }}
+          # One-time migration: identical dependency pins before the libmcrypt fetch fix.
+          restore-keys: ${{ hashFiles('scripts/deps/*.sh') == '97973ea3ab9931a069f937fe352f527f68deff22d313ba05334b1adafef1083e' && matrix.dep.name != 'libmcrypt' && format('dep-{0}-{1}-28200f8f217c05af28ebc23f477a9c2f3ff556bfa5f34c329b7f6984d98d9454', matrix.dep.name, inputs.platform) || '' }}
+
+      - name: Validate Actions cache or restore from release
+        id: dependency-cache
+        run: bash scripts/dependency-release-cache.sh restore
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CACHE_KEY: dep-${{ matrix.dep.name }}-${{ inputs.platform }}-${{ hashFiles('scripts/deps/*.sh') }}
+          CACHE_DIR: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}
+          DEP_NAME: ${{ matrix.dep.name }}
+          DEP_PLATFORM: ${{ inputs.platform }}
+          DEP_LIBS: ${{ matrix.dep.libs }}
+          MATCHED_KEY: ${{ steps.cache.outputs.cache-matched-key }}
+          FORCE_REBUILD: ${{ inputs.force_rebuild }}
 
       - name: Download artifacts
-        if: steps.cache.outputs.cache-hit != 'true' || inputs.force_rebuild == true
+        if: steps.dependency-cache.outputs.hit != 'true' || inputs.force_rebuild == true
         uses: actions/download-artifact@v4
         with:
           pattern: dep-*-${{ inputs.platform }}
@@ -409,7 +559,7 @@ jobs:
           merge-multiple: false
 
       - name: Merge dependencies
-        if: steps.cache.outputs.cache-hit != 'true' || inputs.force_rebuild == true
+        if: steps.dependency-cache.outputs.hit != 'true' || inputs.force_rebuild == true
         run: |
           mkdir -p "${{ runner.temp }}/phm-deps/${{ inputs.platform }}"/{lib/pkgconfig,include,bin,licenses}
           for part in ${{ runner.temp }}/phm-deps/${{ inputs.platform }}-parts/dep-*; do
@@ -428,11 +578,11 @@ jobs:
           done
 
       - name: Install build tools
-        if: steps.cache.outputs.cache-hit != 'true' || inputs.force_rebuild == true
+        if: steps.dependency-cache.outputs.hit != 'true' || inputs.force_rebuild == true
         run: brew install -q autoconf automake pkg-config libtool cmake bison flex
 
       - name: Build ${{ matrix.dep.name }}
-        if: steps.cache.outputs.cache-hit != 'true' || inputs.force_rebuild == true
+        if: steps.dependency-cache.outputs.hit != 'true' || inputs.force_rebuild == true
         run: |
           chmod +x scripts/deps/*.sh
           export DEPS_PREFIX="${{ runner.temp }}/phm-deps/${{ inputs.platform }}"
@@ -453,6 +603,24 @@ jobs:
         env:
           CC: clang
           CXX: clang++
+
+      - name: Publish dependency cache to release
+        run: bash scripts/dependency-release-cache.sh save
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CACHE_KEY: dep-${{ matrix.dep.name }}-${{ inputs.platform }}-${{ hashFiles('scripts/deps/*.sh') }}
+          CACHE_DIR: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}
+          DEP_NAME: ${{ matrix.dep.name }}
+          DEP_PLATFORM: ${{ inputs.platform }}
+          DEP_LIBS: ${{ matrix.dep.libs }}
+          FORCE_REBUILD: ${{ inputs.force_rebuild }}
+
+      - name: Save Actions cache
+        if: steps.cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}
+          key: dep-${{ matrix.dep.name }}-${{ inputs.platform }}-${{ hashFiles('scripts/deps/*.sh') }}
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -490,13 +658,28 @@ jobs:
 
       - name: Cache ${{ matrix.dep.name }}
         id: cache
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         with:
           path: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}
           key: dep-${{ matrix.dep.name }}-${{ inputs.platform }}-${{ hashFiles('scripts/deps/*.sh') }}
+          # One-time migration: identical dependency pins before the libmcrypt fetch fix.
+          restore-keys: ${{ hashFiles('scripts/deps/*.sh') == '97973ea3ab9931a069f937fe352f527f68deff22d313ba05334b1adafef1083e' && matrix.dep.name != 'libmcrypt' && format('dep-{0}-{1}-28200f8f217c05af28ebc23f477a9c2f3ff556bfa5f34c329b7f6984d98d9454', matrix.dep.name, inputs.platform) || '' }}
+
+      - name: Validate Actions cache or restore from release
+        id: dependency-cache
+        run: bash scripts/dependency-release-cache.sh restore
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CACHE_KEY: dep-${{ matrix.dep.name }}-${{ inputs.platform }}-${{ hashFiles('scripts/deps/*.sh') }}
+          CACHE_DIR: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}
+          DEP_NAME: ${{ matrix.dep.name }}
+          DEP_PLATFORM: ${{ inputs.platform }}
+          DEP_LIBS: ${{ matrix.dep.libs }}
+          MATCHED_KEY: ${{ steps.cache.outputs.cache-matched-key }}
+          FORCE_REBUILD: ${{ inputs.force_rebuild }}
 
       - name: Download phase1 artifacts
-        if: steps.cache.outputs.cache-hit != 'true' || inputs.force_rebuild == true
+        if: steps.dependency-cache.outputs.hit != 'true' || inputs.force_rebuild == true
         uses: actions/download-artifact@v4
         with:
           pattern: dep-*-${{ inputs.platform }}
@@ -504,7 +687,7 @@ jobs:
           merge-multiple: false
 
       - name: Merge dependencies
-        if: steps.cache.outputs.cache-hit != 'true' || inputs.force_rebuild == true
+        if: steps.dependency-cache.outputs.hit != 'true' || inputs.force_rebuild == true
         run: |
           mkdir -p "${{ runner.temp }}/phm-deps/${{ inputs.platform }}"/{lib/pkgconfig,include,bin,licenses}
           for part in ${{ runner.temp }}/phm-deps/${{ inputs.platform }}-parts/dep-*; do
@@ -523,11 +706,11 @@ jobs:
           done
 
       - name: Install build tools
-        if: steps.cache.outputs.cache-hit != 'true' || inputs.force_rebuild == true
+        if: steps.dependency-cache.outputs.hit != 'true' || inputs.force_rebuild == true
         run: brew install -q autoconf automake pkg-config libtool cmake bison flex
 
       - name: Build ${{ matrix.dep.name }}
-        if: steps.cache.outputs.cache-hit != 'true' || inputs.force_rebuild == true
+        if: steps.dependency-cache.outputs.hit != 'true' || inputs.force_rebuild == true
         run: |
           chmod +x scripts/deps/*.sh
           export DEPS_PREFIX="${{ runner.temp }}/phm-deps/${{ inputs.platform }}"
@@ -548,6 +731,24 @@ jobs:
         env:
           CC: clang
           CXX: clang++
+
+      - name: Publish dependency cache to release
+        run: bash scripts/dependency-release-cache.sh save
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CACHE_KEY: dep-${{ matrix.dep.name }}-${{ inputs.platform }}-${{ hashFiles('scripts/deps/*.sh') }}
+          CACHE_DIR: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}
+          DEP_NAME: ${{ matrix.dep.name }}
+          DEP_PLATFORM: ${{ inputs.platform }}
+          DEP_LIBS: ${{ matrix.dep.libs }}
+          FORCE_REBUILD: ${{ inputs.force_rebuild }}
+
+      - name: Save Actions cache
+        if: steps.cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}
+          key: dep-${{ matrix.dep.name }}-${{ inputs.platform }}-${{ hashFiles('scripts/deps/*.sh') }}
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -575,13 +776,28 @@ jobs:
 
       - name: Cache ${{ matrix.dep.name }}
         id: cache
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         with:
           path: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}
           key: dep-${{ matrix.dep.name }}-${{ inputs.platform }}-${{ hashFiles('scripts/deps/*.sh') }}
+          # One-time migration: identical dependency pins before the libmcrypt fetch fix.
+          restore-keys: ${{ hashFiles('scripts/deps/*.sh') == '97973ea3ab9931a069f937fe352f527f68deff22d313ba05334b1adafef1083e' && matrix.dep.name != 'libmcrypt' && format('dep-{0}-{1}-28200f8f217c05af28ebc23f477a9c2f3ff556bfa5f34c329b7f6984d98d9454', matrix.dep.name, inputs.platform) || '' }}
+
+      - name: Validate Actions cache or restore from release
+        id: dependency-cache
+        run: bash scripts/dependency-release-cache.sh restore
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CACHE_KEY: dep-${{ matrix.dep.name }}-${{ inputs.platform }}-${{ hashFiles('scripts/deps/*.sh') }}
+          CACHE_DIR: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}
+          DEP_NAME: ${{ matrix.dep.name }}
+          DEP_PLATFORM: ${{ inputs.platform }}
+          DEP_LIBS: ${{ matrix.dep.libs }}
+          MATCHED_KEY: ${{ steps.cache.outputs.cache-matched-key }}
+          FORCE_REBUILD: ${{ inputs.force_rebuild }}
 
       - name: Download artifacts
-        if: steps.cache.outputs.cache-hit != 'true' || inputs.force_rebuild == true
+        if: steps.dependency-cache.outputs.hit != 'true' || inputs.force_rebuild == true
         uses: actions/download-artifact@v4
         with:
           pattern: dep-*-${{ inputs.platform }}
@@ -589,7 +805,7 @@ jobs:
           merge-multiple: false
 
       - name: Merge dependencies
-        if: steps.cache.outputs.cache-hit != 'true' || inputs.force_rebuild == true
+        if: steps.dependency-cache.outputs.hit != 'true' || inputs.force_rebuild == true
         run: |
           mkdir -p "${{ runner.temp }}/phm-deps/${{ inputs.platform }}"/{lib/pkgconfig,include,bin,licenses}
           for part in ${{ runner.temp }}/phm-deps/${{ inputs.platform }}-parts/dep-*; do
@@ -608,11 +824,11 @@ jobs:
           done
 
       - name: Install build tools
-        if: steps.cache.outputs.cache-hit != 'true' || inputs.force_rebuild == true
+        if: steps.dependency-cache.outputs.hit != 'true' || inputs.force_rebuild == true
         run: brew install -q autoconf automake pkg-config libtool cmake bison flex
 
       - name: Build ${{ matrix.dep.name }}
-        if: steps.cache.outputs.cache-hit != 'true' || inputs.force_rebuild == true
+        if: steps.dependency-cache.outputs.hit != 'true' || inputs.force_rebuild == true
         run: |
           chmod +x scripts/deps/*.sh
           export DEPS_PREFIX="${{ runner.temp }}/phm-deps/${{ inputs.platform }}"
@@ -633,6 +849,24 @@ jobs:
         env:
           CC: clang
           CXX: clang++
+
+      - name: Publish dependency cache to release
+        run: bash scripts/dependency-release-cache.sh save
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CACHE_KEY: dep-${{ matrix.dep.name }}-${{ inputs.platform }}-${{ hashFiles('scripts/deps/*.sh') }}
+          CACHE_DIR: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}
+          DEP_NAME: ${{ matrix.dep.name }}
+          DEP_PLATFORM: ${{ inputs.platform }}
+          DEP_LIBS: ${{ matrix.dep.libs }}
+          FORCE_REBUILD: ${{ inputs.force_rebuild }}
+
+      - name: Save Actions cache
+        if: steps.cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}
+          key: dep-${{ matrix.dep.name }}-${{ inputs.platform }}-${{ hashFiles('scripts/deps/*.sh') }}
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -659,13 +893,28 @@ jobs:
 
       - name: Cache ${{ matrix.dep.name }}
         id: cache
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         with:
           path: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}
           key: dep-${{ matrix.dep.name }}-${{ inputs.platform }}-${{ hashFiles('scripts/deps/*.sh') }}
+          # One-time migration: identical dependency pins before the libmcrypt fetch fix.
+          restore-keys: ${{ hashFiles('scripts/deps/*.sh') == '97973ea3ab9931a069f937fe352f527f68deff22d313ba05334b1adafef1083e' && matrix.dep.name != 'libmcrypt' && format('dep-{0}-{1}-28200f8f217c05af28ebc23f477a9c2f3ff556bfa5f34c329b7f6984d98d9454', matrix.dep.name, inputs.platform) || '' }}
+
+      - name: Validate Actions cache or restore from release
+        id: dependency-cache
+        run: bash scripts/dependency-release-cache.sh restore
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CACHE_KEY: dep-${{ matrix.dep.name }}-${{ inputs.platform }}-${{ hashFiles('scripts/deps/*.sh') }}
+          CACHE_DIR: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}
+          DEP_NAME: ${{ matrix.dep.name }}
+          DEP_PLATFORM: ${{ inputs.platform }}
+          DEP_LIBS: ${{ matrix.dep.libs }}
+          MATCHED_KEY: ${{ steps.cache.outputs.cache-matched-key }}
+          FORCE_REBUILD: ${{ inputs.force_rebuild }}
 
       - name: Download artifacts
-        if: steps.cache.outputs.cache-hit != 'true' || inputs.force_rebuild == true
+        if: steps.dependency-cache.outputs.hit != 'true' || inputs.force_rebuild == true
         uses: actions/download-artifact@v4
         with:
           pattern: dep-*-${{ inputs.platform }}
@@ -673,7 +922,7 @@ jobs:
           merge-multiple: false
 
       - name: Merge dependencies
-        if: steps.cache.outputs.cache-hit != 'true' || inputs.force_rebuild == true
+        if: steps.dependency-cache.outputs.hit != 'true' || inputs.force_rebuild == true
         run: |
           mkdir -p "${{ runner.temp }}/phm-deps/${{ inputs.platform }}"/{lib/pkgconfig,include,bin,licenses}
           for part in ${{ runner.temp }}/phm-deps/${{ inputs.platform }}-parts/dep-*; do
@@ -692,11 +941,11 @@ jobs:
           done
 
       - name: Install build tools
-        if: steps.cache.outputs.cache-hit != 'true' || inputs.force_rebuild == true
+        if: steps.dependency-cache.outputs.hit != 'true' || inputs.force_rebuild == true
         run: brew install -q autoconf automake pkg-config libtool cmake bison flex
 
       - name: Build ${{ matrix.dep.name }}
-        if: steps.cache.outputs.cache-hit != 'true' || inputs.force_rebuild == true
+        if: steps.dependency-cache.outputs.hit != 'true' || inputs.force_rebuild == true
         run: |
           chmod +x scripts/deps/*.sh
           export DEPS_PREFIX="${{ runner.temp }}/phm-deps/${{ inputs.platform }}"
@@ -717,6 +966,24 @@ jobs:
         env:
           CC: clang
           CXX: clang++
+
+      - name: Publish dependency cache to release
+        run: bash scripts/dependency-release-cache.sh save
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CACHE_KEY: dep-${{ matrix.dep.name }}-${{ inputs.platform }}-${{ hashFiles('scripts/deps/*.sh') }}
+          CACHE_DIR: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}
+          DEP_NAME: ${{ matrix.dep.name }}
+          DEP_PLATFORM: ${{ inputs.platform }}
+          DEP_LIBS: ${{ matrix.dep.libs }}
+          FORCE_REBUILD: ${{ inputs.force_rebuild }}
+
+      - name: Save Actions cache
+        if: steps.cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}
+          key: dep-${{ matrix.dep.name }}-${{ inputs.platform }}-${{ hashFiles('scripts/deps/*.sh') }}
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4

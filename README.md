@@ -116,3 +116,5 @@ is preserved; use `-d ffi.enable=1` for CLI scripts requiring unrestricted FFI.
 ## Native dependency versions
 
 See the [November 2026 dependency refresh](docs/dependency-refresh-2026-11.md) for pinned versions, build changes, and validation details.
+
+Native dependency jobs use [Actions cache with a durable Releases fallback](docs/dependency-cache.md), including migration of the existing cache.
