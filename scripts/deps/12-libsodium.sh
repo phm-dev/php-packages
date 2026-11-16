@@ -13,7 +13,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/common.sh"
 
 NAME="libsodium"
-VERSION="1.0.20"
+VERSION="1.0.22"
 URL="https://download.libsodium.org/libsodium/releases/libsodium-${VERSION}.tar.gz"
 
 if is_built "$NAME"; then

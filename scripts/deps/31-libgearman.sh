@@ -13,7 +13,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/common.sh"
 
 NAME="libgearman"
-VERSION="1.1.21"
+VERSION="2.2.0"
 URL="https://github.com/gearman/gearmand/releases/download/${VERSION}/gearmand-${VERSION}.tar.gz"
 
 if is_built "$NAME"; then

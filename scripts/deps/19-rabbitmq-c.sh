@@ -14,7 +14,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/common.sh"
 
 NAME="rabbitmq-c"
-VERSION="0.14.0"
+VERSION="0.18.1"
 URL="https://github.com/alanxz/rabbitmq-c/archive/refs/tags/v${VERSION}.tar.gz"
 
 if is_built "$NAME"; then

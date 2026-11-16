@@ -15,7 +15,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/common.sh"
 
 NAME="freetype"
-VERSION="2.13.3"
+VERSION="2.15.0"
 URL="https://downloads.sourceforge.net/freetype/freetype-${VERSION}.tar.gz"
 
 if is_built "$NAME"; then

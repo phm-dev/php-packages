@@ -14,10 +14,10 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/common.sh"
 
 NAME="sqlite"
-VERSION="3.47.2"
+VERSION="3.54.1"
 # SQLite uses a different version format in URLs
-VERSION_CODE="3470200"
-URL="https://www.sqlite.org/2024/sqlite-autoconf-${VERSION_CODE}.tar.gz"
+VERSION_CODE="3540100"
+URL="https://www.sqlite.org/2026/sqlite-autoconf-${VERSION_CODE}.tar.gz"
 
 if is_built "$NAME"; then
     log_info "$NAME already built, skipping"
@@ -45,10 +45,7 @@ cd "$BUILD_DIR"
     --prefix="$DEPS_PREFIX" \
     --enable-static \
     --disable-shared \
-    --disable-tcl \
-    --enable-threadsafe \
     --enable-fts5 \
-    --enable-json1 \
     CFLAGS="-O2 -fPIC -DSQLITE_ENABLE_FTS5 -DSQLITE_ENABLE_JSON1 -DSQLITE_ENABLE_COLUMN_METADATA -DSQLITE_ENABLE_RTREE"
 
 make -j"$NPROC"

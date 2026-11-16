@@ -13,9 +13,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/common.sh"
 
 NAME="icu4c"
-VERSION="74-2"
-VERSION_UNDERSCORE="${VERSION//-/_}"
-URL="https://github.com/unicode-org/icu/releases/download/release-${VERSION}/icu4c-${VERSION_UNDERSCORE}-src.tgz"
+VERSION="79.1"
+URL="https://github.com/unicode-org/icu/releases/download/release-${VERSION}/icu4c-${VERSION}-sources.tgz"
 
 if is_built "$NAME"; then
     log_info "$NAME already built, skipping"

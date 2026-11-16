@@ -14,7 +14,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/common.sh"
 
 NAME="curl"
-VERSION="8.10.1"
+VERSION="8.23.0"
 URL="https://curl.se/download/curl-${VERSION}.tar.gz"
 
 if is_built "$NAME"; then

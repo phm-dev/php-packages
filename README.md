@@ -112,3 +112,7 @@ is preserved; use `-d ffi.enable=1` for CLI scripts requiring unrestricted FFI.
 
 - [PHM CLI](https://github.com/phm-dev/phm)
 - [Documentation](https://phm-dev.github.io)
+
+## Native dependency versions
+
+See the [November 2026 dependency refresh](docs/dependency-refresh-2026-11.md) for pinned versions, build changes, and validation details.

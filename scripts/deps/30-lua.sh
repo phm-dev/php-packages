@@ -13,7 +13,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/common.sh"
 
 NAME="lua"
-VERSION="5.4.7"
+VERSION="5.5.1"
 URL="https://www.lua.org/ftp/lua-${VERSION}.tar.gz"
 
 if is_built "$NAME"; then

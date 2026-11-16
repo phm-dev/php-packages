@@ -14,7 +14,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/common.sh"
 
 NAME="libiconv"
-VERSION="1.17"
+VERSION="1.19.1"
 URL="https://ftp.gnu.org/pub/gnu/libiconv/libiconv-${VERSION}.tar.gz"
 
 if is_built "$NAME"; then

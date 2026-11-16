@@ -14,7 +14,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/common.sh"
 
 NAME="libzip"
-VERSION="1.10.1"
+VERSION="1.12.1"
 URL="https://libzip.org/download/libzip-${VERSION}.tar.gz"
 
 if is_built "$NAME"; then

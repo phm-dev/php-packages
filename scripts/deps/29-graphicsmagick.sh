@@ -15,7 +15,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/common.sh"
 
 NAME="graphicsmagick"
-VERSION="1.3.45"
+VERSION="1.3.49"
 URL="https://sourceforge.net/projects/graphicsmagick/files/graphicsmagick/${VERSION}/GraphicsMagick-${VERSION}.tar.xz/download"
 
 if is_built "$NAME"; then

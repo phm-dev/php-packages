@@ -12,8 +12,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/common.sh"
 
 NAME="openssl"
-VERSION="3.2.3"
-URL="https://www.openssl.org/source/openssl-${VERSION}.tar.gz"
+VERSION="3.5.9"
+URL="https://github.com/openssl/openssl/releases/download/openssl-${VERSION}/openssl-${VERSION}.tar.gz"
 
 if is_built "$NAME"; then
     log_info "$NAME already built, skipping"

@@ -14,7 +14,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/common.sh"
 
 NAME="libedit"
-VERSION="20240517-3.1"
+VERSION="20260512-3.1"
 URL="https://thrysoee.dk/editline/libedit-${VERSION}.tar.gz"
 
 if is_built "$NAME"; then

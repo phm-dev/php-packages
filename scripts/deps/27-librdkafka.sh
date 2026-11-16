@@ -13,7 +13,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/common.sh"
 
 NAME="librdkafka"
-VERSION="2.6.1"
+VERSION="2.16.0"
 URL="https://github.com/confluentinc/librdkafka/archive/refs/tags/v${VERSION}.tar.gz"
 
 if is_built "$NAME"; then

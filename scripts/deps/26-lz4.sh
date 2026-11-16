@@ -13,7 +13,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/common.sh"
 
 NAME="lz4"
-VERSION="1.10.0"
+VERSION="1.11.1"
 URL="https://github.com/lz4/lz4/releases/download/v${VERSION}/lz4-${VERSION}.tar.gz"
 
 if is_built "$NAME"; then

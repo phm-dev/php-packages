@@ -49,7 +49,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}
-          key: dep-${{ matrix.dep.name }}-${{ inputs.platform }}-${{ hashFiles(format('scripts/deps/{0}', matrix.dep.script)) }}
+          key: dep-${{ matrix.dep.name }}-${{ inputs.platform }}-${{ hashFiles('scripts/deps/*.sh') }}
 
       - name: Skip (cached)
         if: steps.cache.outputs.cache-hit == 'true' && inputs.force_rebuild != true
@@ -57,7 +57,7 @@ jobs:
 
       - name: Install build tools
         if: steps.cache.outputs.cache-hit != 'true' || inputs.force_rebuild == true
-        run: brew install -q autoconf automake pkg-config libtool cmake
+        run: brew install -q autoconf automake pkg-config libtool cmake bison flex
 
       - name: Build ${{ matrix.dep.name }}
         if: steps.cache.outputs.cache-hit != 'true' || inputs.force_rebuild == true
@@ -126,7 +126,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}
-          key: dep-${{ matrix.dep.name }}-${{ inputs.platform }}-${{ hashFiles(format('scripts/deps/{0}', matrix.dep.script)) }}
+          key: dep-${{ matrix.dep.name }}-${{ inputs.platform }}-${{ hashFiles('scripts/deps/*.sh') }}
 
       - name: Download phase1 artifacts
         if: steps.cache.outputs.cache-hit != 'true' || inputs.force_rebuild == true
@@ -173,7 +173,7 @@ jobs:
 
       - name: Install build tools
         if: steps.cache.outputs.cache-hit != 'true' || inputs.force_rebuild == true
-        run: brew install -q autoconf automake pkg-config libtool cmake
+        run: brew install -q autoconf automake pkg-config libtool cmake bison flex
 
       - name: Build ${{ matrix.dep.name }}
         if: steps.cache.outputs.cache-hit != 'true' || inputs.force_rebuild == true
@@ -227,7 +227,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}
-          key: dep-${{ matrix.dep.name }}-${{ inputs.platform }}-${{ hashFiles(format('scripts/deps/{0}', matrix.dep.script)) }}
+          key: dep-${{ matrix.dep.name }}-${{ inputs.platform }}-${{ hashFiles('scripts/deps/*.sh') }}
 
       - name: Download artifacts
         if: steps.cache.outputs.cache-hit != 'true' || inputs.force_rebuild == true
@@ -258,7 +258,7 @@ jobs:
 
       - name: Install build tools
         if: steps.cache.outputs.cache-hit != 'true' || inputs.force_rebuild == true
-        run: brew install -q autoconf automake pkg-config libtool cmake
+        run: brew install -q autoconf automake pkg-config libtool cmake bison flex
 
       - name: Build ${{ matrix.dep.name }}
         if: steps.cache.outputs.cache-hit != 'true' || inputs.force_rebuild == true
@@ -314,7 +314,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}
-          key: dep-${{ matrix.dep.name }}-${{ inputs.platform }}-${{ hashFiles(format('scripts/deps/{0}', matrix.dep.script)) }}
+          key: dep-${{ matrix.dep.name }}-${{ inputs.platform }}-${{ hashFiles('scripts/deps/*.sh') }}
 
       - name: Download phase1 artifacts
         if: steps.cache.outputs.cache-hit != 'true' || inputs.force_rebuild == true
@@ -345,7 +345,7 @@ jobs:
 
       - name: Install build tools
         if: steps.cache.outputs.cache-hit != 'true' || inputs.force_rebuild == true
-        run: brew install -q autoconf automake pkg-config libtool cmake
+        run: brew install -q autoconf automake pkg-config libtool cmake bison flex
 
       - name: Build ${{ matrix.dep.name }}
         if: steps.cache.outputs.cache-hit != 'true' || inputs.force_rebuild == true
@@ -398,7 +398,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}
-          key: dep-${{ matrix.dep.name }}-${{ inputs.platform }}-${{ hashFiles(format('scripts/deps/{0}', matrix.dep.script)) }}
+          key: dep-${{ matrix.dep.name }}-${{ inputs.platform }}-${{ hashFiles('scripts/deps/*.sh') }}
 
       - name: Download artifacts
         if: steps.cache.outputs.cache-hit != 'true' || inputs.force_rebuild == true
@@ -429,7 +429,7 @@ jobs:
 
       - name: Install build tools
         if: steps.cache.outputs.cache-hit != 'true' || inputs.force_rebuild == true
-        run: brew install -q autoconf automake pkg-config libtool cmake
+        run: brew install -q autoconf automake pkg-config libtool cmake bison flex
 
       - name: Build ${{ matrix.dep.name }}
         if: steps.cache.outputs.cache-hit != 'true' || inputs.force_rebuild == true
@@ -493,7 +493,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}
-          key: dep-${{ matrix.dep.name }}-${{ inputs.platform }}-${{ hashFiles(format('scripts/deps/{0}', matrix.dep.script)) }}
+          key: dep-${{ matrix.dep.name }}-${{ inputs.platform }}-${{ hashFiles('scripts/deps/*.sh') }}
 
       - name: Download phase1 artifacts
         if: steps.cache.outputs.cache-hit != 'true' || inputs.force_rebuild == true
@@ -524,7 +524,7 @@ jobs:
 
       - name: Install build tools
         if: steps.cache.outputs.cache-hit != 'true' || inputs.force_rebuild == true
-        run: brew install -q autoconf automake pkg-config libtool cmake
+        run: brew install -q autoconf automake pkg-config libtool cmake bison flex
 
       - name: Build ${{ matrix.dep.name }}
         if: steps.cache.outputs.cache-hit != 'true' || inputs.force_rebuild == true
@@ -578,7 +578,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}
-          key: dep-${{ matrix.dep.name }}-${{ inputs.platform }}-${{ hashFiles(format('scripts/deps/{0}', matrix.dep.script)) }}
+          key: dep-${{ matrix.dep.name }}-${{ inputs.platform }}-${{ hashFiles('scripts/deps/*.sh') }}
 
       - name: Download artifacts
         if: steps.cache.outputs.cache-hit != 'true' || inputs.force_rebuild == true
@@ -609,7 +609,7 @@ jobs:
 
       - name: Install build tools
         if: steps.cache.outputs.cache-hit != 'true' || inputs.force_rebuild == true
-        run: brew install -q autoconf automake pkg-config libtool cmake
+        run: brew install -q autoconf automake pkg-config libtool cmake bison flex
 
       - name: Build ${{ matrix.dep.name }}
         if: steps.cache.outputs.cache-hit != 'true' || inputs.force_rebuild == true
@@ -662,7 +662,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}
-          key: dep-${{ matrix.dep.name }}-${{ inputs.platform }}-${{ hashFiles(format('scripts/deps/{0}', matrix.dep.script)) }}
+          key: dep-${{ matrix.dep.name }}-${{ inputs.platform }}-${{ hashFiles('scripts/deps/*.sh') }}
 
       - name: Download artifacts
         if: steps.cache.outputs.cache-hit != 'true' || inputs.force_rebuild == true
@@ -693,7 +693,7 @@ jobs:
 
       - name: Install build tools
         if: steps.cache.outputs.cache-hit != 'true' || inputs.force_rebuild == true
-        run: brew install -q autoconf automake pkg-config libtool cmake
+        run: brew install -q autoconf automake pkg-config libtool cmake bison flex
 
       - name: Build ${{ matrix.dep.name }}
         if: steps.cache.outputs.cache-hit != 'true' || inputs.force_rebuild == true

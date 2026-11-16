@@ -60,7 +60,7 @@ help:
 
 deps:
 	@echo "Installing build dependencies..."
-	@brew install -q autoconf automake bison re2c pkg-config libtool cmake zstd
+	@brew install -q autoconf automake bison flex re2c pkg-config libtool cmake zstd
 	@echo "Building static dependencies..."
 	@chmod +x $(SCRIPTS)/deps/build-all-deps.sh
 	@$(SCRIPTS)/deps/build-all-deps.sh

@@ -14,7 +14,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/common.sh"
 
 NAME="libpng"
-VERSION="1.6.43"
+VERSION="1.6.59"
 URL="https://downloads.sourceforge.net/libpng/libpng-${VERSION}.tar.gz"
 
 if is_built "$NAME"; then

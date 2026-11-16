@@ -14,7 +14,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/common.sh"
 
 NAME="libxslt"
-VERSION="1.1.42"
+VERSION="1.1.45"
 URL="https://download.gnome.org/sources/libxslt/1.1/libxslt-${VERSION}.tar.xz"
 
 if is_built "$NAME"; then

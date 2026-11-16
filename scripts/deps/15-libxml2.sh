@@ -15,8 +15,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/common.sh"
 
 NAME="libxml2"
-VERSION="2.12.9"
-URL="https://download.gnome.org/sources/libxml2/2.12/libxml2-${VERSION}.tar.xz"
+VERSION="2.15.4"
+URL="https://download.gnome.org/sources/libxml2/${VERSION%.*}/libxml2-${VERSION}.tar.xz"
 
 if is_built "$NAME"; then
     log_info "$NAME already built, skipping"

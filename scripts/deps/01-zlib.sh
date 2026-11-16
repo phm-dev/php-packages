@@ -14,9 +14,9 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/common.sh"
 
 NAME="zlib"
-VERSION="1.3.2"
+VERSION="1.4"
 # Use the versioned archive: the root URL only keeps the current release.
-URL="https://zlib.net/fossils/zlib-${VERSION}.tar.gz"
+URL="https://github.com/madler/zlib/releases/download/v${VERSION}/zlib-${VERSION}.tar.gz"
 
 if is_built "$NAME"; then
     log_info "$NAME already built, skipping"

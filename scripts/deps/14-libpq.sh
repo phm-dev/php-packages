@@ -19,7 +19,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/common.sh"
 
 NAME="libpq"
-VERSION="16.4"
+VERSION="18.7"
 URL="https://ftp.postgresql.org/pub/source/v${VERSION}/postgresql-${VERSION}.tar.gz"
 
 if is_built "$NAME"; then
@@ -47,6 +47,12 @@ download_source "$URL" "$TARBALL"
 clean_build "$BUILD_DIR"
 extract_source "$TARBALL" "$BUILD_DIR"
 
+# PostgreSQL 18 requires modern parser generators, not the macOS system bison.
+if command -v brew >/dev/null 2>&1; then
+    export BISON="$(brew --prefix bison)/bin/bison"
+    export FLEX="$(brew --prefix flex)/bin/flex"
+fi
+
 # Build - we only need libpq, not the full PostgreSQL server
 cd "$BUILD_DIR"
 
@@ -55,6 +61,7 @@ cd "$BUILD_DIR"
     --without-readline \
     --with-openssl \
     --without-icu \
+    --without-libcurl \
     CFLAGS="${CFLAGS} -I${DEPS_PREFIX}/include" \
     LDFLAGS="${LDFLAGS} -L${DEPS_PREFIX}/lib"
 
@@ -68,11 +75,12 @@ cp libpq-fe.h libpq-events.h "${DEPS_PREFIX}/include/"
 # Build common and port libraries (required by libpq for static linking)
 cd ../../common
 make -j"$NPROC"
-cp libpgcommon.a "${DEPS_PREFIX}/lib/"
+# libpq needs public encoding symbols; the regular archive renames them _private.
+cp libpgcommon_shlib.a "${DEPS_PREFIX}/lib/libpgcommon.a"
 
 cd ../port
 make -j"$NPROC"
-cp libpgport.a "${DEPS_PREFIX}/lib/"
+cp libpgport_shlib.a "${DEPS_PREFIX}/lib/libpgport.a"
 
 # Install headers
 cd ../..
@@ -80,7 +88,6 @@ mkdir -p "${DEPS_PREFIX}/include/postgresql/internal"
 mkdir -p "${DEPS_PREFIX}/include/libpq"
 cp src/include/postgres_ext.h "${DEPS_PREFIX}/include/"
 cp src/include/pg_config.h "${DEPS_PREFIX}/include/"
-cp src/include/pg_config_ext.h "${DEPS_PREFIX}/include/"
 cp src/include/pg_config_manual.h "${DEPS_PREFIX}/include/"
 
 # Copy libpq-fs.h (required by PHP's pgsql/pdo_pgsql for Large Object support)
