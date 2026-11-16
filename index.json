@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "generated": "2026-11-16T10:55:28Z",
+  "generated": "2026-11-16T14:39:13Z",
   "latest": {
     "8.5": "8.5.12",
     "8.3": "8.3.36",
@@ -5621,6 +5621,16 @@
         },
         {
           "name": "php8.5-opentelemetry",
+          "version": "1.5.0",
+          "php_version": "8.5.12",
+          "description": "opentelemetry extension for PHP 8.5",
+          "depends": [
+            "php8.5-common (>= 8.5.12)"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.5.12/php8.5.12-opentelemetry1.5.0_darwin-arm64.tar.zst"
+        },
+        {
+          "name": "php8.5-opentelemetry",
           "version": "1.4.2",
           "php_version": "8.5.11",
           "description": "opentelemetry extension for PHP 8.5",
@@ -6118,6 +6128,16 @@
             "php8.5-common (>= 8.5.6)"
           ],
           "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.5.6/php8.5.6-msgpack3.0.0_darwin-arm64.tar.zst"
+        },
+        {
+          "name": "php8.5-mongodb",
+          "version": "2.5.7",
+          "php_version": "8.5.12",
+          "description": "mongodb extension for PHP 8.5",
+          "depends": [
+            "php8.5-common (>= 8.5.12)"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.5.12/php8.5.12-mongodb2.5.7_darwin-arm64.tar.zst"
         },
         {
           "name": "php8.5-mongodb",
@@ -7480,6 +7500,16 @@
           "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.5.0/php8.5.0-fpm_darwin-arm64.tar.zst"
         },
         {
+          "name": "php8.5-ffi",
+          "version": "8.5.12",
+          "php_version": "8.5.12",
+          "description": "ffi extension for PHP 8.5",
+          "depends": [
+            "php8.5-common (>= 8.5.12)"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.5.12/php8.5.12-ffi8.5.12_darwin-arm64.tar.zst"
+        },
+        {
           "name": "php8.5-exif",
           "version": "8.5.9",
           "php_version": "8.5.9",
@@ -7728,6 +7758,16 @@
             "php8.5-common (>= 8.5.5)"
           ],
           "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.5.5/php8.5.5-excimer1.2.5_darwin-arm64.tar.zst"
+        },
+        {
+          "name": "php8.5-ev",
+          "version": "1.3.1",
+          "php_version": "8.5.12",
+          "description": "ev extension for PHP 8.5",
+          "depends": [
+            "php8.5-common (>= 8.5.12)"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.5.12/php8.5.12-ev1.3.1_darwin-arm64.tar.zst"
         },
         {
           "name": "php8.5-ev",
@@ -8972,6 +9012,16 @@
             "php8.5-common (>= 8.5.0)"
           ],
           "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.5.0/php8.5-bcmath_8.5.0-1_darwin-arm64.tar.zst"
+        },
+        {
+          "name": "php8.5-ast",
+          "version": "1.1.4",
+          "php_version": "8.5.12",
+          "description": "ast extension for PHP 8.5",
+          "depends": [
+            "php8.5-common (>= 8.5.12)"
+          ],
+          "url": "https://github.com/phm-dev/php-packages/releases/download/php-8.5.12/php8.5.12-ast1.1.4_darwin-arm64.tar.zst"
         },
         {
           "name": "php8.5-ast",
