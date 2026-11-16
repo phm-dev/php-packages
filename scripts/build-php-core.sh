@@ -154,7 +154,9 @@ if [[ "$(uname -s)" == "Darwin" ]]; then
 
     # Link FFI against our archive, never the macOS/Homebrew dynamic library.
     export FFI_CFLAGS="-I${DEPS_PREFIX}/include"
-    export FFI_LIBS="${DEPS_PREFIX}/lib/libffi.a"
+    # PHP_EVAL_LIBLINE recognizes -l/-L, but drops a bare archive path.
+    # This prefix contains only our static libffi (the dependency build disables shared).
+    export FFI_LIBS="-L${DEPS_PREFIX}/lib -lffi"
 
     # All dependency paths point to our static build
     DEPS_DIR="$DEPS_PREFIX"
@@ -636,7 +638,7 @@ fi
 
 # Exercise a C call before publishing and reject non-system runtime dependencies.
 run_build "${PHP_SRC_DIR}/sapi/cli/php" -n -d "extension=${FFI_SO}" -d ffi.enable=1 \
-    -r 'if (FFI::cdef("int abs(int);")->abs(-42) !== 42) { exit(1); }'
+    -r '$ffi = FFI::cdef("int abs(int); double atof(const char *);"); if ($ffi->abs(-42) !== 42 || $ffi->atof("1.5") !== 1.5) { exit(1); }'
 if otool -L "$FFI_SO" | tail -n +2 | grep -Ev '^[[:space:]]+(/usr/lib/|/System/Library/)' ; then
     log_error "FFI module links to non-system dynamic libraries"
     exit 1
