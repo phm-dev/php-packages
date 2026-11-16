@@ -101,18 +101,8 @@ def merge(directory, prefix):
 
 
 def relocate(prefix, cache_root):
-    # Previous per-library caches embed the old shared prefix in pkg-config files.
-    for file in (prefix / 'lib/pkgconfig').glob('*.pc'):
-        text = file.read_text().replace(str(cache_root), str(prefix))
-        text = re.sub(r'^prefix\s*=.*$', f'prefix={prefix}', text, flags=re.M)
-        file.write_text(text)
-    for file in (prefix / 'bin').glob('*'):
-        if file.is_file():
-            file.chmod(file.stat().st_mode | 0o111)
-    pg_config = prefix / 'bin/pg_config'
-    if pg_config.exists() and pg_config.read_bytes().startswith(b'#!/bin/bash'):
-        text = re.sub(r'^PREFIX=.*$', f'PREFIX="{prefix}"', pg_config.read_text(), flags=re.M)
-        pg_config.write_text(text)
+    subprocess.run(['python3', str(ROOT / 'scripts/relocate-dependencies.py'),
+                    str(prefix), '--from-prefix', str(cache_root)], check=True)
 
 
 def marker(dep, prefix):

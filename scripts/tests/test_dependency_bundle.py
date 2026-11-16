@@ -102,3 +102,19 @@ touch "{self.build_marker}"
         self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
         self.assertIn('| debug-visible-detail', result.stdout)
         self.assertIn('debug-visible-detail', (self.individual / 'logs/zlib-build.log').read_text())
+
+    def test_relocation_rewrites_absolute_freetype_paths(self):
+        pc = self.prefix / 'lib/pkgconfig/freetype2.pc'
+        pc.parent.mkdir(parents=True)
+        old_bundle = '/Users/runner/work/_temp/phm-deps-bundle/darwin-arm64'
+        old_library = str(self.individual)
+        pc.write_text(f'prefix={old_bundle}\nincludedir={old_library}/include/freetype2\nlibdir={old_bundle}/lib\nCflags: -I{old_library}/include/freetype2\nLibs: -L{old_bundle}/lib -lfreetype\n')
+        result = subprocess.run(['python3', str(SCRIPT.parent / 'relocate-dependencies.py'),
+                                 str(self.prefix), '--from-prefix', old_library],
+                                capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        text = pc.read_text()
+        self.assertNotIn(old_bundle, text)
+        self.assertNotIn(old_library, text)
+        self.assertIn(f'includedir={self.prefix}/include/freetype2', text)
+        self.assertIn(f'Libs: -L{self.prefix}/lib -lfreetype', text)

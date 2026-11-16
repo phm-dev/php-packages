@@ -145,21 +145,10 @@ jobs:
             echo "WARNING: No bin directory found in deps"
           fi
 
-          # Fix pkgconfig prefix paths - they have hardcoded paths from build time
-          echo "Updating pkgconfig prefixes to: ${DEPS_PREFIX}"
-          for pc in "${DEPS_PREFIX}/lib/pkgconfig"/*.pc; do
-            if [[ -f "$pc" ]]; then
-              # Replace prefix= or prefix = (with optional spaces) with correct path
-              # ICU uses "prefix = value" format, others use "prefix=value"
-              sed -i '' "s|^prefix *=.*|prefix=${DEPS_PREFIX}|" "$pc"
-            fi
-          done
-          echo "Updated $(ls "${DEPS_PREFIX}/lib/pkgconfig"/*.pc 2>/dev/null | wc -l) .pc files"
-
-          # Relocate the libpq wrapper from the dependency runner's bundle prefix.
-          if [[ -f "${DEPS_PREFIX}/bin/pg_config" ]]; then
-            sed -i '' "s|^PREFIX=.*|PREFIX=\"${DEPS_PREFIX}\"|" "${DEPS_PREFIX}/bin/pg_config"
-          fi
+          # Relocate prefix plus absolute includedir/libdir/Cflags/Libs values.
+          python3 scripts/relocate-dependencies.py "$DEPS_PREFIX" \
+            --from-prefix "${{ runner.temp }}/phm-deps/${{ inputs.platform }}" \
+            --from-prefix "${{ runner.temp }}/phm-deps-bundle/${{ inputs.platform }}"
 
           # Verify pg_config is available
           if [[ -x "${DEPS_PREFIX}/bin/pg_config" ]]; then

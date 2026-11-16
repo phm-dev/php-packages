@@ -49,7 +49,7 @@ jobs:
           echo "DEPS_PREFIX=${RUNNER_TEMP}/phm-deps-bundle/${DEP_PLATFORM}" >> "$GITHUB_ENV"
           echo "DEPS_CACHE_ROOT=${RUNNER_TEMP}/phm-deps/${DEP_PLATFORM}" >> "$GITHUB_ENV"
           echo "RECIPE_HASH=${{ hashFiles('scripts/deps/*.sh') }}" >> "$GITHUB_ENV"
-          echo "BUNDLE_KEY=deps-bundle-${{ inputs.platform }}-${{ hashFiles('scripts/deps/*.sh', 'scripts/dependency-libraries.json', 'scripts/dependency-bundle.py', 'scripts/dependency-release-cache.sh') }}" >> "$GITHUB_ENV"
+          echo "BUNDLE_KEY=deps-bundle-${{ inputs.platform }}-${{ hashFiles('scripts/deps/*.sh', 'scripts/dependency-libraries.json', 'scripts/dependency-bundle.py', 'scripts/dependency-release-cache.sh', 'scripts/relocate-dependencies.py') }}" >> "$GITHUB_ENV"
 
       - name: Restore complete Actions cache
         id: bundle-actions

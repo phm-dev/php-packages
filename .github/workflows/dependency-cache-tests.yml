@@ -5,6 +5,7 @@ on:
     paths:
       - 'scripts/dependency-release-cache.sh'
       - 'scripts/dependency-bundle.py'
+      - 'scripts/relocate-dependencies.py'
       - 'scripts/dependency-libraries.json'
       - '.github/workflows/_build-deps.yml'
       - 'scripts/tests/**'
@@ -13,6 +14,7 @@ on:
     paths:
       - 'scripts/dependency-release-cache.sh'
       - 'scripts/dependency-bundle.py'
+      - 'scripts/relocate-dependencies.py'
       - 'scripts/dependency-libraries.json'
       - '.github/workflows/_build-deps.yml'
       - 'scripts/tests/**'
