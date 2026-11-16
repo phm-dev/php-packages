@@ -1,0 +1,187 @@
+[
+  {
+    "name": "libffi",
+    "script": "37-libffi.sh",
+    "libs": "libffi.a"
+  },
+  {
+    "name": "zlib",
+    "script": "01-zlib.sh",
+    "libs": "libz.a"
+  },
+  {
+    "name": "bzip2",
+    "script": "02-bzip2.sh",
+    "libs": "libbz2.a"
+  },
+  {
+    "name": "libedit",
+    "script": "03-libedit.sh",
+    "libs": "libedit.a"
+  },
+  {
+    "name": "openssl",
+    "script": "04-openssl.sh",
+    "libs": "libssl.a libcrypto.a"
+  },
+  {
+    "name": "libiconv",
+    "script": "05-libiconv.sh",
+    "libs": "libiconv.a"
+  },
+  {
+    "name": "icu4c",
+    "script": "06-icu4c.sh",
+    "libs": "libicuuc.a libicui18n.a libicudata.a libicuio.a"
+  },
+  {
+    "name": "oniguruma",
+    "script": "07-oniguruma.sh",
+    "libs": "libonig.a"
+  },
+  {
+    "name": "libpng",
+    "script": "08-libpng.sh",
+    "libs": "libpng.a libpng16.a"
+  },
+  {
+    "name": "jpeg-turbo",
+    "script": "09-jpeg-turbo.sh",
+    "libs": "libjpeg.a libturbojpeg.a"
+  },
+  {
+    "name": "freetype",
+    "script": "11-freetype.sh",
+    "libs": "libfreetype.a"
+  },
+  {
+    "name": "webp",
+    "script": "10-webp.sh",
+    "libs": "libwebp.a libwebpdemux.a libwebpmux.a libsharpyuv.a"
+  },
+  {
+    "name": "libsodium",
+    "script": "12-libsodium.sh",
+    "libs": "libsodium.a"
+  },
+  {
+    "name": "libzip",
+    "script": "13-libzip.sh",
+    "libs": "libzip.a"
+  },
+  {
+    "name": "libpq",
+    "script": "14-libpq.sh",
+    "libs": "libpq.a"
+  },
+  {
+    "name": "libxml2",
+    "script": "15-libxml2.sh",
+    "libs": "libxml2.a"
+  },
+  {
+    "name": "sqlite",
+    "script": "18-sqlite.sh",
+    "libs": "libsqlite3.a"
+  },
+  {
+    "name": "libxslt",
+    "script": "16-libxslt.sh",
+    "libs": "libxslt.a libexslt.a"
+  },
+  {
+    "name": "curl",
+    "script": "17-curl.sh",
+    "libs": "libcurl.a"
+  },
+  {
+    "name": "rabbitmq-c",
+    "script": "19-rabbitmq-c.sh",
+    "libs": "librabbitmq.a"
+  },
+  {
+    "name": "libevent",
+    "script": "20-libevent.sh",
+    "libs": "libevent.a libevent_core.a libevent_pthreads.a libevent_extra.a libevent_openssl.a"
+  },
+  {
+    "name": "zstd",
+    "script": "23-zstd.sh",
+    "libs": "libzstd.a"
+  },
+  {
+    "name": "ossp-uuid",
+    "script": "24-ossp-uuid.sh",
+    "libs": "libuuid.a"
+  },
+  {
+    "name": "libyaml",
+    "script": "25-libyaml.sh",
+    "libs": "libyaml.a"
+  },
+  {
+    "name": "lz4",
+    "script": "26-lz4.sh",
+    "libs": "liblz4.a"
+  },
+  {
+    "name": "libmaxminddb",
+    "script": "28-libmaxminddb.sh",
+    "libs": "libmaxminddb.a"
+  },
+  {
+    "name": "lua",
+    "script": "30-lua.sh",
+    "libs": "liblua.a"
+  },
+  {
+    "name": "libev",
+    "script": "32-libev.sh",
+    "libs": "libev.a"
+  },
+  {
+    "name": "libssh2",
+    "script": "33-libssh2.sh",
+    "libs": "libssh2.a"
+  },
+  {
+    "name": "libmcrypt",
+    "script": "34-libmcrypt.sh",
+    "libs": "libmcrypt.a"
+  },
+  {
+    "name": "gmp",
+    "script": "35-gmp.sh",
+    "libs": "libgmp.a"
+  },
+  {
+    "name": "libjudy",
+    "script": "36-libjudy.sh",
+    "libs": "libJudy.a"
+  },
+  {
+    "name": "libmemcached",
+    "script": "21-libmemcached.sh",
+    "libs": "libmemcached.a"
+  },
+  {
+    "name": "librdkafka",
+    "script": "27-librdkafka.sh",
+    "libs": "librdkafka.a"
+  },
+  {
+    "name": "libgearman",
+    "script": "31-libgearman.sh",
+    "libs": "libgearman.a"
+  },
+  {
+    "name": "imagemagick",
+    "script": "22-imagemagick.sh",
+    "libs": "libMagickCore-7.Q16HDRI.a libMagickWand-7.Q16HDRI.a"
+  },
+  {
+    "name": "graphicsmagick",
+    "script": "29-graphicsmagick.sh",
+    "libs": "libGraphicsMagick.a"
+  }
+]

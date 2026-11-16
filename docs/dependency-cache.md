@@ -1,37 +1,61 @@
 # Native dependency binary cache
 
-Each library job uses the following order:
+## One runner per architecture
 
-1. Restore GitHub Actions cache and validate its required static archives/headers.
-2. If unavailable, download the exact matching binary from the prerelease
-   `native-dependency-cache-v1` and verify SHA-256, manifest, and required archives.
-3. If unavailable or invalid, compile from source.
-4. Publish valid binaries to the prerelease (including binaries restored from
-   Actions), populate Actions cache, and upload the usual inter-job artifact.
+Dependencies are restored and, if necessary, built in a **single job**. The old
+37-library matrix and separate merge job are no longer used. A cache hit must not
+require a new macOS runner for every library.
 
-Assets use `dep-{library}-{platform}-{recipe-hash}.tar.gz` with a matching
-`.sha256`. The manifest repeats the identity and format version. The recipe hash
-covers **all** `scripts/deps/*.sh`, including pinned versions, build switches,
-shared compiler/deployment settings, and transitive dependency recipes. A change
-invalidates the whole dependency set; ARM64 and AMD64 never share an asset.
-Release binaries do not expire when Actions cache entries expire. No latest-release
-fallback or broad version prefix is used.
+The fast path restores the complete dependency bundle from Actions cache, then
+from the `native-dependency-cache-v1` prerelease. One download supplies all 37
+libraries, headers, and helper tools. The combined artifact name remains
+`deps-{platform}`, so the PHP build consumes it as before.
 
-`force_rebuild_deps=true` bypasses both caches and republishes rebuilt release
-assets. Ordinary runs reuse existing complete assets.
+If the complete bundle is unavailable, the same runner:
+
+1. Restores existing individual Actions cache entries, preserving their original
+   paths and cache identities for migration.
+2. Falls back to exact individual release assets and verifies SHA-256, manifest,
+   and required static archives/headers.
+3. Merges restored files, relocates pkg-config/pg_config, and marks prerequisites.
+4. Installs build tools once if anything is missing, then builds only missing
+   libraries in dependency order from `scripts/dependency-libraries.json`.
+5. Publishes individual restored/built libraries to Releases, then publishes the
+   complete bundle to Releases and Actions cache.
+
+Individual assets use `dep-{library}-{platform}-{recipe-hash}.tar.gz` with a
+matching `.sha256`. The recipe hash covers all `scripts/deps/*.sh`, including
+pinned versions, compiler/deployment settings and transitive dependency recipes.
+The whole-bundle key also covers the library manifest and orchestration scripts.
+ARM64 and AMD64 do not share assets. There is no latest-version fallback.
+
+`force_rebuild_deps=true` bypasses both caches and rebuilds all dependencies.
+A normal run retains and publishes valid cached binaries. Missing libraries are
+built serially on the same runner, using parallel `make` within each library.
+This trades cold-build matrix parallelism for eliminating runner queues and
+repeated setup/transfer work on the normal cached path.
 
 ## One-time migration
 
 The workflow accepts the exact old Actions cache key from the November 2026
-refresh, only while the current dependency recipe hash matches the reviewed
-migration snapshot. Dependency versions are identical; the only recipe change is
-the libmcrypt bootstrap fix. libmcrypt is excluded from legacy restore and builds
-again. Valid restored libraries are published under the current key. Changing
-any dependency recipe disables this compatibility fallback automatically.
+refresh, only while the recipe hash matches the reviewed migration snapshot.
+Dependency versions are identical; the only recipe change is the libmcrypt
+bootstrap fix. libmcrypt is excluded from legacy restore. Changing any dependency
+recipe disables this fallback automatically. The non-PHP prerelease tag is skipped
+by the package index generator. Publication requires `contents: write`.
 
-The release is a prerelease with a non-PHP tag, so it is not an installable PHP
-release and the package index generator skips it. Publication requires the
-workflow token's `contents: write` permission.
+## Progress and logs
+
+Normal output reports `RESTORE [12/37] libzip 1.12.1`, cache source, elapsed time,
+cache/build totals, and `BUILD [n/37]` for missing libraries. A running compilation
+emits a heartbeat every 20 seconds, with elapsed time and log size. Compiler
+output is stored in `{library}-build.log`; cache operations have separate logs.
+A failure prints the last 60 lines and records the failed library.
+
+Set the manual workflow input `debug=true` to stream full output live as well as
+save it. The `dependency-logs-{platform}` artifact is uploaded even after failures
+and includes logs, `progress.json`, and `summary.md`. The job summary also shows a
+version/result/time table. Logs are retained for 14 days.
 
 Run offline integration checks with:
 

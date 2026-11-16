@@ -11,6 +11,11 @@ on:
         description: 'GitHub Actions runner'
         required: true
         type: string
+      debug:
+        description: Show full dependency build output live
+        required: false
+        type: boolean
+        default: false
       force_rebuild:
         description: 'Force rebuild even if cached'
         required: false
@@ -26,1022 +31,445 @@ env:
   HOMEBREW_NO_ENV_HINTS: 1
 
 jobs:
-  # ==========================================================================
-  # Phase 1: Base libraries (no dependencies on each other)
-  # ==========================================================================
-  phase1:
-    name: "${{ matrix.dep.name }}"
+  dependencies:
+    name: Restore or build all dependencies
     runs-on: ${{ inputs.runner }}
-    strategy:
-      fail-fast: false
-      matrix:
-        dep:
-          - { name: libffi, script: "37-libffi.sh", libs: "libffi.a" }
-          - { name: zlib, script: "01-zlib.sh", libs: "libz.a" }
-          - { name: bzip2, script: "02-bzip2.sh", libs: "libbz2.a" }
-          - { name: libedit, script: "03-libedit.sh", libs: "libedit.a" }
-          - { name: openssl, script: "04-openssl.sh", libs: "libssl.a libcrypto.a" }
-          - { name: libiconv, script: "05-libiconv.sh", libs: "libiconv.a" }
-          - { name: icu4c, script: "06-icu4c.sh", libs: "libicuuc.a libicui18n.a libicudata.a libicuio.a" }
-          - { name: oniguruma, script: "07-oniguruma.sh", libs: "libonig.a" }
+    timeout-minutes: 180
+    env:
+      GH_TOKEN: ${{ github.token }}
+      DEP_PLATFORM: ${{ inputs.platform }}
+      FORCE_REBUILD: ${{ inputs.force_rebuild }}
+      DEPENDENCY_DEBUG: ${{ inputs.debug }}
     steps:
       - uses: actions/checkout@v4
 
-      - name: Cache ${{ matrix.dep.name }}
-        id: cache
+      - name: Set cache identities
+        run: |
+          echo "DEPENDENCY_LOG_DIR=${RUNNER_TEMP}/dependency-logs" >> "$GITHUB_ENV"
+          echo "DEPS_PREFIX=${RUNNER_TEMP}/phm-deps-bundle/${DEP_PLATFORM}" >> "$GITHUB_ENV"
+          echo "DEPS_CACHE_ROOT=${RUNNER_TEMP}/phm-deps/${DEP_PLATFORM}" >> "$GITHUB_ENV"
+          echo "RECIPE_HASH=${{ hashFiles('scripts/deps/*.sh') }}" >> "$GITHUB_ENV"
+          echo "BUNDLE_KEY=deps-bundle-${{ inputs.platform }}-${{ hashFiles('scripts/deps/*.sh', 'scripts/dependency-libraries.json', 'scripts/dependency-bundle.py', 'scripts/dependency-release-cache.sh') }}" >> "$GITHUB_ENV"
+
+      - name: Restore complete Actions cache
+        id: bundle-actions
+        if: inputs.force_rebuild != true
         uses: actions/cache/restore@v4
         with:
-          path: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}
-          key: dep-${{ matrix.dep.name }}-${{ inputs.platform }}-${{ hashFiles('scripts/deps/*.sh') }}
-          # One-time migration: identical dependency pins before the libmcrypt fetch fix.
-          restore-keys: ${{ hashFiles('scripts/deps/*.sh') == '97973ea3ab9931a069f937fe352f527f68deff22d313ba05334b1adafef1083e' && matrix.dep.name != 'libmcrypt' && format('dep-{0}-{1}-28200f8f217c05af28ebc23f477a9c2f3ff556bfa5f34c329b7f6984d98d9454', matrix.dep.name, inputs.platform) || '' }}
+          path: ${{ env.DEPS_PREFIX }}
+          key: ${{ env.BUNDLE_KEY }}
 
-      - name: Validate Actions cache or restore from release
-        id: dependency-cache
-        run: bash scripts/dependency-release-cache.sh restore
+      - name: Validate complete cache or restore complete release
+        id: bundle
+        run: python3 scripts/dependency-bundle.py restore
         env:
-          GH_TOKEN: ${{ github.token }}
-          CACHE_KEY: dep-${{ matrix.dep.name }}-${{ inputs.platform }}-${{ hashFiles('scripts/deps/*.sh') }}
-          CACHE_DIR: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}
-          DEP_NAME: ${{ matrix.dep.name }}
-          DEP_PLATFORM: ${{ inputs.platform }}
-          DEP_LIBS: ${{ matrix.dep.libs }}
-          MATCHED_KEY: ${{ steps.cache.outputs.cache-matched-key }}
-          FORCE_REBUILD: ${{ inputs.force_rebuild }}
+          BUNDLE_MATCHED_KEY: ${{ steps.bundle-actions.outputs.cache-matched-key }}
 
-      - name: Skip (cached)
-        if: steps.dependency-cache.outputs.hit == 'true' && inputs.force_rebuild != true
-        run: echo "✓ ${{ matrix.dep.name }} restored from cache"
-
-      - name: Install build tools
-        if: steps.dependency-cache.outputs.hit != 'true' || inputs.force_rebuild == true
-        run: brew install -q autoconf automake pkg-config libtool cmake bison flex
-
-      - name: Build ${{ matrix.dep.name }}
-        if: steps.dependency-cache.outputs.hit != 'true' || inputs.force_rebuild == true
-        run: |
-          chmod +x scripts/deps/*.sh
-          mkdir -p "${{ runner.temp }}/phm-deps/${{ inputs.platform }}"
-
-          # Build to temp location, then copy to per-dep cache
-          export DEPS_PREFIX="${{ runner.temp }}/phm-deps/${{ inputs.platform }}"
-          export PLATFORM="${{ inputs.platform }}"
-
-          ./scripts/deps/${{ matrix.dep.script }}
-
-          # Copy built files to per-dep directory for caching
-          mkdir -p "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}"
-
-          # Copy libs
-          for lib in ${{ matrix.dep.libs }}; do
-            if [[ -f "${DEPS_PREFIX}/lib/${lib}" ]]; then
-              mkdir -p "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/lib"
-              cp "${DEPS_PREFIX}/lib/${lib}" "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/lib/"
-            fi
-          done
-
-          # Copy includes and pkgconfig
-          if [[ -d "${DEPS_PREFIX}/include" ]]; then
-            cp -r "${DEPS_PREFIX}/include" "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/" 2>/dev/null || true
-          fi
-          if [[ -d "${DEPS_PREFIX}/lib/pkgconfig" ]]; then
-            mkdir -p "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/lib"
-            cp -r "${DEPS_PREFIX}/lib/pkgconfig" "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/lib/" 2>/dev/null || true
-          fi
-          # Copy bin (for things like xml2-config)
-          if [[ -d "${DEPS_PREFIX}/bin" ]]; then
-            cp -r "${DEPS_PREFIX}/bin" "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/" 2>/dev/null || true
-          fi
-        env:
-          CC: clang
-          CXX: clang++
-
-      - name: Publish dependency cache to release
-        run: bash scripts/dependency-release-cache.sh save
-        env:
-          GH_TOKEN: ${{ github.token }}
-          CACHE_KEY: dep-${{ matrix.dep.name }}-${{ inputs.platform }}-${{ hashFiles('scripts/deps/*.sh') }}
-          CACHE_DIR: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}
-          DEP_NAME: ${{ matrix.dep.name }}
-          DEP_PLATFORM: ${{ inputs.platform }}
-          DEP_LIBS: ${{ matrix.dep.libs }}
-          FORCE_REBUILD: ${{ inputs.force_rebuild }}
-
-      - name: Save Actions cache
-        if: steps.cache.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v4
-        with:
-          path: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}
-          key: dep-${{ matrix.dep.name }}-${{ inputs.platform }}-${{ hashFiles('scripts/deps/*.sh') }}
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: dep-${{ matrix.dep.name }}-${{ inputs.platform }}
-          path: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}
-          retention-days: 1
-
-  # ==========================================================================
-  # Phase 2: Image libraries (depend on zlib)
-  # ==========================================================================
-  phase2:
-    name: "${{ matrix.dep.name }}"
-    needs: phase1
-    runs-on: ${{ inputs.runner }}
-    strategy:
-      fail-fast: false
-      matrix:
-        dep:
-          - { name: libpng, script: "08-libpng.sh", libs: "libpng.a libpng16.a" }
-          - { name: jpeg-turbo, script: "09-jpeg-turbo.sh", libs: "libjpeg.a libturbojpeg.a" }
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Cache ${{ matrix.dep.name }}
-        id: cache
+      - name: Restore Actions cache [1/37] (libffi)
+        id: cache-libffi
+        if: steps.bundle.outputs.hit != 'true' && inputs.force_rebuild != true
         uses: actions/cache/restore@v4
         with:
-          path: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}
-          key: dep-${{ matrix.dep.name }}-${{ inputs.platform }}-${{ hashFiles('scripts/deps/*.sh') }}
-          # One-time migration: identical dependency pins before the libmcrypt fetch fix.
-          restore-keys: ${{ hashFiles('scripts/deps/*.sh') == '97973ea3ab9931a069f937fe352f527f68deff22d313ba05334b1adafef1083e' && matrix.dep.name != 'libmcrypt' && format('dep-{0}-{1}-28200f8f217c05af28ebc23f477a9c2f3ff556bfa5f34c329b7f6984d98d9454', matrix.dep.name, inputs.platform) || '' }}
+          path: ${{ env.DEPS_CACHE_ROOT }}/libffi
+          key: dep-libffi-${{ inputs.platform }}-${{ env.RECIPE_HASH }}
+          restore-keys: ${{ env.RECIPE_HASH == '97973ea3ab9931a069f937fe352f527f68deff22d313ba05334b1adafef1083e' && format('dep-libffi-{0}-28200f8f217c05af28ebc23f477a9c2f3ff556bfa5f34c329b7f6984d98d9454', inputs.platform) || '' }}
 
-      - name: Validate Actions cache or restore from release
-        id: dependency-cache
-        run: bash scripts/dependency-release-cache.sh restore
-        env:
-          GH_TOKEN: ${{ github.token }}
-          CACHE_KEY: dep-${{ matrix.dep.name }}-${{ inputs.platform }}-${{ hashFiles('scripts/deps/*.sh') }}
-          CACHE_DIR: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}
-          DEP_NAME: ${{ matrix.dep.name }}
-          DEP_PLATFORM: ${{ inputs.platform }}
-          DEP_LIBS: ${{ matrix.dep.libs }}
-          MATCHED_KEY: ${{ steps.cache.outputs.cache-matched-key }}
-          FORCE_REBUILD: ${{ inputs.force_rebuild }}
-
-      - name: Download phase1 artifacts
-        if: steps.dependency-cache.outputs.hit != 'true' || inputs.force_rebuild == true
-        uses: actions/download-artifact@v4
-        with:
-          pattern: dep-*-${{ inputs.platform }}
-          path: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}-parts
-          merge-multiple: false
-
-      - name: Merge dependencies
-        if: steps.dependency-cache.outputs.hit != 'true' || inputs.force_rebuild == true
-        run: |
-          echo "=== Downloaded artifacts structure ==="
-          ls -la "${{ runner.temp }}/phm-deps/${{ inputs.platform }}-parts/" || echo "Parts dir doesn't exist"
-          for d in "${{ runner.temp }}/phm-deps/${{ inputs.platform }}-parts"/*; do
-            echo "--- $d ---"
-            ls -la "$d" 2>/dev/null || true
-            ls -la "$d/lib" 2>/dev/null || true
-          done
-
-          mkdir -p "${{ runner.temp }}/phm-deps/${{ inputs.platform }}"/{lib/pkgconfig,include,bin,licenses}
-
-          for part in ${{ runner.temp }}/phm-deps/${{ inputs.platform }}-parts/dep-*; do
-            [[ -d "$part" ]] || continue
-            echo "Copying from: $part"
-            cp -a "$part"/lib/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/lib/" 2>&1 || echo "  No lib/ to copy"
-            cp -a "$part"/include/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/include/" 2>&1 || echo "  No include/ to copy"
-            cp -a "$part"/bin/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/bin/" 2>&1 || echo "  No bin/ to copy"
-          done
-
-          # Make bin files executable (artifacts don't preserve permissions)
-          chmod +x "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/bin/"* 2>/dev/null || true
-
-          echo "=== Final merged lib/ ==="
-          ls -la "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/lib/" || echo "lib/ empty"
-
-          # Create marker files for downloaded deps (needed by is_built() checks)
-          for part in ${{ runner.temp }}/phm-deps/${{ inputs.platform }}-parts/dep-*; do
-            [[ -d "$part" ]] || continue
-            name=$(basename "$part" | sed 's/dep-//;s/-${{ inputs.platform }}//')
-            echo "1.0" > "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/.built-${name}"
-            echo "  Created marker: .built-${name}"
-          done
-
-      - name: Install build tools
-        if: steps.dependency-cache.outputs.hit != 'true' || inputs.force_rebuild == true
-        run: brew install -q autoconf automake pkg-config libtool cmake bison flex
-
-      - name: Build ${{ matrix.dep.name }}
-        if: steps.dependency-cache.outputs.hit != 'true' || inputs.force_rebuild == true
-        run: |
-          chmod +x scripts/deps/*.sh
-          export DEPS_PREFIX="${{ runner.temp }}/phm-deps/${{ inputs.platform }}"
-          export PLATFORM="${{ inputs.platform }}"
-          export PATH="${DEPS_PREFIX}/bin:$PATH"
-
-          ./scripts/deps/${{ matrix.dep.script }}
-
-          mkdir -p "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/lib"
-          for lib in ${{ matrix.dep.libs }}; do
-            [[ -f "${DEPS_PREFIX}/lib/${lib}" ]] && cp "${DEPS_PREFIX}/lib/${lib}" "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/lib/"
-          done
-          cp -r "${DEPS_PREFIX}/include" "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/" 2>/dev/null || true
-          cp -r "${DEPS_PREFIX}/bin" "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/" 2>/dev/null || true
-          if [[ -d "${DEPS_PREFIX}/lib/pkgconfig" ]]; then
-            mkdir -p "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/lib/pkgconfig"
-            cp -r "${DEPS_PREFIX}/lib/pkgconfig"/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/lib/pkgconfig/" 2>/dev/null || true
-          fi
-        env:
-          CC: clang
-          CXX: clang++
-
-      - name: Publish dependency cache to release
-        run: bash scripts/dependency-release-cache.sh save
-        env:
-          GH_TOKEN: ${{ github.token }}
-          CACHE_KEY: dep-${{ matrix.dep.name }}-${{ inputs.platform }}-${{ hashFiles('scripts/deps/*.sh') }}
-          CACHE_DIR: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}
-          DEP_NAME: ${{ matrix.dep.name }}
-          DEP_PLATFORM: ${{ inputs.platform }}
-          DEP_LIBS: ${{ matrix.dep.libs }}
-          FORCE_REBUILD: ${{ inputs.force_rebuild }}
-
-      - name: Save Actions cache
-        if: steps.cache.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v4
-        with:
-          path: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}
-          key: dep-${{ matrix.dep.name }}-${{ inputs.platform }}-${{ hashFiles('scripts/deps/*.sh') }}
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: dep-${{ matrix.dep.name }}-${{ inputs.platform }}
-          path: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}
-          retention-days: 1
-
-  # ==========================================================================
-  # Phase 3: Freetype and Webp (depend on libpng/jpeg-turbo)
-  # ==========================================================================
-  phase3:
-    name: "${{ matrix.dep.name }}"
-    needs: phase2
-    runs-on: ${{ inputs.runner }}
-    strategy:
-      fail-fast: false
-      matrix:
-        dep:
-          - { name: freetype, script: "11-freetype.sh", libs: "libfreetype.a" }
-          - { name: webp, script: "10-webp.sh", libs: "libwebp.a libwebpdemux.a libwebpmux.a libsharpyuv.a" }
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Cache ${{ matrix.dep.name }}
-        id: cache
+      - name: Restore Actions cache [2/37] (zlib)
+        id: cache-zlib
+        if: steps.bundle.outputs.hit != 'true' && inputs.force_rebuild != true
         uses: actions/cache/restore@v4
         with:
-          path: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}
-          key: dep-${{ matrix.dep.name }}-${{ inputs.platform }}-${{ hashFiles('scripts/deps/*.sh') }}
-          # One-time migration: identical dependency pins before the libmcrypt fetch fix.
-          restore-keys: ${{ hashFiles('scripts/deps/*.sh') == '97973ea3ab9931a069f937fe352f527f68deff22d313ba05334b1adafef1083e' && matrix.dep.name != 'libmcrypt' && format('dep-{0}-{1}-28200f8f217c05af28ebc23f477a9c2f3ff556bfa5f34c329b7f6984d98d9454', matrix.dep.name, inputs.platform) || '' }}
+          path: ${{ env.DEPS_CACHE_ROOT }}/zlib
+          key: dep-zlib-${{ inputs.platform }}-${{ env.RECIPE_HASH }}
+          restore-keys: ${{ env.RECIPE_HASH == '97973ea3ab9931a069f937fe352f527f68deff22d313ba05334b1adafef1083e' && format('dep-zlib-{0}-28200f8f217c05af28ebc23f477a9c2f3ff556bfa5f34c329b7f6984d98d9454', inputs.platform) || '' }}
 
-      - name: Validate Actions cache or restore from release
-        id: dependency-cache
-        run: bash scripts/dependency-release-cache.sh restore
-        env:
-          GH_TOKEN: ${{ github.token }}
-          CACHE_KEY: dep-${{ matrix.dep.name }}-${{ inputs.platform }}-${{ hashFiles('scripts/deps/*.sh') }}
-          CACHE_DIR: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}
-          DEP_NAME: ${{ matrix.dep.name }}
-          DEP_PLATFORM: ${{ inputs.platform }}
-          DEP_LIBS: ${{ matrix.dep.libs }}
-          MATCHED_KEY: ${{ steps.cache.outputs.cache-matched-key }}
-          FORCE_REBUILD: ${{ inputs.force_rebuild }}
-
-      - name: Download artifacts
-        if: steps.dependency-cache.outputs.hit != 'true' || inputs.force_rebuild == true
-        uses: actions/download-artifact@v4
-        with:
-          pattern: dep-*-${{ inputs.platform }}
-          path: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}-parts
-          merge-multiple: false
-
-      - name: Merge dependencies
-        if: steps.dependency-cache.outputs.hit != 'true' || inputs.force_rebuild == true
-        run: |
-          mkdir -p "${{ runner.temp }}/phm-deps/${{ inputs.platform }}"/{lib/pkgconfig,include,bin,licenses}
-          for part in ${{ runner.temp }}/phm-deps/${{ inputs.platform }}-parts/dep-*; do
-            [[ -d "$part" ]] || continue
-            cp -a "$part"/lib/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/lib/" 2>/dev/null || true
-            cp -a "$part"/include/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/include/" 2>/dev/null || true
-            cp -a "$part"/bin/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/bin/" 2>/dev/null || true
-          done
-          # Make bin files executable (artifacts don't preserve permissions)
-          chmod +x "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/bin/"* 2>/dev/null || true
-          # Create marker files for downloaded deps
-          for part in ${{ runner.temp }}/phm-deps/${{ inputs.platform }}-parts/dep-*; do
-            [[ -d "$part" ]] || continue
-            name=$(basename "$part" | sed 's/dep-//;s/-${{ inputs.platform }}//')
-            echo "1.0" > "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/.built-${name}"
-          done
-
-      - name: Install build tools
-        if: steps.dependency-cache.outputs.hit != 'true' || inputs.force_rebuild == true
-        run: brew install -q autoconf automake pkg-config libtool cmake bison flex
-
-      - name: Build ${{ matrix.dep.name }}
-        if: steps.dependency-cache.outputs.hit != 'true' || inputs.force_rebuild == true
-        run: |
-          chmod +x scripts/deps/*.sh
-          export DEPS_PREFIX="${{ runner.temp }}/phm-deps/${{ inputs.platform }}"
-          export PLATFORM="${{ inputs.platform }}"
-          export PATH="${DEPS_PREFIX}/bin:$PATH"
-          ./scripts/deps/${{ matrix.dep.script }}
-
-          mkdir -p "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/lib"
-          for lib in ${{ matrix.dep.libs }}; do
-            [[ -f "${DEPS_PREFIX}/lib/${lib}" ]] && cp "${DEPS_PREFIX}/lib/${lib}" "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/lib/"
-          done
-          cp -r "${DEPS_PREFIX}/include" "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/" 2>/dev/null || true
-          cp -r "${DEPS_PREFIX}/bin" "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/" 2>/dev/null || true
-          if [[ -d "${DEPS_PREFIX}/lib/pkgconfig" ]]; then
-            mkdir -p "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/lib/pkgconfig"
-            cp -r "${DEPS_PREFIX}/lib/pkgconfig"/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/lib/pkgconfig/" 2>/dev/null || true
-          fi
-        env:
-          CC: clang
-          CXX: clang++
-
-      - name: Publish dependency cache to release
-        run: bash scripts/dependency-release-cache.sh save
-        env:
-          GH_TOKEN: ${{ github.token }}
-          CACHE_KEY: dep-${{ matrix.dep.name }}-${{ inputs.platform }}-${{ hashFiles('scripts/deps/*.sh') }}
-          CACHE_DIR: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}
-          DEP_NAME: ${{ matrix.dep.name }}
-          DEP_PLATFORM: ${{ inputs.platform }}
-          DEP_LIBS: ${{ matrix.dep.libs }}
-          FORCE_REBUILD: ${{ inputs.force_rebuild }}
-
-      - name: Save Actions cache
-        if: steps.cache.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v4
-        with:
-          path: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}
-          key: dep-${{ matrix.dep.name }}-${{ inputs.platform }}-${{ hashFiles('scripts/deps/*.sh') }}
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: dep-${{ matrix.dep.name }}-${{ inputs.platform }}
-          path: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}
-          retention-days: 1
-
-  # ==========================================================================
-  # Phase 4: Core libraries
-  # ==========================================================================
-  phase4:
-    name: "${{ matrix.dep.name }}"
-    needs: phase1
-    runs-on: ${{ inputs.runner }}
-    strategy:
-      fail-fast: false
-      matrix:
-        dep:
-          - { name: libsodium, script: "12-libsodium.sh", libs: "libsodium.a" }
-          - { name: libzip, script: "13-libzip.sh", libs: "libzip.a" }
-          - { name: libpq, script: "14-libpq.sh", libs: "libpq.a" }
-          - { name: libxml2, script: "15-libxml2.sh", libs: "libxml2.a" }
-          - { name: sqlite, script: "18-sqlite.sh", libs: "libsqlite3.a" }
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Cache ${{ matrix.dep.name }}
-        id: cache
+      - name: Restore Actions cache [3/37] (bzip2)
+        id: cache-bzip2
+        if: steps.bundle.outputs.hit != 'true' && inputs.force_rebuild != true
         uses: actions/cache/restore@v4
         with:
-          path: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}
-          key: dep-${{ matrix.dep.name }}-${{ inputs.platform }}-${{ hashFiles('scripts/deps/*.sh') }}
-          # One-time migration: identical dependency pins before the libmcrypt fetch fix.
-          restore-keys: ${{ hashFiles('scripts/deps/*.sh') == '97973ea3ab9931a069f937fe352f527f68deff22d313ba05334b1adafef1083e' && matrix.dep.name != 'libmcrypt' && format('dep-{0}-{1}-28200f8f217c05af28ebc23f477a9c2f3ff556bfa5f34c329b7f6984d98d9454', matrix.dep.name, inputs.platform) || '' }}
+          path: ${{ env.DEPS_CACHE_ROOT }}/bzip2
+          key: dep-bzip2-${{ inputs.platform }}-${{ env.RECIPE_HASH }}
+          restore-keys: ${{ env.RECIPE_HASH == '97973ea3ab9931a069f937fe352f527f68deff22d313ba05334b1adafef1083e' && format('dep-bzip2-{0}-28200f8f217c05af28ebc23f477a9c2f3ff556bfa5f34c329b7f6984d98d9454', inputs.platform) || '' }}
 
-      - name: Validate Actions cache or restore from release
-        id: dependency-cache
-        run: bash scripts/dependency-release-cache.sh restore
-        env:
-          GH_TOKEN: ${{ github.token }}
-          CACHE_KEY: dep-${{ matrix.dep.name }}-${{ inputs.platform }}-${{ hashFiles('scripts/deps/*.sh') }}
-          CACHE_DIR: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}
-          DEP_NAME: ${{ matrix.dep.name }}
-          DEP_PLATFORM: ${{ inputs.platform }}
-          DEP_LIBS: ${{ matrix.dep.libs }}
-          MATCHED_KEY: ${{ steps.cache.outputs.cache-matched-key }}
-          FORCE_REBUILD: ${{ inputs.force_rebuild }}
-
-      - name: Download phase1 artifacts
-        if: steps.dependency-cache.outputs.hit != 'true' || inputs.force_rebuild == true
-        uses: actions/download-artifact@v4
-        with:
-          pattern: dep-*-${{ inputs.platform }}
-          path: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}-parts
-          merge-multiple: false
-
-      - name: Merge dependencies
-        if: steps.dependency-cache.outputs.hit != 'true' || inputs.force_rebuild == true
-        run: |
-          mkdir -p "${{ runner.temp }}/phm-deps/${{ inputs.platform }}"/{lib/pkgconfig,include,bin,licenses}
-          for part in ${{ runner.temp }}/phm-deps/${{ inputs.platform }}-parts/dep-*; do
-            [[ -d "$part" ]] || continue
-            cp -a "$part"/lib/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/lib/" 2>/dev/null || true
-            cp -a "$part"/include/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/include/" 2>/dev/null || true
-            cp -a "$part"/bin/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/bin/" 2>/dev/null || true
-          done
-          # Make bin files executable (artifacts don't preserve permissions)
-          chmod +x "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/bin/"* 2>/dev/null || true
-          # Create marker files for downloaded deps
-          for part in ${{ runner.temp }}/phm-deps/${{ inputs.platform }}-parts/dep-*; do
-            [[ -d "$part" ]] || continue
-            name=$(basename "$part" | sed 's/dep-//;s/-${{ inputs.platform }}//')
-            echo "1.0" > "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/.built-${name}"
-          done
-
-      - name: Install build tools
-        if: steps.dependency-cache.outputs.hit != 'true' || inputs.force_rebuild == true
-        run: brew install -q autoconf automake pkg-config libtool cmake bison flex
-
-      - name: Build ${{ matrix.dep.name }}
-        if: steps.dependency-cache.outputs.hit != 'true' || inputs.force_rebuild == true
-        run: |
-          chmod +x scripts/deps/*.sh
-          export DEPS_PREFIX="${{ runner.temp }}/phm-deps/${{ inputs.platform }}"
-          export PLATFORM="${{ inputs.platform }}"
-          export PATH="${DEPS_PREFIX}/bin:$PATH"
-          ./scripts/deps/${{ matrix.dep.script }}
-
-          mkdir -p "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/lib"
-          for lib in ${{ matrix.dep.libs }}; do
-            [[ -f "${DEPS_PREFIX}/lib/${lib}" ]] && cp "${DEPS_PREFIX}/lib/${lib}" "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/lib/"
-          done
-          cp -r "${DEPS_PREFIX}/include" "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/" 2>/dev/null || true
-          cp -r "${DEPS_PREFIX}/bin" "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/" 2>/dev/null || true
-          if [[ -d "${DEPS_PREFIX}/lib/pkgconfig" ]]; then
-            mkdir -p "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/lib/pkgconfig"
-            cp -r "${DEPS_PREFIX}/lib/pkgconfig"/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/lib/pkgconfig/" 2>/dev/null || true
-          fi
-        env:
-          CC: clang
-          CXX: clang++
-
-      - name: Publish dependency cache to release
-        run: bash scripts/dependency-release-cache.sh save
-        env:
-          GH_TOKEN: ${{ github.token }}
-          CACHE_KEY: dep-${{ matrix.dep.name }}-${{ inputs.platform }}-${{ hashFiles('scripts/deps/*.sh') }}
-          CACHE_DIR: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}
-          DEP_NAME: ${{ matrix.dep.name }}
-          DEP_PLATFORM: ${{ inputs.platform }}
-          DEP_LIBS: ${{ matrix.dep.libs }}
-          FORCE_REBUILD: ${{ inputs.force_rebuild }}
-
-      - name: Save Actions cache
-        if: steps.cache.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v4
-        with:
-          path: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}
-          key: dep-${{ matrix.dep.name }}-${{ inputs.platform }}-${{ hashFiles('scripts/deps/*.sh') }}
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: dep-${{ matrix.dep.name }}-${{ inputs.platform }}
-          path: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}
-          retention-days: 1
-
-  # ==========================================================================
-  # Phase 5: XML/Network (depends on libxml2, openssl)
-  # ==========================================================================
-  phase5:
-    name: "${{ matrix.dep.name }}"
-    needs: phase4
-    runs-on: ${{ inputs.runner }}
-    strategy:
-      fail-fast: false
-      matrix:
-        dep:
-          - { name: libxslt, script: "16-libxslt.sh", libs: "libxslt.a libexslt.a" }
-          - { name: curl, script: "17-curl.sh", libs: "libcurl.a" }
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Cache ${{ matrix.dep.name }}
-        id: cache
+      - name: Restore Actions cache [4/37] (libedit)
+        id: cache-libedit
+        if: steps.bundle.outputs.hit != 'true' && inputs.force_rebuild != true
         uses: actions/cache/restore@v4
         with:
-          path: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}
-          key: dep-${{ matrix.dep.name }}-${{ inputs.platform }}-${{ hashFiles('scripts/deps/*.sh') }}
-          # One-time migration: identical dependency pins before the libmcrypt fetch fix.
-          restore-keys: ${{ hashFiles('scripts/deps/*.sh') == '97973ea3ab9931a069f937fe352f527f68deff22d313ba05334b1adafef1083e' && matrix.dep.name != 'libmcrypt' && format('dep-{0}-{1}-28200f8f217c05af28ebc23f477a9c2f3ff556bfa5f34c329b7f6984d98d9454', matrix.dep.name, inputs.platform) || '' }}
+          path: ${{ env.DEPS_CACHE_ROOT }}/libedit
+          key: dep-libedit-${{ inputs.platform }}-${{ env.RECIPE_HASH }}
+          restore-keys: ${{ env.RECIPE_HASH == '97973ea3ab9931a069f937fe352f527f68deff22d313ba05334b1adafef1083e' && format('dep-libedit-{0}-28200f8f217c05af28ebc23f477a9c2f3ff556bfa5f34c329b7f6984d98d9454', inputs.platform) || '' }}
 
-      - name: Validate Actions cache or restore from release
-        id: dependency-cache
-        run: bash scripts/dependency-release-cache.sh restore
-        env:
-          GH_TOKEN: ${{ github.token }}
-          CACHE_KEY: dep-${{ matrix.dep.name }}-${{ inputs.platform }}-${{ hashFiles('scripts/deps/*.sh') }}
-          CACHE_DIR: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}
-          DEP_NAME: ${{ matrix.dep.name }}
-          DEP_PLATFORM: ${{ inputs.platform }}
-          DEP_LIBS: ${{ matrix.dep.libs }}
-          MATCHED_KEY: ${{ steps.cache.outputs.cache-matched-key }}
-          FORCE_REBUILD: ${{ inputs.force_rebuild }}
-
-      - name: Download artifacts
-        if: steps.dependency-cache.outputs.hit != 'true' || inputs.force_rebuild == true
-        uses: actions/download-artifact@v4
-        with:
-          pattern: dep-*-${{ inputs.platform }}
-          path: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}-parts
-          merge-multiple: false
-
-      - name: Merge dependencies
-        if: steps.dependency-cache.outputs.hit != 'true' || inputs.force_rebuild == true
-        run: |
-          mkdir -p "${{ runner.temp }}/phm-deps/${{ inputs.platform }}"/{lib/pkgconfig,include,bin,licenses}
-          for part in ${{ runner.temp }}/phm-deps/${{ inputs.platform }}-parts/dep-*; do
-            [[ -d "$part" ]] || continue
-            cp -a "$part"/lib/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/lib/" 2>/dev/null || true
-            cp -a "$part"/include/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/include/" 2>/dev/null || true
-            cp -a "$part"/bin/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/bin/" 2>/dev/null || true
-          done
-          # Make bin files executable (artifacts don't preserve permissions)
-          chmod +x "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/bin/"* 2>/dev/null || true
-          # Create marker files for downloaded deps
-          for part in ${{ runner.temp }}/phm-deps/${{ inputs.platform }}-parts/dep-*; do
-            [[ -d "$part" ]] || continue
-            name=$(basename "$part" | sed 's/dep-//;s/-${{ inputs.platform }}//')
-            echo "1.0" > "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/.built-${name}"
-          done
-
-      - name: Install build tools
-        if: steps.dependency-cache.outputs.hit != 'true' || inputs.force_rebuild == true
-        run: brew install -q autoconf automake pkg-config libtool cmake bison flex
-
-      - name: Build ${{ matrix.dep.name }}
-        if: steps.dependency-cache.outputs.hit != 'true' || inputs.force_rebuild == true
-        run: |
-          chmod +x scripts/deps/*.sh
-          export DEPS_PREFIX="${{ runner.temp }}/phm-deps/${{ inputs.platform }}"
-          export PLATFORM="${{ inputs.platform }}"
-          export PATH="${DEPS_PREFIX}/bin:$PATH"
-          ./scripts/deps/${{ matrix.dep.script }}
-
-          mkdir -p "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/lib"
-          for lib in ${{ matrix.dep.libs }}; do
-            [[ -f "${DEPS_PREFIX}/lib/${lib}" ]] && cp "${DEPS_PREFIX}/lib/${lib}" "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/lib/"
-          done
-          cp -r "${DEPS_PREFIX}/include" "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/" 2>/dev/null || true
-          cp -r "${DEPS_PREFIX}/bin" "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/" 2>/dev/null || true
-          if [[ -d "${DEPS_PREFIX}/lib/pkgconfig" ]]; then
-            mkdir -p "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/lib/pkgconfig"
-            cp -r "${DEPS_PREFIX}/lib/pkgconfig"/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/lib/pkgconfig/" 2>/dev/null || true
-          fi
-        env:
-          CC: clang
-          CXX: clang++
-
-      - name: Publish dependency cache to release
-        run: bash scripts/dependency-release-cache.sh save
-        env:
-          GH_TOKEN: ${{ github.token }}
-          CACHE_KEY: dep-${{ matrix.dep.name }}-${{ inputs.platform }}-${{ hashFiles('scripts/deps/*.sh') }}
-          CACHE_DIR: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}
-          DEP_NAME: ${{ matrix.dep.name }}
-          DEP_PLATFORM: ${{ inputs.platform }}
-          DEP_LIBS: ${{ matrix.dep.libs }}
-          FORCE_REBUILD: ${{ inputs.force_rebuild }}
-
-      - name: Save Actions cache
-        if: steps.cache.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v4
-        with:
-          path: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}
-          key: dep-${{ matrix.dep.name }}-${{ inputs.platform }}-${{ hashFiles('scripts/deps/*.sh') }}
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: dep-${{ matrix.dep.name }}-${{ inputs.platform }}
-          path: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}
-          retention-days: 1
-
-  # ==========================================================================
-  # Phase 6: Extension dependencies (independent)
-  # ==========================================================================
-  phase6-independent:
-    name: "${{ matrix.dep.name }}"
-    needs: phase1
-    runs-on: ${{ inputs.runner }}
-    strategy:
-      fail-fast: false
-      matrix:
-        dep:
-          - { name: rabbitmq-c, script: "19-rabbitmq-c.sh", libs: "librabbitmq.a" }
-          - { name: libevent, script: "20-libevent.sh", libs: "libevent.a libevent_core.a libevent_pthreads.a libevent_extra.a libevent_openssl.a" }
-          - { name: zstd, script: "23-zstd.sh", libs: "libzstd.a" }
-          - { name: ossp-uuid, script: "24-ossp-uuid.sh", libs: "libuuid.a" }
-          - { name: libyaml, script: "25-libyaml.sh", libs: "libyaml.a" }
-          - { name: lz4, script: "26-lz4.sh", libs: "liblz4.a" }
-          - { name: libmaxminddb, script: "28-libmaxminddb.sh", libs: "libmaxminddb.a" }
-          - { name: lua, script: "30-lua.sh", libs: "liblua.a" }
-          - { name: libev, script: "32-libev.sh", libs: "libev.a" }
-          - { name: libssh2, script: "33-libssh2.sh", libs: "libssh2.a" }
-          - { name: libmcrypt, script: "34-libmcrypt.sh", libs: "libmcrypt.a" }
-          - { name: gmp, script: "35-gmp.sh", libs: "libgmp.a" }
-          - { name: libjudy, script: "36-libjudy.sh", libs: "libJudy.a" }
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Cache ${{ matrix.dep.name }}
-        id: cache
+      - name: Restore Actions cache [5/37] (openssl)
+        id: cache-openssl
+        if: steps.bundle.outputs.hit != 'true' && inputs.force_rebuild != true
         uses: actions/cache/restore@v4
         with:
-          path: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}
-          key: dep-${{ matrix.dep.name }}-${{ inputs.platform }}-${{ hashFiles('scripts/deps/*.sh') }}
-          # One-time migration: identical dependency pins before the libmcrypt fetch fix.
-          restore-keys: ${{ hashFiles('scripts/deps/*.sh') == '97973ea3ab9931a069f937fe352f527f68deff22d313ba05334b1adafef1083e' && matrix.dep.name != 'libmcrypt' && format('dep-{0}-{1}-28200f8f217c05af28ebc23f477a9c2f3ff556bfa5f34c329b7f6984d98d9454', matrix.dep.name, inputs.platform) || '' }}
+          path: ${{ env.DEPS_CACHE_ROOT }}/openssl
+          key: dep-openssl-${{ inputs.platform }}-${{ env.RECIPE_HASH }}
+          restore-keys: ${{ env.RECIPE_HASH == '97973ea3ab9931a069f937fe352f527f68deff22d313ba05334b1adafef1083e' && format('dep-openssl-{0}-28200f8f217c05af28ebc23f477a9c2f3ff556bfa5f34c329b7f6984d98d9454', inputs.platform) || '' }}
 
-      - name: Validate Actions cache or restore from release
-        id: dependency-cache
-        run: bash scripts/dependency-release-cache.sh restore
-        env:
-          GH_TOKEN: ${{ github.token }}
-          CACHE_KEY: dep-${{ matrix.dep.name }}-${{ inputs.platform }}-${{ hashFiles('scripts/deps/*.sh') }}
-          CACHE_DIR: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}
-          DEP_NAME: ${{ matrix.dep.name }}
-          DEP_PLATFORM: ${{ inputs.platform }}
-          DEP_LIBS: ${{ matrix.dep.libs }}
-          MATCHED_KEY: ${{ steps.cache.outputs.cache-matched-key }}
-          FORCE_REBUILD: ${{ inputs.force_rebuild }}
-
-      - name: Download phase1 artifacts
-        if: steps.dependency-cache.outputs.hit != 'true' || inputs.force_rebuild == true
-        uses: actions/download-artifact@v4
-        with:
-          pattern: dep-*-${{ inputs.platform }}
-          path: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}-parts
-          merge-multiple: false
-
-      - name: Merge dependencies
-        if: steps.dependency-cache.outputs.hit != 'true' || inputs.force_rebuild == true
-        run: |
-          mkdir -p "${{ runner.temp }}/phm-deps/${{ inputs.platform }}"/{lib/pkgconfig,include,bin,licenses}
-          for part in ${{ runner.temp }}/phm-deps/${{ inputs.platform }}-parts/dep-*; do
-            [[ -d "$part" ]] || continue
-            cp -a "$part"/lib/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/lib/" 2>/dev/null || true
-            cp -a "$part"/include/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/include/" 2>/dev/null || true
-            cp -a "$part"/bin/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/bin/" 2>/dev/null || true
-          done
-          # Make bin files executable (artifacts don't preserve permissions)
-          chmod +x "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/bin/"* 2>/dev/null || true
-          # Create marker files for downloaded deps
-          for part in ${{ runner.temp }}/phm-deps/${{ inputs.platform }}-parts/dep-*; do
-            [[ -d "$part" ]] || continue
-            name=$(basename "$part" | sed 's/dep-//;s/-${{ inputs.platform }}//')
-            echo "1.0" > "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/.built-${name}"
-          done
-
-      - name: Install build tools
-        if: steps.dependency-cache.outputs.hit != 'true' || inputs.force_rebuild == true
-        run: brew install -q autoconf automake pkg-config libtool cmake bison flex
-
-      - name: Build ${{ matrix.dep.name }}
-        if: steps.dependency-cache.outputs.hit != 'true' || inputs.force_rebuild == true
-        run: |
-          chmod +x scripts/deps/*.sh
-          export DEPS_PREFIX="${{ runner.temp }}/phm-deps/${{ inputs.platform }}"
-          export PLATFORM="${{ inputs.platform }}"
-          export PATH="${DEPS_PREFIX}/bin:$PATH"
-          ./scripts/deps/${{ matrix.dep.script }}
-
-          mkdir -p "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/lib"
-          for lib in ${{ matrix.dep.libs }}; do
-            [[ -f "${DEPS_PREFIX}/lib/${lib}" ]] && cp "${DEPS_PREFIX}/lib/${lib}" "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/lib/"
-          done
-          cp -r "${DEPS_PREFIX}/include" "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/" 2>/dev/null || true
-          cp -r "${DEPS_PREFIX}/bin" "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/" 2>/dev/null || true
-          if [[ -d "${DEPS_PREFIX}/lib/pkgconfig" ]]; then
-            mkdir -p "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/lib/pkgconfig"
-            cp -r "${DEPS_PREFIX}/lib/pkgconfig"/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/lib/pkgconfig/" 2>/dev/null || true
-          fi
-        env:
-          CC: clang
-          CXX: clang++
-
-      - name: Publish dependency cache to release
-        run: bash scripts/dependency-release-cache.sh save
-        env:
-          GH_TOKEN: ${{ github.token }}
-          CACHE_KEY: dep-${{ matrix.dep.name }}-${{ inputs.platform }}-${{ hashFiles('scripts/deps/*.sh') }}
-          CACHE_DIR: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}
-          DEP_NAME: ${{ matrix.dep.name }}
-          DEP_PLATFORM: ${{ inputs.platform }}
-          DEP_LIBS: ${{ matrix.dep.libs }}
-          FORCE_REBUILD: ${{ inputs.force_rebuild }}
-
-      - name: Save Actions cache
-        if: steps.cache.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v4
-        with:
-          path: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}
-          key: dep-${{ matrix.dep.name }}-${{ inputs.platform }}-${{ hashFiles('scripts/deps/*.sh') }}
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: dep-${{ matrix.dep.name }}-${{ inputs.platform }}
-          path: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}
-          retention-days: 1
-
-  # ==========================================================================
-  # Phase 7: Extension deps (depend on libevent)
-  # ==========================================================================
-  phase7:
-    name: "${{ matrix.dep.name }}"
-    needs: phase6-independent
-    runs-on: ${{ inputs.runner }}
-    strategy:
-      fail-fast: false
-      matrix:
-        dep:
-          - { name: libmemcached, script: "21-libmemcached.sh", libs: "libmemcached.a" }
-          - { name: librdkafka, script: "27-librdkafka.sh", libs: "librdkafka.a" }
-          - { name: libgearman, script: "31-libgearman.sh", libs: "libgearman.a" }
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Cache ${{ matrix.dep.name }}
-        id: cache
+      - name: Restore Actions cache [6/37] (libiconv)
+        id: cache-libiconv
+        if: steps.bundle.outputs.hit != 'true' && inputs.force_rebuild != true
         uses: actions/cache/restore@v4
         with:
-          path: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}
-          key: dep-${{ matrix.dep.name }}-${{ inputs.platform }}-${{ hashFiles('scripts/deps/*.sh') }}
-          # One-time migration: identical dependency pins before the libmcrypt fetch fix.
-          restore-keys: ${{ hashFiles('scripts/deps/*.sh') == '97973ea3ab9931a069f937fe352f527f68deff22d313ba05334b1adafef1083e' && matrix.dep.name != 'libmcrypt' && format('dep-{0}-{1}-28200f8f217c05af28ebc23f477a9c2f3ff556bfa5f34c329b7f6984d98d9454', matrix.dep.name, inputs.platform) || '' }}
+          path: ${{ env.DEPS_CACHE_ROOT }}/libiconv
+          key: dep-libiconv-${{ inputs.platform }}-${{ env.RECIPE_HASH }}
+          restore-keys: ${{ env.RECIPE_HASH == '97973ea3ab9931a069f937fe352f527f68deff22d313ba05334b1adafef1083e' && format('dep-libiconv-{0}-28200f8f217c05af28ebc23f477a9c2f3ff556bfa5f34c329b7f6984d98d9454', inputs.platform) || '' }}
 
-      - name: Validate Actions cache or restore from release
-        id: dependency-cache
-        run: bash scripts/dependency-release-cache.sh restore
-        env:
-          GH_TOKEN: ${{ github.token }}
-          CACHE_KEY: dep-${{ matrix.dep.name }}-${{ inputs.platform }}-${{ hashFiles('scripts/deps/*.sh') }}
-          CACHE_DIR: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}
-          DEP_NAME: ${{ matrix.dep.name }}
-          DEP_PLATFORM: ${{ inputs.platform }}
-          DEP_LIBS: ${{ matrix.dep.libs }}
-          MATCHED_KEY: ${{ steps.cache.outputs.cache-matched-key }}
-          FORCE_REBUILD: ${{ inputs.force_rebuild }}
-
-      - name: Download artifacts
-        if: steps.dependency-cache.outputs.hit != 'true' || inputs.force_rebuild == true
-        uses: actions/download-artifact@v4
-        with:
-          pattern: dep-*-${{ inputs.platform }}
-          path: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}-parts
-          merge-multiple: false
-
-      - name: Merge dependencies
-        if: steps.dependency-cache.outputs.hit != 'true' || inputs.force_rebuild == true
-        run: |
-          mkdir -p "${{ runner.temp }}/phm-deps/${{ inputs.platform }}"/{lib/pkgconfig,include,bin,licenses}
-          for part in ${{ runner.temp }}/phm-deps/${{ inputs.platform }}-parts/dep-*; do
-            [[ -d "$part" ]] || continue
-            cp -a "$part"/lib/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/lib/" 2>/dev/null || true
-            cp -a "$part"/include/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/include/" 2>/dev/null || true
-            cp -a "$part"/bin/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/bin/" 2>/dev/null || true
-          done
-          # Make bin files executable (artifacts don't preserve permissions)
-          chmod +x "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/bin/"* 2>/dev/null || true
-          # Create marker files for downloaded deps
-          for part in ${{ runner.temp }}/phm-deps/${{ inputs.platform }}-parts/dep-*; do
-            [[ -d "$part" ]] || continue
-            name=$(basename "$part" | sed 's/dep-//;s/-${{ inputs.platform }}//')
-            echo "1.0" > "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/.built-${name}"
-          done
-
-      - name: Install build tools
-        if: steps.dependency-cache.outputs.hit != 'true' || inputs.force_rebuild == true
-        run: brew install -q autoconf automake pkg-config libtool cmake bison flex
-
-      - name: Build ${{ matrix.dep.name }}
-        if: steps.dependency-cache.outputs.hit != 'true' || inputs.force_rebuild == true
-        run: |
-          chmod +x scripts/deps/*.sh
-          export DEPS_PREFIX="${{ runner.temp }}/phm-deps/${{ inputs.platform }}"
-          export PLATFORM="${{ inputs.platform }}"
-          export PATH="${DEPS_PREFIX}/bin:$PATH"
-          ./scripts/deps/${{ matrix.dep.script }}
-
-          mkdir -p "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/lib"
-          for lib in ${{ matrix.dep.libs }}; do
-            [[ -f "${DEPS_PREFIX}/lib/${lib}" ]] && cp "${DEPS_PREFIX}/lib/${lib}" "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/lib/"
-          done
-          cp -r "${DEPS_PREFIX}/include" "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/" 2>/dev/null || true
-          cp -r "${DEPS_PREFIX}/bin" "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/" 2>/dev/null || true
-          if [[ -d "${DEPS_PREFIX}/lib/pkgconfig" ]]; then
-            mkdir -p "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/lib/pkgconfig"
-            cp -r "${DEPS_PREFIX}/lib/pkgconfig"/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/lib/pkgconfig/" 2>/dev/null || true
-          fi
-        env:
-          CC: clang
-          CXX: clang++
-
-      - name: Publish dependency cache to release
-        run: bash scripts/dependency-release-cache.sh save
-        env:
-          GH_TOKEN: ${{ github.token }}
-          CACHE_KEY: dep-${{ matrix.dep.name }}-${{ inputs.platform }}-${{ hashFiles('scripts/deps/*.sh') }}
-          CACHE_DIR: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}
-          DEP_NAME: ${{ matrix.dep.name }}
-          DEP_PLATFORM: ${{ inputs.platform }}
-          DEP_LIBS: ${{ matrix.dep.libs }}
-          FORCE_REBUILD: ${{ inputs.force_rebuild }}
-
-      - name: Save Actions cache
-        if: steps.cache.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v4
-        with:
-          path: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}
-          key: dep-${{ matrix.dep.name }}-${{ inputs.platform }}-${{ hashFiles('scripts/deps/*.sh') }}
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: dep-${{ matrix.dep.name }}-${{ inputs.platform }}
-          path: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}
-          retention-days: 1
-
-  # ==========================================================================
-  # Phase 8: ImageMagick & GraphicsMagick (depend on freetype, libpng, jpeg)
-  # ==========================================================================
-  phase8:
-    name: "${{ matrix.dep.name }}"
-    needs: phase3
-    runs-on: ${{ inputs.runner }}
-    strategy:
-      fail-fast: false
-      matrix:
-        dep:
-          - { name: imagemagick, script: "22-imagemagick.sh", libs: "libMagickCore-7.Q16HDRI.a libMagickWand-7.Q16HDRI.a" }
-          - { name: graphicsmagick, script: "29-graphicsmagick.sh", libs: "libGraphicsMagick.a" }
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Cache ${{ matrix.dep.name }}
-        id: cache
+      - name: Restore Actions cache [7/37] (icu4c)
+        id: cache-icu4c
+        if: steps.bundle.outputs.hit != 'true' && inputs.force_rebuild != true
         uses: actions/cache/restore@v4
         with:
-          path: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}
-          key: dep-${{ matrix.dep.name }}-${{ inputs.platform }}-${{ hashFiles('scripts/deps/*.sh') }}
-          # One-time migration: identical dependency pins before the libmcrypt fetch fix.
-          restore-keys: ${{ hashFiles('scripts/deps/*.sh') == '97973ea3ab9931a069f937fe352f527f68deff22d313ba05334b1adafef1083e' && matrix.dep.name != 'libmcrypt' && format('dep-{0}-{1}-28200f8f217c05af28ebc23f477a9c2f3ff556bfa5f34c329b7f6984d98d9454', matrix.dep.name, inputs.platform) || '' }}
+          path: ${{ env.DEPS_CACHE_ROOT }}/icu4c
+          key: dep-icu4c-${{ inputs.platform }}-${{ env.RECIPE_HASH }}
+          restore-keys: ${{ env.RECIPE_HASH == '97973ea3ab9931a069f937fe352f527f68deff22d313ba05334b1adafef1083e' && format('dep-icu4c-{0}-28200f8f217c05af28ebc23f477a9c2f3ff556bfa5f34c329b7f6984d98d9454', inputs.platform) || '' }}
 
-      - name: Validate Actions cache or restore from release
-        id: dependency-cache
-        run: bash scripts/dependency-release-cache.sh restore
-        env:
-          GH_TOKEN: ${{ github.token }}
-          CACHE_KEY: dep-${{ matrix.dep.name }}-${{ inputs.platform }}-${{ hashFiles('scripts/deps/*.sh') }}
-          CACHE_DIR: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}
-          DEP_NAME: ${{ matrix.dep.name }}
-          DEP_PLATFORM: ${{ inputs.platform }}
-          DEP_LIBS: ${{ matrix.dep.libs }}
-          MATCHED_KEY: ${{ steps.cache.outputs.cache-matched-key }}
-          FORCE_REBUILD: ${{ inputs.force_rebuild }}
-
-      - name: Download artifacts
-        if: steps.dependency-cache.outputs.hit != 'true' || inputs.force_rebuild == true
-        uses: actions/download-artifact@v4
+      - name: Restore Actions cache [8/37] (oniguruma)
+        id: cache-oniguruma
+        if: steps.bundle.outputs.hit != 'true' && inputs.force_rebuild != true
+        uses: actions/cache/restore@v4
         with:
-          pattern: dep-*-${{ inputs.platform }}
-          path: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}-parts
-          merge-multiple: false
+          path: ${{ env.DEPS_CACHE_ROOT }}/oniguruma
+          key: dep-oniguruma-${{ inputs.platform }}-${{ env.RECIPE_HASH }}
+          restore-keys: ${{ env.RECIPE_HASH == '97973ea3ab9931a069f937fe352f527f68deff22d313ba05334b1adafef1083e' && format('dep-oniguruma-{0}-28200f8f217c05af28ebc23f477a9c2f3ff556bfa5f34c329b7f6984d98d9454', inputs.platform) || '' }}
 
-      - name: Merge dependencies
-        if: steps.dependency-cache.outputs.hit != 'true' || inputs.force_rebuild == true
-        run: |
-          mkdir -p "${{ runner.temp }}/phm-deps/${{ inputs.platform }}"/{lib/pkgconfig,include,bin,licenses}
-          for part in ${{ runner.temp }}/phm-deps/${{ inputs.platform }}-parts/dep-*; do
-            [[ -d "$part" ]] || continue
-            cp -a "$part"/lib/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/lib/" 2>/dev/null || true
-            cp -a "$part"/include/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/include/" 2>/dev/null || true
-            cp -a "$part"/bin/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/bin/" 2>/dev/null || true
-          done
-          # Make bin files executable (artifacts don't preserve permissions)
-          chmod +x "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/bin/"* 2>/dev/null || true
-          # Create marker files for downloaded deps
-          for part in ${{ runner.temp }}/phm-deps/${{ inputs.platform }}-parts/dep-*; do
-            [[ -d "$part" ]] || continue
-            name=$(basename "$part" | sed 's/dep-//;s/-${{ inputs.platform }}//')
-            echo "1.0" > "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/.built-${name}"
-          done
+      - name: Restore Actions cache [9/37] (libpng)
+        id: cache-libpng
+        if: steps.bundle.outputs.hit != 'true' && inputs.force_rebuild != true
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ env.DEPS_CACHE_ROOT }}/libpng
+          key: dep-libpng-${{ inputs.platform }}-${{ env.RECIPE_HASH }}
+          restore-keys: ${{ env.RECIPE_HASH == '97973ea3ab9931a069f937fe352f527f68deff22d313ba05334b1adafef1083e' && format('dep-libpng-{0}-28200f8f217c05af28ebc23f477a9c2f3ff556bfa5f34c329b7f6984d98d9454', inputs.platform) || '' }}
 
-      - name: Install build tools
-        if: steps.dependency-cache.outputs.hit != 'true' || inputs.force_rebuild == true
+      - name: Restore Actions cache [10/37] (jpeg-turbo)
+        id: cache-jpeg-turbo
+        if: steps.bundle.outputs.hit != 'true' && inputs.force_rebuild != true
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ env.DEPS_CACHE_ROOT }}/jpeg-turbo
+          key: dep-jpeg-turbo-${{ inputs.platform }}-${{ env.RECIPE_HASH }}
+          restore-keys: ${{ env.RECIPE_HASH == '97973ea3ab9931a069f937fe352f527f68deff22d313ba05334b1adafef1083e' && format('dep-jpeg-turbo-{0}-28200f8f217c05af28ebc23f477a9c2f3ff556bfa5f34c329b7f6984d98d9454', inputs.platform) || '' }}
+
+      - name: Restore Actions cache [11/37] (freetype)
+        id: cache-freetype
+        if: steps.bundle.outputs.hit != 'true' && inputs.force_rebuild != true
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ env.DEPS_CACHE_ROOT }}/freetype
+          key: dep-freetype-${{ inputs.platform }}-${{ env.RECIPE_HASH }}
+          restore-keys: ${{ env.RECIPE_HASH == '97973ea3ab9931a069f937fe352f527f68deff22d313ba05334b1adafef1083e' && format('dep-freetype-{0}-28200f8f217c05af28ebc23f477a9c2f3ff556bfa5f34c329b7f6984d98d9454', inputs.platform) || '' }}
+
+      - name: Restore Actions cache [12/37] (webp)
+        id: cache-webp
+        if: steps.bundle.outputs.hit != 'true' && inputs.force_rebuild != true
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ env.DEPS_CACHE_ROOT }}/webp
+          key: dep-webp-${{ inputs.platform }}-${{ env.RECIPE_HASH }}
+          restore-keys: ${{ env.RECIPE_HASH == '97973ea3ab9931a069f937fe352f527f68deff22d313ba05334b1adafef1083e' && format('dep-webp-{0}-28200f8f217c05af28ebc23f477a9c2f3ff556bfa5f34c329b7f6984d98d9454', inputs.platform) || '' }}
+
+      - name: Restore Actions cache [13/37] (libsodium)
+        id: cache-libsodium
+        if: steps.bundle.outputs.hit != 'true' && inputs.force_rebuild != true
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ env.DEPS_CACHE_ROOT }}/libsodium
+          key: dep-libsodium-${{ inputs.platform }}-${{ env.RECIPE_HASH }}
+          restore-keys: ${{ env.RECIPE_HASH == '97973ea3ab9931a069f937fe352f527f68deff22d313ba05334b1adafef1083e' && format('dep-libsodium-{0}-28200f8f217c05af28ebc23f477a9c2f3ff556bfa5f34c329b7f6984d98d9454', inputs.platform) || '' }}
+
+      - name: Restore Actions cache [14/37] (libzip)
+        id: cache-libzip
+        if: steps.bundle.outputs.hit != 'true' && inputs.force_rebuild != true
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ env.DEPS_CACHE_ROOT }}/libzip
+          key: dep-libzip-${{ inputs.platform }}-${{ env.RECIPE_HASH }}
+          restore-keys: ${{ env.RECIPE_HASH == '97973ea3ab9931a069f937fe352f527f68deff22d313ba05334b1adafef1083e' && format('dep-libzip-{0}-28200f8f217c05af28ebc23f477a9c2f3ff556bfa5f34c329b7f6984d98d9454', inputs.platform) || '' }}
+
+      - name: Restore Actions cache [15/37] (libpq)
+        id: cache-libpq
+        if: steps.bundle.outputs.hit != 'true' && inputs.force_rebuild != true
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ env.DEPS_CACHE_ROOT }}/libpq
+          key: dep-libpq-${{ inputs.platform }}-${{ env.RECIPE_HASH }}
+          restore-keys: ${{ env.RECIPE_HASH == '97973ea3ab9931a069f937fe352f527f68deff22d313ba05334b1adafef1083e' && format('dep-libpq-{0}-28200f8f217c05af28ebc23f477a9c2f3ff556bfa5f34c329b7f6984d98d9454', inputs.platform) || '' }}
+
+      - name: Restore Actions cache [16/37] (libxml2)
+        id: cache-libxml2
+        if: steps.bundle.outputs.hit != 'true' && inputs.force_rebuild != true
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ env.DEPS_CACHE_ROOT }}/libxml2
+          key: dep-libxml2-${{ inputs.platform }}-${{ env.RECIPE_HASH }}
+          restore-keys: ${{ env.RECIPE_HASH == '97973ea3ab9931a069f937fe352f527f68deff22d313ba05334b1adafef1083e' && format('dep-libxml2-{0}-28200f8f217c05af28ebc23f477a9c2f3ff556bfa5f34c329b7f6984d98d9454', inputs.platform) || '' }}
+
+      - name: Restore Actions cache [17/37] (sqlite)
+        id: cache-sqlite
+        if: steps.bundle.outputs.hit != 'true' && inputs.force_rebuild != true
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ env.DEPS_CACHE_ROOT }}/sqlite
+          key: dep-sqlite-${{ inputs.platform }}-${{ env.RECIPE_HASH }}
+          restore-keys: ${{ env.RECIPE_HASH == '97973ea3ab9931a069f937fe352f527f68deff22d313ba05334b1adafef1083e' && format('dep-sqlite-{0}-28200f8f217c05af28ebc23f477a9c2f3ff556bfa5f34c329b7f6984d98d9454', inputs.platform) || '' }}
+
+      - name: Restore Actions cache [18/37] (libxslt)
+        id: cache-libxslt
+        if: steps.bundle.outputs.hit != 'true' && inputs.force_rebuild != true
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ env.DEPS_CACHE_ROOT }}/libxslt
+          key: dep-libxslt-${{ inputs.platform }}-${{ env.RECIPE_HASH }}
+          restore-keys: ${{ env.RECIPE_HASH == '97973ea3ab9931a069f937fe352f527f68deff22d313ba05334b1adafef1083e' && format('dep-libxslt-{0}-28200f8f217c05af28ebc23f477a9c2f3ff556bfa5f34c329b7f6984d98d9454', inputs.platform) || '' }}
+
+      - name: Restore Actions cache [19/37] (curl)
+        id: cache-curl
+        if: steps.bundle.outputs.hit != 'true' && inputs.force_rebuild != true
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ env.DEPS_CACHE_ROOT }}/curl
+          key: dep-curl-${{ inputs.platform }}-${{ env.RECIPE_HASH }}
+          restore-keys: ${{ env.RECIPE_HASH == '97973ea3ab9931a069f937fe352f527f68deff22d313ba05334b1adafef1083e' && format('dep-curl-{0}-28200f8f217c05af28ebc23f477a9c2f3ff556bfa5f34c329b7f6984d98d9454', inputs.platform) || '' }}
+
+      - name: Restore Actions cache [20/37] (rabbitmq-c)
+        id: cache-rabbitmq-c
+        if: steps.bundle.outputs.hit != 'true' && inputs.force_rebuild != true
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ env.DEPS_CACHE_ROOT }}/rabbitmq-c
+          key: dep-rabbitmq-c-${{ inputs.platform }}-${{ env.RECIPE_HASH }}
+          restore-keys: ${{ env.RECIPE_HASH == '97973ea3ab9931a069f937fe352f527f68deff22d313ba05334b1adafef1083e' && format('dep-rabbitmq-c-{0}-28200f8f217c05af28ebc23f477a9c2f3ff556bfa5f34c329b7f6984d98d9454', inputs.platform) || '' }}
+
+      - name: Restore Actions cache [21/37] (libevent)
+        id: cache-libevent
+        if: steps.bundle.outputs.hit != 'true' && inputs.force_rebuild != true
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ env.DEPS_CACHE_ROOT }}/libevent
+          key: dep-libevent-${{ inputs.platform }}-${{ env.RECIPE_HASH }}
+          restore-keys: ${{ env.RECIPE_HASH == '97973ea3ab9931a069f937fe352f527f68deff22d313ba05334b1adafef1083e' && format('dep-libevent-{0}-28200f8f217c05af28ebc23f477a9c2f3ff556bfa5f34c329b7f6984d98d9454', inputs.platform) || '' }}
+
+      - name: Restore Actions cache [22/37] (zstd)
+        id: cache-zstd
+        if: steps.bundle.outputs.hit != 'true' && inputs.force_rebuild != true
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ env.DEPS_CACHE_ROOT }}/zstd
+          key: dep-zstd-${{ inputs.platform }}-${{ env.RECIPE_HASH }}
+          restore-keys: ${{ env.RECIPE_HASH == '97973ea3ab9931a069f937fe352f527f68deff22d313ba05334b1adafef1083e' && format('dep-zstd-{0}-28200f8f217c05af28ebc23f477a9c2f3ff556bfa5f34c329b7f6984d98d9454', inputs.platform) || '' }}
+
+      - name: Restore Actions cache [23/37] (ossp-uuid)
+        id: cache-ossp-uuid
+        if: steps.bundle.outputs.hit != 'true' && inputs.force_rebuild != true
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ env.DEPS_CACHE_ROOT }}/ossp-uuid
+          key: dep-ossp-uuid-${{ inputs.platform }}-${{ env.RECIPE_HASH }}
+          restore-keys: ${{ env.RECIPE_HASH == '97973ea3ab9931a069f937fe352f527f68deff22d313ba05334b1adafef1083e' && format('dep-ossp-uuid-{0}-28200f8f217c05af28ebc23f477a9c2f3ff556bfa5f34c329b7f6984d98d9454', inputs.platform) || '' }}
+
+      - name: Restore Actions cache [24/37] (libyaml)
+        id: cache-libyaml
+        if: steps.bundle.outputs.hit != 'true' && inputs.force_rebuild != true
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ env.DEPS_CACHE_ROOT }}/libyaml
+          key: dep-libyaml-${{ inputs.platform }}-${{ env.RECIPE_HASH }}
+          restore-keys: ${{ env.RECIPE_HASH == '97973ea3ab9931a069f937fe352f527f68deff22d313ba05334b1adafef1083e' && format('dep-libyaml-{0}-28200f8f217c05af28ebc23f477a9c2f3ff556bfa5f34c329b7f6984d98d9454', inputs.platform) || '' }}
+
+      - name: Restore Actions cache [25/37] (lz4)
+        id: cache-lz4
+        if: steps.bundle.outputs.hit != 'true' && inputs.force_rebuild != true
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ env.DEPS_CACHE_ROOT }}/lz4
+          key: dep-lz4-${{ inputs.platform }}-${{ env.RECIPE_HASH }}
+          restore-keys: ${{ env.RECIPE_HASH == '97973ea3ab9931a069f937fe352f527f68deff22d313ba05334b1adafef1083e' && format('dep-lz4-{0}-28200f8f217c05af28ebc23f477a9c2f3ff556bfa5f34c329b7f6984d98d9454', inputs.platform) || '' }}
+
+      - name: Restore Actions cache [26/37] (libmaxminddb)
+        id: cache-libmaxminddb
+        if: steps.bundle.outputs.hit != 'true' && inputs.force_rebuild != true
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ env.DEPS_CACHE_ROOT }}/libmaxminddb
+          key: dep-libmaxminddb-${{ inputs.platform }}-${{ env.RECIPE_HASH }}
+          restore-keys: ${{ env.RECIPE_HASH == '97973ea3ab9931a069f937fe352f527f68deff22d313ba05334b1adafef1083e' && format('dep-libmaxminddb-{0}-28200f8f217c05af28ebc23f477a9c2f3ff556bfa5f34c329b7f6984d98d9454', inputs.platform) || '' }}
+
+      - name: Restore Actions cache [27/37] (lua)
+        id: cache-lua
+        if: steps.bundle.outputs.hit != 'true' && inputs.force_rebuild != true
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ env.DEPS_CACHE_ROOT }}/lua
+          key: dep-lua-${{ inputs.platform }}-${{ env.RECIPE_HASH }}
+          restore-keys: ${{ env.RECIPE_HASH == '97973ea3ab9931a069f937fe352f527f68deff22d313ba05334b1adafef1083e' && format('dep-lua-{0}-28200f8f217c05af28ebc23f477a9c2f3ff556bfa5f34c329b7f6984d98d9454', inputs.platform) || '' }}
+
+      - name: Restore Actions cache [28/37] (libev)
+        id: cache-libev
+        if: steps.bundle.outputs.hit != 'true' && inputs.force_rebuild != true
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ env.DEPS_CACHE_ROOT }}/libev
+          key: dep-libev-${{ inputs.platform }}-${{ env.RECIPE_HASH }}
+          restore-keys: ${{ env.RECIPE_HASH == '97973ea3ab9931a069f937fe352f527f68deff22d313ba05334b1adafef1083e' && format('dep-libev-{0}-28200f8f217c05af28ebc23f477a9c2f3ff556bfa5f34c329b7f6984d98d9454', inputs.platform) || '' }}
+
+      - name: Restore Actions cache [29/37] (libssh2)
+        id: cache-libssh2
+        if: steps.bundle.outputs.hit != 'true' && inputs.force_rebuild != true
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ env.DEPS_CACHE_ROOT }}/libssh2
+          key: dep-libssh2-${{ inputs.platform }}-${{ env.RECIPE_HASH }}
+          restore-keys: ${{ env.RECIPE_HASH == '97973ea3ab9931a069f937fe352f527f68deff22d313ba05334b1adafef1083e' && format('dep-libssh2-{0}-28200f8f217c05af28ebc23f477a9c2f3ff556bfa5f34c329b7f6984d98d9454', inputs.platform) || '' }}
+
+      - name: Restore Actions cache [30/37] (libmcrypt)
+        id: cache-libmcrypt
+        if: steps.bundle.outputs.hit != 'true' && inputs.force_rebuild != true
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ env.DEPS_CACHE_ROOT }}/libmcrypt
+          key: dep-libmcrypt-${{ inputs.platform }}-${{ env.RECIPE_HASH }}
+
+      - name: Restore Actions cache [31/37] (gmp)
+        id: cache-gmp
+        if: steps.bundle.outputs.hit != 'true' && inputs.force_rebuild != true
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ env.DEPS_CACHE_ROOT }}/gmp
+          key: dep-gmp-${{ inputs.platform }}-${{ env.RECIPE_HASH }}
+          restore-keys: ${{ env.RECIPE_HASH == '97973ea3ab9931a069f937fe352f527f68deff22d313ba05334b1adafef1083e' && format('dep-gmp-{0}-28200f8f217c05af28ebc23f477a9c2f3ff556bfa5f34c329b7f6984d98d9454', inputs.platform) || '' }}
+
+      - name: Restore Actions cache [32/37] (libjudy)
+        id: cache-libjudy
+        if: steps.bundle.outputs.hit != 'true' && inputs.force_rebuild != true
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ env.DEPS_CACHE_ROOT }}/libjudy
+          key: dep-libjudy-${{ inputs.platform }}-${{ env.RECIPE_HASH }}
+          restore-keys: ${{ env.RECIPE_HASH == '97973ea3ab9931a069f937fe352f527f68deff22d313ba05334b1adafef1083e' && format('dep-libjudy-{0}-28200f8f217c05af28ebc23f477a9c2f3ff556bfa5f34c329b7f6984d98d9454', inputs.platform) || '' }}
+
+      - name: Restore Actions cache [33/37] (libmemcached)
+        id: cache-libmemcached
+        if: steps.bundle.outputs.hit != 'true' && inputs.force_rebuild != true
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ env.DEPS_CACHE_ROOT }}/libmemcached
+          key: dep-libmemcached-${{ inputs.platform }}-${{ env.RECIPE_HASH }}
+          restore-keys: ${{ env.RECIPE_HASH == '97973ea3ab9931a069f937fe352f527f68deff22d313ba05334b1adafef1083e' && format('dep-libmemcached-{0}-28200f8f217c05af28ebc23f477a9c2f3ff556bfa5f34c329b7f6984d98d9454', inputs.platform) || '' }}
+
+      - name: Restore Actions cache [34/37] (librdkafka)
+        id: cache-librdkafka
+        if: steps.bundle.outputs.hit != 'true' && inputs.force_rebuild != true
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ env.DEPS_CACHE_ROOT }}/librdkafka
+          key: dep-librdkafka-${{ inputs.platform }}-${{ env.RECIPE_HASH }}
+          restore-keys: ${{ env.RECIPE_HASH == '97973ea3ab9931a069f937fe352f527f68deff22d313ba05334b1adafef1083e' && format('dep-librdkafka-{0}-28200f8f217c05af28ebc23f477a9c2f3ff556bfa5f34c329b7f6984d98d9454', inputs.platform) || '' }}
+
+      - name: Restore Actions cache [35/37] (libgearman)
+        id: cache-libgearman
+        if: steps.bundle.outputs.hit != 'true' && inputs.force_rebuild != true
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ env.DEPS_CACHE_ROOT }}/libgearman
+          key: dep-libgearman-${{ inputs.platform }}-${{ env.RECIPE_HASH }}
+          restore-keys: ${{ env.RECIPE_HASH == '97973ea3ab9931a069f937fe352f527f68deff22d313ba05334b1adafef1083e' && format('dep-libgearman-{0}-28200f8f217c05af28ebc23f477a9c2f3ff556bfa5f34c329b7f6984d98d9454', inputs.platform) || '' }}
+
+      - name: Restore Actions cache [36/37] (imagemagick)
+        id: cache-imagemagick
+        if: steps.bundle.outputs.hit != 'true' && inputs.force_rebuild != true
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ env.DEPS_CACHE_ROOT }}/imagemagick
+          key: dep-imagemagick-${{ inputs.platform }}-${{ env.RECIPE_HASH }}
+          restore-keys: ${{ env.RECIPE_HASH == '97973ea3ab9931a069f937fe352f527f68deff22d313ba05334b1adafef1083e' && format('dep-imagemagick-{0}-28200f8f217c05af28ebc23f477a9c2f3ff556bfa5f34c329b7f6984d98d9454', inputs.platform) || '' }}
+
+      - name: Restore Actions cache [37/37] (graphicsmagick)
+        id: cache-graphicsmagick
+        if: steps.bundle.outputs.hit != 'true' && inputs.force_rebuild != true
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ env.DEPS_CACHE_ROOT }}/graphicsmagick
+          key: dep-graphicsmagick-${{ inputs.platform }}-${{ env.RECIPE_HASH }}
+          restore-keys: ${{ env.RECIPE_HASH == '97973ea3ab9931a069f937fe352f527f68deff22d313ba05334b1adafef1083e' && format('dep-graphicsmagick-{0}-28200f8f217c05af28ebc23f477a9c2f3ff556bfa5f34c329b7f6984d98d9454', inputs.platform) || '' }}
+
+      - name: Restore individual releases and migrate Actions cache
+        id: individual
+        if: steps.bundle.outputs.hit != 'true'
+        run: python3 scripts/dependency-bundle.py prepare
+        env:
+          MATCHED_LIBFFI: ${{ steps.cache-libffi.outputs.cache-matched-key }}
+          MATCHED_ZLIB: ${{ steps.cache-zlib.outputs.cache-matched-key }}
+          MATCHED_BZIP2: ${{ steps.cache-bzip2.outputs.cache-matched-key }}
+          MATCHED_LIBEDIT: ${{ steps.cache-libedit.outputs.cache-matched-key }}
+          MATCHED_OPENSSL: ${{ steps.cache-openssl.outputs.cache-matched-key }}
+          MATCHED_LIBICONV: ${{ steps.cache-libiconv.outputs.cache-matched-key }}
+          MATCHED_ICU4C: ${{ steps.cache-icu4c.outputs.cache-matched-key }}
+          MATCHED_ONIGURUMA: ${{ steps.cache-oniguruma.outputs.cache-matched-key }}
+          MATCHED_LIBPNG: ${{ steps.cache-libpng.outputs.cache-matched-key }}
+          MATCHED_JPEG_TURBO: ${{ steps.cache-jpeg-turbo.outputs.cache-matched-key }}
+          MATCHED_FREETYPE: ${{ steps.cache-freetype.outputs.cache-matched-key }}
+          MATCHED_WEBP: ${{ steps.cache-webp.outputs.cache-matched-key }}
+          MATCHED_LIBSODIUM: ${{ steps.cache-libsodium.outputs.cache-matched-key }}
+          MATCHED_LIBZIP: ${{ steps.cache-libzip.outputs.cache-matched-key }}
+          MATCHED_LIBPQ: ${{ steps.cache-libpq.outputs.cache-matched-key }}
+          MATCHED_LIBXML2: ${{ steps.cache-libxml2.outputs.cache-matched-key }}
+          MATCHED_SQLITE: ${{ steps.cache-sqlite.outputs.cache-matched-key }}
+          MATCHED_LIBXSLT: ${{ steps.cache-libxslt.outputs.cache-matched-key }}
+          MATCHED_CURL: ${{ steps.cache-curl.outputs.cache-matched-key }}
+          MATCHED_RABBITMQ_C: ${{ steps.cache-rabbitmq-c.outputs.cache-matched-key }}
+          MATCHED_LIBEVENT: ${{ steps.cache-libevent.outputs.cache-matched-key }}
+          MATCHED_ZSTD: ${{ steps.cache-zstd.outputs.cache-matched-key }}
+          MATCHED_OSSP_UUID: ${{ steps.cache-ossp-uuid.outputs.cache-matched-key }}
+          MATCHED_LIBYAML: ${{ steps.cache-libyaml.outputs.cache-matched-key }}
+          MATCHED_LZ4: ${{ steps.cache-lz4.outputs.cache-matched-key }}
+          MATCHED_LIBMAXMINDDB: ${{ steps.cache-libmaxminddb.outputs.cache-matched-key }}
+          MATCHED_LUA: ${{ steps.cache-lua.outputs.cache-matched-key }}
+          MATCHED_LIBEV: ${{ steps.cache-libev.outputs.cache-matched-key }}
+          MATCHED_LIBSSH2: ${{ steps.cache-libssh2.outputs.cache-matched-key }}
+          MATCHED_LIBMCRYPT: ${{ steps.cache-libmcrypt.outputs.cache-matched-key }}
+          MATCHED_GMP: ${{ steps.cache-gmp.outputs.cache-matched-key }}
+          MATCHED_LIBJUDY: ${{ steps.cache-libjudy.outputs.cache-matched-key }}
+          MATCHED_LIBMEMCACHED: ${{ steps.cache-libmemcached.outputs.cache-matched-key }}
+          MATCHED_LIBRDKAFKA: ${{ steps.cache-librdkafka.outputs.cache-matched-key }}
+          MATCHED_LIBGEARMAN: ${{ steps.cache-libgearman.outputs.cache-matched-key }}
+          MATCHED_IMAGEMAGICK: ${{ steps.cache-imagemagick.outputs.cache-matched-key }}
+          MATCHED_GRAPHICSMAGICK: ${{ steps.cache-graphicsmagick.outputs.cache-matched-key }}
+
+      - name: Install build tools once
+        if: steps.individual.outputs.needs_build == 'true'
         run: brew install -q autoconf automake pkg-config libtool cmake bison flex
 
-      - name: Build ${{ matrix.dep.name }}
-        if: steps.dependency-cache.outputs.hit != 'true' || inputs.force_rebuild == true
-        run: |
-          chmod +x scripts/deps/*.sh
-          export DEPS_PREFIX="${{ runner.temp }}/phm-deps/${{ inputs.platform }}"
-          export PLATFORM="${{ inputs.platform }}"
-          export PATH="${DEPS_PREFIX}/bin:$PATH"
-          ./scripts/deps/${{ matrix.dep.script }}
+      - name: Build only missing dependencies in order
+        if: steps.individual.outputs.needs_build == 'true'
+        run: python3 scripts/dependency-bundle.py build
 
-          mkdir -p "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/lib"
-          for lib in ${{ matrix.dep.libs }}; do
-            [[ -f "${DEPS_PREFIX}/lib/${lib}" ]] && cp "${DEPS_PREFIX}/lib/${lib}" "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/lib/"
-          done
-          cp -r "${DEPS_PREFIX}/include" "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/" 2>/dev/null || true
-          cp -r "${DEPS_PREFIX}/bin" "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/" 2>/dev/null || true
-          if [[ -d "${DEPS_PREFIX}/lib/pkgconfig" ]]; then
-            mkdir -p "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/lib/pkgconfig"
-            cp -r "${DEPS_PREFIX}/lib/pkgconfig"/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}/lib/pkgconfig/" 2>/dev/null || true
-          fi
-        env:
-          CC: clang
-          CXX: clang++
+      - name: Publish complete dependency bundle to Releases
+        run: python3 scripts/dependency-bundle.py save
 
-      - name: Publish dependency cache to release
-        run: bash scripts/dependency-release-cache.sh save
-        env:
-          GH_TOKEN: ${{ github.token }}
-          CACHE_KEY: dep-${{ matrix.dep.name }}-${{ inputs.platform }}-${{ hashFiles('scripts/deps/*.sh') }}
-          CACHE_DIR: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}
-          DEP_NAME: ${{ matrix.dep.name }}
-          DEP_PLATFORM: ${{ inputs.platform }}
-          DEP_LIBS: ${{ matrix.dep.libs }}
-          FORCE_REBUILD: ${{ inputs.force_rebuild }}
-
-      - name: Save Actions cache
-        if: steps.cache.outputs.cache-hit != 'true'
+      - name: Save complete Actions cache
+        if: steps.bundle-actions.outputs.cache-hit != 'true'
         uses: actions/cache/save@v4
         with:
-          path: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}
-          key: dep-${{ matrix.dep.name }}-${{ inputs.platform }}-${{ hashFiles('scripts/deps/*.sh') }}
+          path: ${{ env.DEPS_PREFIX }}
+          key: ${{ env.BUNDLE_KEY }}
 
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: dep-${{ matrix.dep.name }}-${{ inputs.platform }}
-          path: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}/${{ matrix.dep.name }}
-          retention-days: 1
-
-  # ==========================================================================
-  # Final: Merge all dependencies
-  # ==========================================================================
-  merge:
-    name: Merge all deps
-    needs: [phase1, phase2, phase3, phase4, phase5, phase6-independent, phase7, phase8]
-    runs-on: ${{ inputs.runner }}
-    steps:
-      - name: Download all artifacts
-        uses: actions/download-artifact@v4
-        with:
-          pattern: dep-*-${{ inputs.platform }}
-          path: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}-parts
-          merge-multiple: false
-
-      - name: Merge into final directory
-        run: |
-          mkdir -p "${{ runner.temp }}/phm-deps/${{ inputs.platform }}"/{lib/pkgconfig,include,bin,licenses}
-
-          echo "Merging dependencies..."
-          for part in ${{ runner.temp }}/phm-deps/${{ inputs.platform }}-parts/dep-*; do
-            name=$(basename "$part" | sed 's/dep-//;s/-${{ inputs.platform }}//')
-            echo "  ← $name"
-            cp -a "$part"/lib/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/lib/" 2>/dev/null || true
-            cp -a "$part"/include/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/include/" 2>/dev/null || true
-            cp -a "$part"/bin/* "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/bin/" 2>/dev/null || true
-          done
-
-          # Make bin files executable (artifacts don't preserve permissions)
-          chmod +x "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/bin/"* 2>/dev/null || true
-
-          echo ""
-          echo "Libraries:"
-          ls "${{ runner.temp }}/phm-deps/${{ inputs.platform }}/lib/"*.a | wc -l | xargs echo "  Total:"
-
-      - name: Upload merged deps
+      - name: Upload merged dependencies
         uses: actions/upload-artifact@v4
         with:
           name: deps-${{ inputs.platform }}
-          path: ${{ runner.temp }}/phm-deps/${{ inputs.platform }}
+          path: ${{ env.DEPS_PREFIX }}
           retention-days: 7
 
-      - name: Verify core libraries
-        run: |
-          PREFIX="${{ runner.temp }}/phm-deps/${{ inputs.platform }}"
-          echo "Verifying core libraries..."
-          for lib in libz.a libssl.a libcrypto.a libedit.a libxml2.a libcurl.a libsqlite3.a libpq.a; do
-            if [[ -f "${PREFIX}/lib/${lib}" ]]; then
-              echo "  ✓ ${lib}"
-            else
-              echo "  ✗ ${lib} MISSING" && exit 1
-            fi
-          done
+      - name: Upload dependency logs and progress report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-logs-${{ inputs.platform }}
+          path: ${{ env.DEPENDENCY_LOG_DIR }}
+          if-no-files-found: ignore
+          retention-days: 14

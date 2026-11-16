@@ -4,11 +4,17 @@ on:
   push:
     paths:
       - 'scripts/dependency-release-cache.sh'
+      - 'scripts/dependency-bundle.py'
+      - 'scripts/dependency-libraries.json'
+      - '.github/workflows/_build-deps.yml'
       - 'scripts/tests/**'
       - '.github/workflows/dependency-cache-tests.yml'
   pull_request:
     paths:
       - 'scripts/dependency-release-cache.sh'
+      - 'scripts/dependency-bundle.py'
+      - 'scripts/dependency-libraries.json'
+      - '.github/workflows/_build-deps.yml'
       - 'scripts/tests/**'
       - '.github/workflows/dependency-cache-tests.yml'
 

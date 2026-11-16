@@ -63,6 +63,10 @@ on:
     - cron: '0 3 * * *'  # Daily at 3:00 UTC
   workflow_dispatch:
     inputs:
+      debug:
+        description: Show full dependency build output live
+        type: boolean
+        default: false
       force_build:
         description: 'Force build even if version unchanged'
         type: boolean
@@ -82,6 +86,7 @@ jobs:
       php_minor: "${php_minor}"
       platform: "${platform}"
       runner: "${runner}"
+      debug: \${{ inputs.debug || false }}
       force_build: \${{ inputs.force_build || false }}
       force_rebuild_deps: \${{ inputs.force_rebuild_deps || false }}
     secrets: inherit

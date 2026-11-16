@@ -15,6 +15,11 @@ on:
         description: 'GitHub Actions runner'
         required: true
         type: string
+      debug:
+        description: Show full dependency build output live
+        required: false
+        type: boolean
+        default: false
       force_build:
         description: 'Force build even if version unchanged'
         required: false
@@ -98,6 +103,7 @@ jobs:
       platform: ${{ inputs.platform }}
       runner: ${{ inputs.runner }}
       force_rebuild: ${{ inputs.force_rebuild_deps }}
+      debug: ${{ inputs.debug }}
 
   build:
     name: Build PHP ${{ needs.check.outputs.php_version }}
@@ -149,6 +155,11 @@ jobs:
             fi
           done
           echo "Updated $(ls "${DEPS_PREFIX}/lib/pkgconfig"/*.pc 2>/dev/null | wc -l) .pc files"
+
+          # Relocate the libpq wrapper from the dependency runner's bundle prefix.
+          if [[ -f "${DEPS_PREFIX}/bin/pg_config" ]]; then
+            sed -i '' "s|^PREFIX=.*|PREFIX=\"${DEPS_PREFIX}\"|" "${DEPS_PREFIX}/bin/pg_config"
+          fi
 
           # Verify pg_config is available
           if [[ -x "${DEPS_PREFIX}/bin/pg_config" ]]; then
