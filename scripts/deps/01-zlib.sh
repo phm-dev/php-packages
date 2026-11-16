@@ -15,7 +15,8 @@ source "${SCRIPT_DIR}/common.sh"
 
 NAME="zlib"
 VERSION="1.3.2"
-URL="https://zlib.net/zlib-${VERSION}.tar.gz"
+# Use the versioned archive: the root URL only keeps the current release.
+URL="https://zlib.net/fossils/zlib-${VERSION}.tar.gz"
 
 if is_built "$NAME"; then
     log_info "$NAME already built, skipping"
