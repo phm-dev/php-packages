@@ -33,6 +33,7 @@ jobs:
       fail-fast: false
       matrix:
         dep:
+          - { name: libffi, script: "37-libffi.sh", libs: "libffi.a" }
           - { name: zlib, script: "01-zlib.sh", libs: "libz.a" }
           - { name: bzip2, script: "02-bzip2.sh", libs: "libbz2.a" }
           - { name: libedit, script: "03-libedit.sh", libs: "libedit.a" }

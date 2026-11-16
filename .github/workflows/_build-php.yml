@@ -398,7 +398,7 @@ jobs:
 
           VERSION="${{ needs.check.outputs.php_version }}"
           # Check required packages exist (core packages use full version: php8.5.1-cli, not php8.5-cli)
-          for pkg in cli fpm common; do
+          for pkg in cli fpm common ffi${VERSION}; do
             if ls artifacts/php${VERSION}-${pkg}_*.tar.zst 1>/dev/null 2>&1; then
               echo "  ✓ php${VERSION}-${pkg}"
             else

@@ -126,7 +126,7 @@ if [[ "$(uname -s)" == "Darwin" ]]; then
     fi
 
     # Verify critical dependencies exist
-    for lib in libz.a libssl.a libcrypto.a libedit.a libxml2.a libcurl.a libsqlite3.a libgmp.a; do
+    for lib in libz.a libssl.a libcrypto.a libedit.a libxml2.a libcurl.a libsqlite3.a libgmp.a libffi.a; do
         if [[ ! -f "${DEPS_PREFIX}/lib/${lib}" ]]; then
             log_error "Missing required library: ${lib}"
             log_error "Run php-packages/scripts/deps/build-all-deps.sh first"
@@ -151,6 +151,10 @@ if [[ "$(uname -s)" == "Darwin" ]]; then
     # LIBS contains libraries that should be linked AFTER object files
     # libsharpyuv is required by libwebp but PHP's webp detection doesn't use --static for pkg-config
     export LIBS="-lsharpyuv"
+
+    # Link FFI against our archive, never the macOS/Homebrew dynamic library.
+    export FFI_CFLAGS="-I${DEPS_PREFIX}/include"
+    export FFI_LIBS="${DEPS_PREFIX}/lib/libffi.a"
 
     # All dependency paths point to our static build
     DEPS_DIR="$DEPS_PREFIX"
@@ -247,6 +251,7 @@ CONFIGURE_OPTS=(
     --with-sodium="${SODIUM_DIR}"
     --with-gmp="${GMP_DIR}"
     --with-zip
+    --with-ffi=shared
     --with-pear
 
     # Database
@@ -621,6 +626,25 @@ source "${SCRIPT_DIR}/package.sh"
 # Create packages using NEW naming convention: php{VERSION}-{type}_{platform}.tar.zst
 # Example: php8.5.0-cli_darwin-arm64.tar.zst
 # =============================================================================
+
+# FFI ships with PHP sources but is installed as an optional shared extension.
+FFI_SO="${STAGING_EXT_DIR}/ffi.so"
+if [[ ! -f "$FFI_SO" ]]; then
+    log_error "FFI module not found: ${FFI_SO}"
+    exit 1
+fi
+
+# Exercise a C call before publishing and reject non-system runtime dependencies.
+run_build "${PHP_SRC_DIR}/sapi/cli/php" -n -d "extension=${FFI_SO}" -d ffi.enable=1 \
+    -r 'if (FFI::cdef("int abs(int);")->abs(-42) !== 42) { exit(1); }'
+if otool -L "$FFI_SO" | tail -n +2 | grep -Ev '^[[:space:]]+(/usr/lib/|/System/Library/)' ; then
+    log_error "FFI module links to non-system dynamic libraries"
+    exit 1
+fi
+
+create_extension_package_v2 "ffi" "$PHP_VERSION" "$PHP_VERSION" "$PLATFORM" "$FFI_SO" \
+    --ext-dir "$EXT_DIR_NAME" \
+    --description "PHP ${PHP_VERSION} Foreign Function Interface"
 
 # Package: php8.5.0-common (shared files)
 create_php_core_package "common" "$PHP_VERSION" "$PLATFORM" \

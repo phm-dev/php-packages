@@ -125,6 +125,8 @@ main() {
     "${SCRIPT_DIR}/35-gmp.sh"           # For PHP gmp extension
     "${SCRIPT_DIR}/36-libjudy.sh"       # For memprof extension
 
+    "${SCRIPT_DIR}/37-libffi.sh"        # For PHP FFI extension
+
     # Calculate elapsed time
     local elapsed=$((SECONDS - start_time))
     local minutes=$((elapsed / 60))

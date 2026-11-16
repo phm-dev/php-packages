@@ -81,6 +81,23 @@ curl -fsSL https://raw.githubusercontent.com/phm-dev/phm/main/scripts/install-ph
 phm install php8.5-cli php8.5-fpm php8.5-redis php8.5-xdebug
 ```
 
+## FFI (ext-ffi)
+
+FFI is built from the PHP sources as an optional shared module, with statically
+linked libffi. It is packaged by `make php VERSION=8.5.0`, not the PECL extension
+builder. Run `make deps` first to include libffi.
+
+After publishing the rebuilt PHP release and regenerating the package index:
+
+```bash
+phm install php8.5-ffi
+php --ri FFI
+php -d ffi.enable=1 -r 'echo FFI::cdef("int abs(int);")->abs(-42), PHP_EOL;'
+```
+
+The package loads `ffi.so` through `20-ffi.ini`. PHP's default `ffi.enable=preload`
+is preserved; use `-d ffi.enable=1` for CLI scripts requiring unrestricted FFI.
+
 ## Missing an Extension?
 
 [Open an issue](https://github.com/phm-dev/php-packages/issues) to request a new extension.
